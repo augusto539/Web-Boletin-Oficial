@@ -1,6 +1,8 @@
 import { useLazyQuery, useQuery } from "@apollo/client/react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { FlechaIcon } from "../components/FlechaIcon";
+import { trackEvent } from "../lib/analytics";
 import { cuit as formatCuit, dato, fecha, hoyISO } from "../lib/format";
 import {
   BUSCAR_PERSONAS_AVANZADO,
@@ -86,7 +88,7 @@ function Paginador({
         onClick={() => onCambiar(pagina + 1)}
         className="cursor-pointer rounded-full bg-white px-5 py-2 text-sm font-bold text-carbon disabled:cursor-not-allowed disabled:opacity-40"
       >
-        Siguiente →
+        Siguiente <FlechaIcon className="ml-1" />
       </button>
     </div>
   );
@@ -159,6 +161,13 @@ function BusquedaSociedades() {
         onSubmit={(e) => {
           e.preventDefault();
           ejecutarBusqueda(1);
+          trackEvent("buscar_avanzada", {
+            entidad: "sociedades",
+            con_termino: Boolean(termino.trim()),
+            grupo_clae: grupoClae || undefined,
+            tipo_sociedad: Boolean(tipoSociedadId),
+            departamento: Boolean(departamentoId),
+          });
         }}
         className="mt-8 grid gap-5 rounded-3xl bg-white p-7 md:grid-cols-4"
       >
@@ -421,6 +430,12 @@ function BusquedaPersonas() {
         onSubmit={(e) => {
           e.preventDefault();
           ejecutarBusqueda(1);
+          trackEvent("buscar_avanzada", {
+            entidad: "personas",
+            con_termino: Boolean(termino.trim()),
+            departamento: Boolean(departamentoId),
+            con_rango_nacimiento: Boolean(fechaNacDesde || fechaNacHasta),
+          });
         }}
         className="mt-8 grid gap-5 rounded-3xl bg-white p-7 md:grid-cols-4"
       >

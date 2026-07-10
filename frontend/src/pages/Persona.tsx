@@ -1,5 +1,6 @@
 import { useQuery } from "@apollo/client/react";
 import { Link, useParams } from "react-router-dom";
+import { FlechaIcon } from "../components/FlechaIcon";
 import { GrafoPersona } from "../components/GrafoPersona";
 import { Reveal } from "../components/Reveal";
 import { SearchBox } from "../components/SearchBox";
@@ -221,7 +222,7 @@ function FilaSociedad({ sociedad: s }: { sociedad: SociedadAgrupada }) {
             to={`/sociedad/${s.sociedad.id}`}
             className="font-bold text-vino underline-offset-4 hover:underline"
           >
-            {s.sociedad.nombre} ↗
+            {s.sociedad.nombre} <FlechaIcon className="ml-1" />
           </Link>
         ) : (
           <span className="font-bold">{SIN_DATO}</span>
@@ -248,7 +249,7 @@ function FilaSociedad({ sociedad: s }: { sociedad: SociedadAgrupada }) {
             className="font-bold text-vino underline-offset-4 hover:underline"
           >
             Boletín Oficial{s.fuente.nroEdicion ? ` N.º ${s.fuente.nroEdicion}` : ""} —{" "}
-            {fecha(s.fuente.fecha)} ↗
+            {fecha(s.fuente.fecha)} <FlechaIcon className="ml-1" />
           </a>
         ) : s.fuente ? (
           <span>

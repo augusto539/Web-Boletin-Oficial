@@ -2,6 +2,7 @@ import { useQuery } from "@apollo/client/react";
 import cytoscape from "cytoscape";
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { trackEvent } from "../lib/analytics";
 import { GRAFO, type DataGrafo, type Id } from "../lib/queries";
 
 const COLORES: Record<string, string> = {
@@ -176,6 +177,7 @@ export function GrafoSociedad({ sociedadId, nombre }: { sociedadId: Id; nombre: 
       const tipo = nodo.data("tipo");
       const id = String(nodo.id()).split("-")[1];
       if (!id) return;
+      trackEvent("grafo_interaccion", { accion: "click_nodo", origen: "sociedad", tipo_destino: tipo });
       if (tipo === "sociedad") navigate(`/sociedad/${id}`);
       else if (tipo === "persona") navigate(`/persona/${id}`);
     });
@@ -263,10 +265,15 @@ export function GrafoSociedad({ sociedadId, nombre }: { sociedadId: Id; nombre: 
       level: cy.zoom() * factor,
       renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 },
     });
+    trackEvent("grafo_interaccion", {
+      accion: factor > 1 ? "zoom_in" : "zoom_out",
+      origen: "sociedad",
+    });
   }
 
   function ajustarVista() {
     cyRef.current?.fit(undefined, 40);
+    trackEvent("grafo_interaccion", { accion: "ajustar_vista", origen: "sociedad" });
   }
 
   const vacio = !loading && (data?.grafoDeSociedad.nodes.length ?? 0) === 0;

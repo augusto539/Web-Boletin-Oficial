@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { CountUp } from "../components/CountUp";
+import { FlechaIcon } from "../components/FlechaIcon";
 import { GrafoSociedad } from "../components/GrafoSociedad";
 import { Reveal } from "../components/Reveal";
 import { SearchBox } from "../components/SearchBox";
@@ -50,16 +51,25 @@ export default function Landing() {
 function Hero() {
   return (
     <section className="relative flex min-h-screen flex-col justify-center overflow-hidden bg-vino px-6 pt-24 pb-16 text-white">
-      <motion.svg
-        viewBox="0 0 100 100"
-        className="pointer-events-none absolute -right-10 -bottom-10 h-[420px] w-[420px] opacity-10"
+      {/* <motion.img
+        src="/brand/flecha-blanco.svg"
+        alt=""
+        className="pointer-events-none absolute -right-10 -bottom-10 h-[840px] w-[840px] opacity-10"
         initial={{ opacity: 0, x: -40, y: 40 }}
         animate={{ opacity: 0.1, x: 0, y: 0 }}
         transition={{ duration: 1.2, ease: "easeOut", delay: 0.5 }}
         aria-hidden="true"
-      >
-        <path d="M20 80 L70 30 M70 30 H40 M70 30 V60" stroke="white" strokeWidth="7" fill="none" />
-      </motion.svg>
+      /> */}
+      <div
+        className="dots pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.4) 1.5px, transparent 1.5px)",
+          backgroundSize: "20px 20px",
+          maskImage: "radial-gradient(black, transparent 80%)",
+          WebkitMaskImage: "radial-gradient(black, transparent 80%)",
+        }}
+        aria-hidden="true"
+      />
 
       <div className="mx-auto w-full max-w-7xl">
         <motion.p
@@ -377,7 +387,7 @@ function DatosPublicos() {
                     rel="noreferrer"
                     className="font-bold text-vino underline-offset-4 hover:underline"
                   >
-                    {f.nombre} ↗
+                    {f.nombre} <FlechaIcon className="ml-1" />
                   </a>
                 </li>
               ))}

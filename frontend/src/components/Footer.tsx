@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { FlechaIcon } from "./FlechaIcon";
 import { Logo } from "./Logo";
 import { EMAIL_BAJA_DATOS, FUENTES } from "../lib/constantes";
 
@@ -7,7 +8,7 @@ export function Footer() {
     <footer className="bg-carbon text-white">
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-14 md:grid-cols-3">
         <div>
-          <Logo claro />
+          <Logo claro variante="principal" className="h-20 w-auto" />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/60">
             Información societaria de Mendoza, estructurada a partir de fuentes públicas.
           </p>
@@ -34,7 +35,7 @@ export function Footer() {
                   rel="noreferrer"
                   className="text-white/80 underline-offset-4 hover:underline"
                 >
-                  {f.nombre} ↗
+                  {f.nombre} <FlechaIcon className="ml-1" />
                 </a>
               </li>
             ))}

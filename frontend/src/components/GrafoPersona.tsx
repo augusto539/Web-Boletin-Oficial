@@ -2,6 +2,7 @@ import { useQuery } from "@apollo/client/react";
 import cytoscape from "cytoscape";
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { trackEvent } from "../lib/analytics";
 import { GRAFO_PERSONA, type DataGrafoPersona, type Id } from "../lib/queries";
 
 const COLORES: Record<string, string> = {
@@ -132,7 +133,10 @@ export function GrafoPersona({ personaId, nombre }: { personaId: Id; nombre: str
       const nodo = evento.target;
       if (nodo.data("tipo") === "sociedad" && !nodo.data("central")) {
         const id = String(nodo.id()).split("-")[1];
-        if (id) navigate(`/sociedad/${id}`);
+        if (id) {
+          trackEvent("grafo_interaccion", { accion: "click_nodo", origen: "persona", tipo_destino: "sociedad" });
+          navigate(`/sociedad/${id}`);
+        }
       }
     });
 
@@ -208,10 +212,12 @@ export function GrafoPersona({ personaId, nombre }: { personaId: Id; nombre: str
       level: cy.zoom() * factor,
       renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 },
     });
+    trackEvent("grafo_interaccion", { accion: factor > 1 ? "zoom_in" : "zoom_out", origen: "persona" });
   }
 
   function ajustarVista() {
     cyRef.current?.fit(undefined, 40);
+    trackEvent("grafo_interaccion", { accion: "ajustar_vista", origen: "persona" });
   }
 
   const vacio = !loading && (data?.grafoDePersona.nodes.length ?? 0) === 0;

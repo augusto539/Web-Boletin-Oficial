@@ -1,5 +1,6 @@
 import { useQuery } from "@apollo/client/react";
 import { Link, useParams } from "react-router-dom";
+import { FlechaIcon } from "../components/FlechaIcon";
 import { GrafoSociedad } from "../components/GrafoSociedad";
 import { Reveal } from "../components/Reveal";
 import { SearchBox } from "../components/SearchBox";
@@ -302,7 +303,7 @@ function FilaVinculo({ vinculo: v }: { vinculo: VinculoAgrupado }) {
               to={`/persona/${v.personaFisicaByPersonaId.id}`}
               className="font-bold text-vino underline-offset-4 hover:underline"
             >
-              {v.personaFisicaByPersonaId.nombre} ↗
+              {v.personaFisicaByPersonaId.nombre} <FlechaIcon className="ml-1" />
             </Link>
             {v.personaFisicaByPersonaId.profesion && (
               <span className="block text-xs text-carbon/50">
@@ -315,7 +316,7 @@ function FilaVinculo({ vinculo: v }: { vinculo: VinculoAgrupado }) {
             to={`/sociedad/${v.sociedadBySociedadMiembroId.id}`}
             className="font-bold text-vino underline-offset-4 hover:underline"
           >
-            {v.sociedadBySociedadMiembroId.nombre} ↗
+            {v.sociedadBySociedadMiembroId.nombre} <FlechaIcon className="ml-1" />
           </Link>
         ) : (
           <>
@@ -443,7 +444,8 @@ function ItemActo({ acto }: { acto: ActoAgrupado }) {
                   rel="noreferrer"
                   className="font-bold text-vino underline-offset-4 hover:underline"
                 >
-                  Boletín Oficial{f.nroEdicion ? ` N.º ${f.nroEdicion}` : ""} — {fecha(f.fecha)} ↗
+                  Boletín Oficial{f.nroEdicion ? ` N.º ${f.nroEdicion}` : ""} — {fecha(f.fecha)}{" "}
+                  <FlechaIcon className="ml-1" />
                 </a>
               ) : (
                 <span>

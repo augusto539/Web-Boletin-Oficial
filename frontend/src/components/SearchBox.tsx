@@ -1,6 +1,8 @@
 import { useLazyQuery } from "@apollo/client/react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { trackEvent } from "../lib/analytics";
+import { FlechaIcon } from "./FlechaIcon";
 import {
   BUSCAR_SOCIEDADES,
   BUSCAR_SOCIEDADES_POR_CUIT,
@@ -52,6 +54,11 @@ export function SearchBox({
         buscarPorCuit({ variables: { termino: limpio } });
       }
       setAbierto(true);
+      trackEvent("buscar", {
+        modo,
+        ubicacion: sobreOscuro ? "landing" : "nav",
+        longitud_termino: limpio.length,
+      });
     }, 250);
     return () => clearTimeout(timer);
   }, [termino, modo, buscarPorNombre, buscarPorCuit]);
@@ -161,7 +168,7 @@ export function SearchBox({
               sobreOscuro ? "text-white/70 hover:text-white" : "text-carbon/60 hover:text-vino"
             }`}
           >
-            Búsqueda avanzada →
+            Búsqueda avanzada <FlechaIcon className="ml-1" />
           </Link>
         </div>
       )}

@@ -1,10 +1,13 @@
 import { useQuery } from "@apollo/client/react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { FlechaIcon } from "../components/FlechaIcon";
 import {
   obtenerEstadisticasAdmin,
+  obtenerLeadsAdmin,
   obtenerUsuariosAdmin,
   type EstadisticasAdmin,
+  type LeadAdmin,
   type UsuarioAdmin,
 } from "../lib/adminApi";
 import { cuit as formatCuit, dato, fecha } from "../lib/format";
@@ -107,12 +110,13 @@ function TabEstadisticas() {
 
 const POR_PAGINA = 100;
 
-type SubPestana = "sociedades" | "personas" | "usuarios";
+type SubPestana = "sociedades" | "personas" | "usuarios" | "leads";
 
 const SUBPESTANAS: { id: SubPestana; etiqueta: string }[] = [
   { id: "sociedades", etiqueta: "Sociedades" },
   { id: "personas", etiqueta: "Personas físicas" },
   { id: "usuarios", etiqueta: "Usuarios" },
+  { id: "leads", etiqueta: "Leads" },
 ];
 
 function TabDatos() {
@@ -138,6 +142,7 @@ function TabDatos() {
       {sub === "sociedades" && <TablaSociedades />}
       {sub === "personas" && <TablaPersonas />}
       {sub === "usuarios" && <TablaUsuarios />}
+      {sub === "leads" && <TablaLeads />}
     </div>
   );
 }
@@ -171,7 +176,7 @@ function Paginador({
         onClick={() => onCambiar(pagina + 1)}
         className="cursor-pointer rounded-full bg-white px-5 py-2 text-sm font-bold text-carbon disabled:cursor-not-allowed disabled:opacity-40"
       >
-        Siguiente →
+        Siguiente <FlechaIcon className="ml-1" />
       </button>
     </div>
   );
@@ -335,6 +340,53 @@ function TablaUsuarios() {
                 <td className="py-3 pr-4 font-bold">{u.nombre}</td>
                 <td className="py-3 pr-4">{u.mail}</td>
                 <td className="py-3">{fecha(u.creadoEl.slice(0, 10))}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <Paginador pagina={pagina} totalPaginas={totalPaginas} onCambiar={setPagina} />
+    </div>
+  );
+}
+
+function TablaLeads() {
+  const [pagina, setPagina] = useState(1);
+  const [datos, setDatos] = useState<{ total: number; leads: LeadAdmin[] }>({
+    total: 0,
+    leads: [],
+  });
+  const [cargando, setCargando] = useState(true);
+
+  useEffect(() => {
+    setCargando(true);
+    obtenerLeadsAdmin(POR_PAGINA, (pagina - 1) * POR_PAGINA)
+      .then(setDatos)
+      .finally(() => setCargando(false));
+  }, [pagina]);
+
+  const totalPaginas = Math.ceil(datos.total / POR_PAGINA);
+
+  return (
+    <div className="rounded-3xl bg-white p-7">
+      <p className="mb-4 text-sm text-carbon/50">
+        {cargando
+          ? "Cargando…"
+          : `Mostrando ${datos.leads.length} de ${datos.total.toLocaleString("es-AR")}`}
+      </p>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[400px] text-left text-sm">
+          <thead>
+            <tr className="border-b border-carbon/10 text-xs uppercase tracking-widest text-carbon/50">
+              <th className="py-3 pr-4">Mail</th>
+              <th className="py-3">Creado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {datos.leads.map((l) => (
+              <tr key={l.id} className="border-b border-carbon/5 last:border-0">
+                <td className="py-3 pr-4 font-bold">{l.mail}</td>
+                <td className="py-3">{fecha(l.creadoEl.slice(0, 10))}</td>
               </tr>
             ))}
           </tbody>

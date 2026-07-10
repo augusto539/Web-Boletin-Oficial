@@ -36,3 +36,21 @@ adminRouter.get("/usuarios", async (req: Request, res: Response) => {
     usuarios: rows.map((u) => ({ id: u.id, nombre: u.nombre, mail: u.mail, creadoEl: u.creado_el })),
   });
 });
+
+adminRouter.get("/leads", async (req: Request, res: Response) => {
+  const limite = Math.min(Number(req.query.limit) || 100, 500);
+  const offset = Number(req.query.offset) || 0;
+
+  const [{ rows: totalRows }, { rows }] = await Promise.all([
+    pool().query<{ count: string }>("SELECT count(*) FROM leads_informe"),
+    pool().query<{ id: string; mail: string; creado_el: string }>(
+      "SELECT id, mail, creado_el FROM leads_informe ORDER BY creado_el DESC LIMIT $1 OFFSET $2",
+      [limite, offset],
+    ),
+  ]);
+
+  return res.json({
+    total: Number(totalRows[0].count),
+    leads: rows.map((l) => ({ id: l.id, mail: l.mail, creadoEl: l.creado_el })),
+  });
+});

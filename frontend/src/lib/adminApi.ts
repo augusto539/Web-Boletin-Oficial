@@ -12,6 +12,12 @@ export interface UsuarioAdmin {
   creadoEl: string;
 }
 
+export interface LeadAdmin {
+  id: string;
+  mail: string;
+  creadoEl: string;
+}
+
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${API}${path}`, { credentials: "include" });
   if (!res.ok) throw new Error(`Error ${res.status} pidiendo ${path}`);
@@ -27,4 +33,11 @@ export function obtenerUsuariosAdmin(
   offset: number,
 ): Promise<{ total: number; usuarios: UsuarioAdmin[] }> {
   return get(`/api/admin/usuarios?limit=${first}&offset=${offset}`);
+}
+
+export function obtenerLeadsAdmin(
+  first: number,
+  offset: number,
+): Promise<{ total: number; leads: LeadAdmin[] }> {
+  return get(`/api/admin/leads?limit=${first}&offset=${offset}`);
 }

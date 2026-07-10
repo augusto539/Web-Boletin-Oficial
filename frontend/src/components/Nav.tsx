@@ -47,7 +47,7 @@ export function Nav() {
     >
       <nav className="mx-auto flex h-18 max-w-7xl items-center justify-between px-6">
         <Link to="/" aria-label="INGcome, inicio">
-          <Logo claro={claro} />
+          <Logo claro={claro} className="h-25 w-auto" />
         </Link>
 
         <div className="hidden items-center gap-8 md:flex">
@@ -59,14 +59,14 @@ export function Nav() {
           >
             Búsqueda avanzada
           </Link>
-          <Link
+          {/* <Link
             to="/notificaciones"
             className={`text-sm transition-opacity hover:opacity-70 ${
               claro ? "text-white" : "text-carbon"
             }`}
           >
             Notificaciones
-          </Link>
+          </Link> desactivado por ahora */}
           {SECCIONES.map((s) => (
             <button
               key={s.id}
