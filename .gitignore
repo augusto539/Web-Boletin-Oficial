@@ -1,0 +1,20 @@
+node_modules/
+dist/
+build/
+
+.env
+.env.local
+.env.*.local
+
+*.log
+.DS_Store
+
+.vscode/
+.idea/
+
+*.pem
+*.key
+
+# Manual de marca: 192MB, no es código y GitHub rechaza archivos >100MB.
+# Guardarlo aparte (Drive/Notion/etc.), no en el repo.
+MANUAL DE MARCA.pdf

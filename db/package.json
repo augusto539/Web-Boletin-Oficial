@@ -1,0 +1,19 @@
+{
+  "name": "db",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "migrate": "tsx migrate.ts",
+    "seed": "tsx seed.ts"
+  },
+  "dependencies": {
+    "pg": "^8.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/pg": "^8.11.10",
+    "dotenv": "^16.4.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

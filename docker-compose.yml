@@ -1,0 +1,81 @@
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: boletin_sociedades
+      POSTGRES_USER: boletin_admin
+      POSTGRES_PASSWORD: boletin_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - boletin_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U boletin_admin -d boletin_sociedades"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    image: node:22-alpine
+    working_dir: /app
+    # Instala (workspaces completo, como en local) y levanta PostGraphile con
+    # recarga automática al cambiar archivos.
+    command: sh -c "npm install && npm run dev --workspace backend"
+    ports:
+      - "5050:5050"
+    environment:
+      # Dentro de la red de docker compose, Postgres se resuelve por el
+      # nombre del servicio, no por localhost.
+      DATABASE_URL: postgres://boletin_admin:boletin_dev_password@postgres:5432/boletin_sociedades
+      DATABASE_URL_API: postgres://boletin_api:boletin_api_dev_password@postgres:5432/boletin_sociedades
+      DATABASE_URL_AUTH: postgres://boletin_auth:boletin_auth_dev_password@postgres:5432/boletin_sociedades
+      JWT_SECRET: dev_jwt_secret_cambiar_en_produccion
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      MAIL_FROM: "INGcome <onboarding@resend.dev>"
+      FRONTEND_URL: http://localhost:5173
+      PORT: 5050
+      CORS_ORIGIN: http://localhost:5173
+      NODE_ENV: development
+    volumes:
+      - .:/app
+      # node_modules se aísla del host en volúmenes propios: los binarios
+      # nativos (esbuild, etc.) instalados en tu Mac no sirven dentro del
+      # contenedor Linux, y viceversa.
+      - backend_root_deps:/app/node_modules
+      - backend_ws_deps:/app/backend/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    image: node:22-alpine
+    working_dir: /app
+    # --host para que Vite escuche en 0.0.0.0: por defecto solo escucha en
+    # localhost, que dentro del contenedor no es alcanzable desde el host.
+    command: sh -c "npm install && npm run dev --workspace frontend -- --host"
+    ports:
+      - "5173:5173"
+    environment:
+      NODE_ENV: development
+    volumes:
+      - .:/app
+      - frontend_root_deps:/app/node_modules
+      - frontend_ws_deps:/app/frontend/node_modules
+    depends_on:
+      - backend
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5080:80"
+
+volumes:
+  boletin_pg_data:
+  backend_root_deps:
+  backend_ws_deps:
+  frontend_root_deps:
+  frontend_ws_deps:

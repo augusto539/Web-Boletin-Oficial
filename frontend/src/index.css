@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+/* Tokens de marca según MANUAL DE MARCA.pdf (INGcome Consultora):
+   rojo #691824, gris #191D20, gris claro #EFEFEF, blanco; tipografía Arial
+   (títulos bold en oración, textos regular). */
+@theme {
+  --color-vino: #691824;
+  --color-vino-oscuro: #4a0f19;
+  --color-vino-claro: #8a2433;
+  --color-carbon: #191d20;
+  --color-humo: #efefef;
+
+  --font-sans: Arial, Helvetica, sans-serif;
+}
+
+html {
+  scroll-behavior: auto; /* el scroll suave lo maneja Lenis */
+}
+
+body {
+  @apply bg-white font-sans text-carbon antialiased;
+}
+
+/* Ticker/marquee continuo estilo ventriloc */
+@keyframes ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-ticker {
+  animation: ticker 28s linear infinite;
+}

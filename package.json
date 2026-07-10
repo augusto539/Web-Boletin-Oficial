@@ -1,0 +1,17 @@
+{
+  "name": "boletin-sociedades",
+  "private": true,
+  "workspaces": [
+    "db",
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "migrate": "npm run migrate --workspace db",
+    "seed": "npm run seed --workspace db",
+    "dev:backend": "npm run dev --workspace backend",
+    "dev:front": "npm run dev --workspace frontend"
+  }
+}
