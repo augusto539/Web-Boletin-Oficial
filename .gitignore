@@ -15,6 +15,8 @@ build/
 *.pem
 *.key
 
-# Manual de marca: 192MB, no es código y GitHub rechaza archivos >100MB.
-# Guardarlo aparte (Drive/Notion/etc.), no en el repo.
+# Manual de marca (PDF 192MB, AI 423MB): no son código y GitHub rechaza
+# archivos >100MB. Guardarlos aparte (Drive/Notion/etc.), no en el repo.
+# El patrón sin ruta cubre tanto la copia en la raíz como la de grafica/.
 MANUAL DE MARCA.pdf
+MANUAL DE MARCA.ai
