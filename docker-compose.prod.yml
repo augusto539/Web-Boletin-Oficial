@@ -1,0 +1,75 @@
+# Compose de producción: usa la imagen ya construida (no bind-mounts de
+# código ni npm install al vuelo, a diferencia de docker-compose.yml que es
+# de desarrollo). Se corre en el servidor de Oracle Cloud con:
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Variables sensibles (contraseñas, JWT_SECRET, RESEND_API_KEY) viven SOLO en
+# el .env del servidor (nunca en el repo) — ver .env.production.example.
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: boletin_sociedades
+      POSTGRES_USER: boletin_admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?falta POSTGRES_PASSWORD en el .env}
+    # Sin "ports": no se expone al host ni a internet, solo accesible por los
+    # demás servicios a través de la red interna de docker compose.
+    volumes:
+      - boletin_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U boletin_admin -d boletin_sociedades"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    image: ${APP_IMAGE:-ghcr.io/augusto539/web-boletin-oficial:latest}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://boletin_admin:${POSTGRES_PASSWORD:?falta POSTGRES_PASSWORD en el .env}@postgres:5432/boletin_sociedades
+      DATABASE_URL_API: postgres://boletin_api:${BOLETIN_API_PASSWORD:?falta BOLETIN_API_PASSWORD en el .env}@postgres:5432/boletin_sociedades
+      DATABASE_URL_AUTH: postgres://boletin_auth:${BOLETIN_AUTH_PASSWORD:?falta BOLETIN_AUTH_PASSWORD en el .env}@postgres:5432/boletin_sociedades
+      JWT_SECRET: ${JWT_SECRET:?falta JWT_SECRET en el .env}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      MAIL_FROM: ${MAIL_FROM:-INGcome <onboarding@resend.dev>}
+      FRONTEND_URL: ${SITE_URL}
+      SITE_URL: ${SITE_URL}
+      CORS_ORIGIN: ${SITE_URL}
+      PORT: 5050
+      NODE_ENV: production
+      # VITE_GA_ID / VITE_API_URL / VITE_GRAPHQL_URL NO van acá: Vite las
+      # incrusta en el JS al buildear la imagen (ver ARG VITE_GA_ID en el
+      # Dockerfile), no las lee en runtime — setearlas acá no tendría efecto.
+    # Solo puerto interno; Caddy es el único que habla con el mundo (ver
+    # deploy/Caddyfile) y lo alcanza por el nombre de servicio "app".
+    expose:
+      - "5050"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5050/robots.txt').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+volumes:
+  boletin_pg_data:
+  caddy_data:
+  caddy_config:

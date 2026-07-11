@@ -1,0 +1,102 @@
+name: Deploy a producción
+
+# Se dispara al mergear a main. push a otras ramas / PRs no deployan nada.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {} # permite re-disparar un deploy a mano desde la UI de Actions
+
+env:
+  IMAGE: ghcr.io/augusto539/web-boletin-oficial
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build --workspace backend
+      - run: npx tsc -b
+        working-directory: frontend
+
+  build-and-push:
+    needs: checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          # Vite necesita el GA ID en build-time (ver Dockerfile). Definilo
+          # como Repository Variable (Settings → Secrets and variables →
+          # Actions → Variables) si querés analytics en prod; si no está,
+          # queda vacío y listo.
+          build-args: |
+            VITE_GA_ID=${{ vars.VITE_GA_ID }}
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Desplegar en el servidor por SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.ORACLE_HOST }}
+          username: ${{ secrets.ORACLE_SSH_USER }}
+          key: ${{ secrets.ORACLE_SSH_KEY }}
+          port: ${{ secrets.ORACLE_SSH_PORT || 22 }}
+          script_stop: true
+          envs: GHCR_USER,GHCR_TOKEN,IMAGE_TAG
+          script: |
+            set -e
+            cd ~/app
+
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+
+            # docker-compose.prod.yml usa ${APP_IMAGE:-...:latest} por default;
+            # acá lo fijamos al SHA recién buildeado para que el deploy sea
+            # reproducible (y quede como referencia si hay que hacer rollback
+            # a mano a un SHA anterior editando el .env del servidor).
+            export APP_IMAGE="$IMAGE_TAG"
+
+            docker compose -f docker-compose.prod.yml pull app
+            docker compose -f docker-compose.prod.yml run --rm app npm run migrate --workspace db
+            docker compose -f docker-compose.prod.yml up -d
+
+            # Espera a que el healthcheck del contenedor pase antes de dar el
+            # deploy por bueno; si no, el step falla y el commit queda
+            # marcado en rojo en GitHub.
+            for i in $(seq 1 15); do
+              status=$(docker inspect -f '{{.State.Health.Status}}' "$(docker compose -f docker-compose.prod.yml ps -q app)")
+              [ "$status" = "healthy" ] && echo "app healthy" && break
+              [ "$i" = "15" ] && echo "timeout esperando healthcheck" && exit 1
+              sleep 2
+            done
+
+            docker image prune -f
+        env:
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_TAG: ${{ env.IMAGE }}:${{ github.sha }}

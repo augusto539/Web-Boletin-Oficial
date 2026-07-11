@@ -1,0 +1,25 @@
+node_modules
+**/node_modules
+dist
+**/dist
+build
+**/build
+
+.git
+.github
+
+.env
+.env.local
+.env.*.local
+docker-compose.yml
+docker-compose.prod.yml
+
+*.log
+.DS_Store
+.vscode
+.idea
+
+docs
+Grafica
+MANUAL DE MARCA.pdf
+MANUAL DE MARCA.ai
