@@ -3,7 +3,9 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FlechaIcon } from "../components/FlechaIcon";
 import { trackEvent } from "../lib/analytics";
+import { useAuth } from "../lib/auth";
 import { cuit as formatCuit, dato, fecha, hoyISO } from "../lib/format";
+import { registrarBusqueda } from "../lib/historialApi";
 import {
   BUSCAR_PERSONAS_AVANZADO,
   BUSCAR_SOCIEDADES_AVANZADO,
@@ -95,6 +97,7 @@ function Paginador({
 }
 
 function BusquedaSociedades() {
+  const { usuario } = useAuth();
   const [hoy] = useState(hoyISO);
   const [termino, setTermino] = useState("");
   const [grupoClae, setGrupoClae] = useState("");
@@ -112,7 +115,7 @@ function BusquedaSociedades() {
 
   function ejecutarBusqueda(paginaDestino = 1) {
     setPagina(paginaDestino);
-    buscar({
+    return buscar({
       variables: {
         termino: termino.trim() || undefined,
         grupoClae: grupoClae || undefined,
@@ -160,7 +163,11 @@ function BusquedaSociedades() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          ejecutarBusqueda(1);
+          ejecutarBusqueda(1).then((resultado) => {
+            if (!usuario) return;
+            const cantidad = resultado.data?.buscarSociedadesAvanzado.totalCount ?? 0;
+            registrarBusqueda("sociedad_avanzada", termino.trim() || null, cantidad);
+          });
           trackEvent("buscar_avanzada", {
             entidad: "sociedades",
             con_termino: Boolean(termino.trim()),
@@ -378,6 +385,7 @@ function BusquedaSociedades() {
 }
 
 function BusquedaPersonas() {
+  const { usuario } = useAuth();
   const [termino, setTermino] = useState("");
   const [departamentoId, setDepartamentoId] = useState("");
   const [fechaNacDesde, setFechaNacDesde] = useState("");
@@ -390,7 +398,7 @@ function BusquedaPersonas() {
 
   function ejecutarBusqueda(paginaDestino = 1) {
     setPagina(paginaDestino);
-    buscar({
+    return buscar({
       variables: {
         termino: termino.trim() || undefined,
         departamentoId: departamentoId ? Number(departamentoId) : undefined,
@@ -429,7 +437,11 @@ function BusquedaPersonas() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          ejecutarBusqueda(1);
+          ejecutarBusqueda(1).then((resultado) => {
+            if (!usuario) return;
+            const cantidad = resultado.data?.buscarPersonasAvanzado.totalCount ?? 0;
+            registrarBusqueda("persona_avanzada", termino.trim() || null, cantidad);
+          });
           trackEvent("buscar_avanzada", {
             entidad: "personas",
             con_termino: Boolean(termino.trim()),

@@ -4,7 +4,7 @@ export function Logo({
   className = "h-9 w-auto",
 }: {
   claro?: boolean;
-  variante?: "horizontal" | "principal";
+  variante?: "horizontal" | "principal" | "imagotipo";
   className?: string;
 }) {
   const src = claro ? `/brand/${variante}-blanco.svg` : `/brand/${variante}-color.svg`;

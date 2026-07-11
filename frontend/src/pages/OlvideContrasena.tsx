@@ -33,7 +33,7 @@ export default function OlvideContrasena() {
     <main className="flex min-h-screen items-center justify-center bg-humo px-6 pt-20 pb-10">
       <div className="w-full max-w-md rounded-3xl bg-white p-10 shadow-xl shadow-carbon/5">
         <Link to="/" className="mb-8 block w-fit">
-          <Logo />
+          <Logo variante="imagotipo" className="h-5 w-auto" />
         </Link>
         <h1 className="text-3xl font-bold">Recuperar contraseña</h1>
         <p className="mt-2 text-sm text-carbon/60">

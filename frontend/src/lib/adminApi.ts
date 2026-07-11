@@ -9,6 +9,8 @@ export interface UsuarioAdmin {
   id: string;
   nombre: string;
   mail: string;
+  plan: string;
+  admin: boolean;
   creadoEl: string;
 }
 
@@ -18,8 +20,27 @@ export interface LeadAdmin {
   creadoEl: string;
 }
 
+export interface HistorialItem {
+  id: string;
+  tipo: string;
+  termino: string | null;
+  resultados: number;
+  creadoEl: string;
+}
+
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${API}${path}`, { credentials: "include" });
+  if (!res.ok) throw new Error(`Error ${res.status} pidiendo ${path}`);
+  return res.json();
+}
+
+async function patch<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${API}${path}`, {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
   if (!res.ok) throw new Error(`Error ${res.status} pidiendo ${path}`);
   return res.json();
 }
@@ -40,4 +61,20 @@ export function obtenerLeadsAdmin(
   offset: number,
 ): Promise<{ total: number; leads: LeadAdmin[] }> {
   return get(`/api/admin/leads?limit=${first}&offset=${offset}`);
+}
+
+export function obtenerUsuarioAdmin(id: string): Promise<{ usuario: UsuarioAdmin }> {
+  return get(`/api/admin/usuarios/${id}`);
+}
+
+export function alternarAdminUsuario(id: string, admin: boolean): Promise<{ usuario: UsuarioAdmin }> {
+  return patch(`/api/admin/usuarios/${id}/admin`, { admin });
+}
+
+export function obtenerHistorialUsuario(
+  id: string,
+  first: number,
+  offset: number,
+): Promise<{ total: number; historial: HistorialItem[] }> {
+  return get(`/api/admin/usuarios/${id}/historial?limit=${first}&offset=${offset}`);
 }

@@ -16,8 +16,10 @@ import { scrollToSection } from "../lib/scroll";
 
 // Sociedad real con red rica (19 vínculos) que usamos como demo en vivo del
 // grafo — no es un mock, es el mismo componente que ve cualquier usuario en
-// /sociedad/1051.
-const SOCIEDAD_DEMO_ID = "1051";
+// /sociedad/987. OJO: el id es un valor concreto de la base actual; si se
+// recarga/repuebla la base los ids pueden cambiar y hay que actualizarlo acá
+// (buscar "Grupo Mdd S.A.S." y usar su id nuevo).
+const SOCIEDAD_DEMO_ID = "987";
 const SOCIEDAD_DEMO_NOMBRE = "Grupo Mdd S.A.S.";
 
 const API = import.meta.env.VITE_API_URL ?? "http://localhost:5050";
@@ -216,6 +218,15 @@ function QueEncontras() {
             </p>
             <div className="mt-6">
               <GrafoSociedad sociedadId={SOCIEDAD_DEMO_ID} nombre={SOCIEDAD_DEMO_NOMBRE} />
+            </div>
+            <div className="mt-5 text-right">
+              <Link
+                to={`/exploracion/sociedad/${SOCIEDAD_DEMO_ID}`}
+                state={{ nombre: SOCIEDAD_DEMO_NOMBRE }}
+                className="inline-block cursor-pointer rounded-full bg-vino px-5 py-2.5 text-sm font-bold text-white transition-transform hover:scale-105"
+              >
+                Ver red completa
+              </Link>
             </div>
           </div>
         </Reveal>

@@ -123,7 +123,7 @@ export function GrafoPersona({ personaId, nombre }: { personaId: Id; nombre: str
         animate: false,
         padding: 40,
         idealEdgeLength: 32 * 2,
-        nodeRepulsion: 4048,
+        nodeRepulsion: 200048,
       },
     });
     cyRef.current = cy;

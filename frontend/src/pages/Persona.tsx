@@ -126,10 +126,19 @@ export default function Persona() {
         <Reveal>
           <section>
             <TituloSeccion>Red de vínculos</TituloSeccion>
-            <p className="mb-6 -mt-4 text-carbon/60">
-              Sociedades de las que {persona.nombre} es o fue socia. Hacé click en una sociedad
-              para ver su ficha.
-            </p>
+            <div className="mb-6 -mt-4 flex flex-wrap items-end justify-between gap-4">
+              <p className="text-carbon/60">
+                Sociedades de las que {persona.nombre} es o fue socia. Hacé click en una sociedad
+                para ver su ficha.
+              </p>
+              <Link
+                to={`/exploracion/persona/${persona.id}`}
+                state={{ nombre: persona.nombre }}
+                className="shrink-0 cursor-pointer rounded-full bg-vino px-5 py-2.5 text-sm font-bold text-white transition-transform hover:scale-105"
+              >
+                Ver red completa
+              </Link>
+            </div>
             <GrafoPersona personaId={persona.id} nombre={persona.nombre} />
           </section>
         </Reveal>
@@ -169,7 +178,7 @@ interface SociedadAgrupada {
   porcentaje: string | null;
   fechaEntrada: string | null;
   fechaSalida: string | null;
-  fuente: { fecha: string; nroEdicion: string | null; enlace: string | null } | null;
+  fuente: { fecha: string; enlace: string | null } | null;
 }
 
 function agruparSociedades(vinculos: VinculoPersona[]): SociedadAgrupada[] {
@@ -180,7 +189,7 @@ function agruparSociedades(vinculos: VinculoPersona[]): SociedadAgrupada[] {
     const rol = v.rolByRolId?.nombre;
     const boletin = v.actoByActoAltaId?.boletinByBoletinId;
     const fuente = boletin
-      ? { fecha: boletin.fecha, nroEdicion: boletin.nroEdicion, enlace: enlaceBoletin(boletin) }
+      ? { fecha: boletin.fecha, enlace: enlaceBoletin(boletin) }
       : null;
 
     const existente = grupos.get(clave);
@@ -248,14 +257,10 @@ function FilaSociedad({ sociedad: s }: { sociedad: SociedadAgrupada }) {
             rel="noreferrer"
             className="font-bold text-vino underline-offset-4 hover:underline"
           >
-            Boletín Oficial{s.fuente.nroEdicion ? ` N.º ${s.fuente.nroEdicion}` : ""} —{" "}
-            {fecha(s.fuente.fecha)} <FlechaIcon className="ml-1" />
+            Boletín Oficial — {fecha(s.fuente.fecha)} <FlechaIcon className="ml-1" />
           </a>
         ) : s.fuente ? (
-          <span>
-            Boletín Oficial{s.fuente.nroEdicion ? ` N.º ${s.fuente.nroEdicion}` : ""} —{" "}
-            {fecha(s.fuente.fecha)}
-          </span>
+          <span>Boletín Oficial — {fecha(s.fuente.fecha)}</span>
         ) : (
           SIN_DATO
         )}

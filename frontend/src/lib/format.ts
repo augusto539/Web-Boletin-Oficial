@@ -48,9 +48,8 @@ export function cuit(valor: string | null | undefined): string {
 }
 
 // El visor de PDF del Boletín Oficial de Mendoza arma la URL con el id_pdf
-// de esa edición; `url` casi siempre viene vacío en la base real.
-export function enlaceBoletin(boletin: { url: string | null; idPdf: string | null }): string | null {
-  if (boletin.url) return boletin.url;
+// de esa edición (la tabla boletines solo guarda id_pdf, no una URL directa).
+export function enlaceBoletin(boletin: { idPdf: string | null }): string | null {
   if (boletin.idPdf) return `https://boe.mendoza.gov.ar/default/public/publico/verpdf/${boletin.idPdf}`;
   return null;
 }

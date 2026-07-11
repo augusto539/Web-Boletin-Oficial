@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FlechaIcon } from "../components/FlechaIcon";
 import {
+  alternarAdminUsuario,
   obtenerEstadisticasAdmin,
   obtenerLeadsAdmin,
   obtenerUsuariosAdmin,
@@ -316,6 +317,20 @@ function TablaUsuarios() {
       .finally(() => setCargando(false));
   }, [pagina]);
 
+  function alAlternarAdmin(usuario: UsuarioAdmin) {
+    setDatos((d) => ({
+      ...d,
+      usuarios: d.usuarios.map((u) => (u.id === usuario.id ? { ...u, admin: !u.admin } : u)),
+    }));
+    alternarAdminUsuario(usuario.id, !usuario.admin).catch(() => {
+      // Si falla (ej. intentar auto-degradarse), se revierte el cambio optimista.
+      setDatos((d) => ({
+        ...d,
+        usuarios: d.usuarios.map((u) => (u.id === usuario.id ? { ...u, admin: usuario.admin } : u)),
+      }));
+    });
+  }
+
   const totalPaginas = Math.ceil(datos.total / POR_PAGINA);
 
   return (
@@ -326,20 +341,41 @@ function TablaUsuarios() {
           : `Mostrando ${datos.usuarios.length} de ${datos.total.toLocaleString("es-AR")}`}
       </p>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[600px] text-left text-sm">
+        <table className="w-full min-w-[700px] text-left text-sm">
           <thead>
             <tr className="border-b border-carbon/10 text-xs uppercase tracking-widest text-carbon/50">
               <th className="py-3 pr-4">Nombre</th>
               <th className="py-3 pr-4">Mail</th>
-              <th className="py-3">Creado</th>
+              <th className="py-3 pr-4">Creado</th>
+              <th className="py-3">Admin</th>
             </tr>
           </thead>
           <tbody>
             {datos.usuarios.map((u) => (
               <tr key={u.id} className="border-b border-carbon/5 last:border-0">
-                <td className="py-3 pr-4 font-bold">{u.nombre}</td>
+                <td className="py-3 pr-4 font-bold">
+                  <Link
+                    to={`/admin/usuarios/${u.id}`}
+                    className="text-vino underline-offset-4 hover:underline"
+                  >
+                    {u.nombre}
+                  </Link>
+                </td>
                 <td className="py-3 pr-4">{u.mail}</td>
-                <td className="py-3">{fecha(u.creadoEl.slice(0, 10))}</td>
+                <td className="py-3 pr-4">{fecha(u.creadoEl.slice(0, 10))}</td>
+                <td className="py-3">
+                  <button
+                    type="button"
+                    onClick={() => alAlternarAdmin(u)}
+                    className={`cursor-pointer rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${
+                      u.admin
+                        ? "bg-vino text-white hover:bg-vino-oscuro"
+                        : "bg-humo text-carbon/60 hover:bg-carbon/10"
+                    }`}
+                  >
+                    {u.admin ? "Quitar admin" : "Dar admin"}
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>

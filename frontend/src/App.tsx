@@ -6,9 +6,12 @@ import { RutaAdmin } from "./components/RutaAdmin";
 import { iniciarAnalytics, trackPageview } from "./lib/analytics";
 import { lenis } from "./lib/scroll";
 import Admin from "./pages/Admin";
+import AdminUsuario from "./pages/AdminUsuario";
 import BusquedaAvanzada from "./pages/BusquedaAvanzada";
+import Exploracion from "./pages/Exploracion";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
+import NotFound from "./pages/NotFound";
 // import Notificaciones from "./pages/Notificaciones"; // desactivado por ahora
 import OlvideContrasena from "./pages/OlvideContrasena";
 import Persona from "./pages/Persona";
@@ -43,6 +46,8 @@ export default function App() {
         <Route path="/sociedad/:id" element={<Sociedad />} />
         <Route path="/persona/:id" element={<Persona />} />
         <Route path="/busqueda-avanzada" element={<BusquedaAvanzada />} />
+        <Route path="/exploracion" element={<Exploracion />} />
+        <Route path="/exploracion/:tipo/:id" element={<Exploracion />} />
         {/* <Route path="/notificaciones" element={<Notificaciones />} /> desactivado por ahora */}
         <Route path="/terminos" element={<Terminos />} />
         <Route path="/privacidad" element={<Privacidad />} />
@@ -54,8 +59,17 @@ export default function App() {
             </RutaAdmin>
           }
         />
+        <Route
+          path="/admin/usuarios/:id"
+          element={
+            <RutaAdmin>
+              <AdminUsuario />
+            </RutaAdmin>
+          }
+        />
+        <Route path="*" element={<NotFound />} />
       </Routes>
-      <Footer />
+      {!pathname.startsWith("/exploracion") && <Footer />}
     </>
   );
 }

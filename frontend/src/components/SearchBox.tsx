@@ -2,6 +2,8 @@ import { useLazyQuery } from "@apollo/client/react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { trackEvent } from "../lib/analytics";
+import { useAuth } from "../lib/auth";
+import { registrarBusqueda } from "../lib/historialApi";
 import { FlechaIcon } from "./FlechaIcon";
 import {
   BUSCAR_SOCIEDADES,
@@ -31,6 +33,7 @@ export function SearchBox({
   const [abierto, setAbierto] = useState(false);
   const contenedor = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { usuario } = useAuth();
 
   const [buscarPorNombre, porNombre] = useLazyQuery<DataBusqueda>(BUSCAR_SOCIEDADES);
   const [buscarPorCuit, porCuit] = useLazyQuery<DataBusquedaPorCuit>(BUSCAR_SOCIEDADES_POR_CUIT);
@@ -48,20 +51,28 @@ export function SearchBox({
       return;
     }
     const timer = setTimeout(() => {
-      if (modo === "nombre") {
-        buscarPorNombre({ variables: { termino: limpio } });
-      } else {
-        buscarPorCuit({ variables: { termino: limpio } });
-      }
       setAbierto(true);
       trackEvent("buscar", {
         modo,
         ubicacion: sobreOscuro ? "landing" : "nav",
         longitud_termino: limpio.length,
       });
+      if (modo === "nombre") {
+        buscarPorNombre({ variables: { termino: limpio } }).then((resultado) => {
+          if (!usuario) return;
+          const cantidad = resultado.data?.buscarSociedades.nodes.length ?? 0;
+          registrarBusqueda("sociedad_nombre", limpio, cantidad);
+        });
+      } else {
+        buscarPorCuit({ variables: { termino: limpio } }).then((resultado) => {
+          if (!usuario) return;
+          const cantidad = resultado.data?.buscarSociedadesPorCuit.nodes.length ?? 0;
+          registrarBusqueda("sociedad_cuit", limpio, cantidad);
+        });
+      }
     }, 250);
     return () => clearTimeout(timer);
-  }, [termino, modo, buscarPorNombre, buscarPorCuit]);
+  }, [termino, modo, buscarPorNombre, buscarPorCuit, usuario]);
 
   useEffect(() => {
     function alClickearAfuera(e: MouseEvent) {

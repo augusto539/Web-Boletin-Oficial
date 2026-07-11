@@ -325,26 +325,42 @@ declare module "express-serve-static-core" {
   }
 }
 
+// Compartido por requireUsuario() y requireAdmin(): nunca confía en los
+// claims del JWT más allá del id (sub), siempre relee la base para que
+// plan/admin estén frescos (clave para que una promoción/degradación a admin
+// surta efecto en el próximo request, no recién cuando expire el access token).
+async function usuarioDesdeToken(token: unknown): Promise<UsuarioRow | null> {
+  if (typeof token !== "string" || !token) return null;
+  let sub: string;
+  try {
+    const payload = jwt.verify(token, jwtSecret()) as { sub?: string };
+    if (!payload.sub) throw new Error("sin sub");
+    sub = payload.sub;
+  } catch {
+    return null;
+  }
+
+  const { rows } = await pool().query<UsuarioRow>(
+    "SELECT id, mail, contrasena_hash, nombre, plan, admin FROM usuarios WHERE id = $1",
+    [sub],
+  );
+  return rows[0] ?? null;
+}
+
+// Guard para rutas que solo requieren sesión (cualquier usuario logueado),
+// como registrar historial de búsquedas.
+export function requireUsuario() {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    const fila = await usuarioDesdeToken(req.cookies?.access_token);
+    if (!fila) return res.status(401).json({ error: "Sin sesión." });
+    req.usuario = usuarioPublico(fila);
+    next();
+  };
+}
+
 export function requireAdmin() {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const token = req.cookies?.access_token;
-    if (typeof token !== "string" || !token) {
-      return res.status(401).json({ error: "Sin sesión." });
-    }
-    let sub: string;
-    try {
-      const payload = jwt.verify(token, jwtSecret()) as { sub?: string };
-      if (!payload.sub) throw new Error("sin sub");
-      sub = payload.sub;
-    } catch {
-      return res.status(401).json({ error: "Token inválido o expirado." });
-    }
-
-    const { rows } = await pool().query<UsuarioRow>(
-      "SELECT id, mail, contrasena_hash, nombre, plan, admin FROM usuarios WHERE id = $1",
-      [sub],
-    );
-    const fila = rows[0];
+    const fila = await usuarioDesdeToken(req.cookies?.access_token);
     if (!fila) return res.status(401).json({ error: "Sin sesión." });
     if (!fila.admin) return res.status(403).json({ error: "No autorizado." });
 

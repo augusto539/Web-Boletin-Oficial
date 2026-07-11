@@ -13,7 +13,6 @@ export const BUSCAR_SOCIEDADES = gql`
         id
         nombre
         cuit
-        activa
         tipoSociedadByTipoSociedadId {
           nombre
         }
@@ -26,7 +25,6 @@ export interface ResultadoBusqueda {
   id: Id;
   nombre: string;
   cuit: string | null;
-  activa: boolean | null;
   tipoSociedadByTipoSociedadId: { nombre: string } | null;
 }
 
@@ -41,7 +39,6 @@ export const BUSCAR_SOCIEDADES_POR_CUIT = gql`
         id
         nombre
         cuit
-        activa
         tipoSociedadByTipoSociedadId {
           nombre
         }
@@ -240,7 +237,6 @@ export const SOCIEDAD = gql`
       id
       nombre
       cuit
-      activa
       empleador
       fechaConstitucion
       capitalInicial
@@ -319,8 +315,6 @@ export const SOCIEDAD = gql`
           }
           boletinByBoletinId {
             fecha
-            nroEdicion
-            url
             idPdf
           }
         }
@@ -353,8 +347,6 @@ export interface Acto {
   personaFisicaByEscribanoId: { nombre: string } | null;
   boletinByBoletinId: {
     fecha: string;
-    nroEdicion: string | null;
-    url: string | null;
     idPdf: string | null;
   } | null;
 }
@@ -371,7 +363,6 @@ export interface Sociedad {
   id: Id;
   nombre: string;
   cuit: string | null;
-  activa: boolean | null;
   empleador: boolean | null;
   fechaConstitucion: string | null;
   capitalInicial: string | null;
@@ -584,8 +575,6 @@ export const PERSONA = gql`
           actoByActoAltaId {
             boletinByBoletinId {
               fecha
-              nroEdicion
-              url
               idPdf
             }
           }
@@ -605,8 +594,6 @@ export interface VinculoPersona {
   actoByActoAltaId: {
     boletinByBoletinId: {
       fecha: string;
-      nroEdicion: string | null;
-      url: string | null;
       idPdf: string | null;
     } | null;
   } | null;

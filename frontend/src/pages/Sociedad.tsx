@@ -180,10 +180,19 @@ export default function Sociedad() {
         <Reveal>
           <section>
             <TituloSeccion>Red de vínculos</TituloSeccion>
-            <p className="mb-6 -mt-4 text-carbon/60">
-              Personas y sociedades conectadas con {sociedad.nombre}. Hacé click en otra sociedad
-              para explorar su red.
-            </p>
+            <div className="mb-6 -mt-4 flex flex-wrap items-end justify-between gap-4">
+              <p className="text-carbon/60">
+                Personas y sociedades conectadas con {sociedad.nombre}. Hacé click en otra sociedad
+                para explorar su red.
+              </p>
+              <Link
+                to={`/exploracion/sociedad/${sociedad.id}`}
+                state={{ nombre: sociedad.nombre }}
+                className="shrink-0 cursor-pointer rounded-full bg-vino px-5 py-2.5 text-sm font-bold text-white transition-transform hover:scale-105"
+              >
+                Ver red completa
+              </Link>
+            </div>
             <GrafoSociedad sociedadId={sociedad.id} nombre={sociedad.nombre} />
           </section>
         </Reveal>
@@ -360,7 +369,7 @@ interface ActoAgrupado {
   personaFisicaByEscribanoId: Acto["personaFisicaByEscribanoId"];
   registroNotarial: string | null;
   fechasActo: string[];
-  fuentes: Array<{ fecha: string; nroEdicion: string | null; enlace: string | null }>;
+  fuentes: Array<{ fecha: string; enlace: string | null }>;
   fechaOrden: string;
 }
 
@@ -378,7 +387,7 @@ function agruparActos(actos: Acto[]): ActoAgrupado[] {
 
     const boletin = a.boletinByBoletinId;
     const fuente = boletin
-      ? { fecha: boletin.fecha, nroEdicion: boletin.nroEdicion, enlace: enlaceBoletin(boletin) }
+      ? { fecha: boletin.fecha, enlace: enlaceBoletin(boletin) }
       : null;
     const fechaActo = a.fechaActo ?? a.fechaPublicacion;
 
@@ -444,13 +453,10 @@ function ItemActo({ acto }: { acto: ActoAgrupado }) {
                   rel="noreferrer"
                   className="font-bold text-vino underline-offset-4 hover:underline"
                 >
-                  Boletín Oficial{f.nroEdicion ? ` N.º ${f.nroEdicion}` : ""} — {fecha(f.fecha)}{" "}
-                  <FlechaIcon className="ml-1" />
+                  Boletín Oficial — {fecha(f.fecha)} <FlechaIcon className="ml-1" />
                 </a>
               ) : (
-                <span>
-                  Boletín Oficial{f.nroEdicion ? ` N.º ${f.nroEdicion}` : ""} — {fecha(f.fecha)}
-                </span>
+                <span>Boletín Oficial — {fecha(f.fecha)}</span>
               )}
             </span>
           ))}

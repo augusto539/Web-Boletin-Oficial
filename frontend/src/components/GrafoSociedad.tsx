@@ -164,7 +164,7 @@ export function GrafoSociedad({ sociedadId, nombre }: { sociedadId: Id; nombre: 
         // nodeDimensionsIncludeLabels y gravity para otros parámetros que
         // también afectan qué tan cerca quedan los nodos del central.
         idealEdgeLength: 32 * 2,
-        nodeRepulsion: 4048,
+        nodeRepulsion: 200048
       },
     });
     cyRef.current = cy;

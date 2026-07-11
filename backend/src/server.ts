@@ -9,6 +9,7 @@ import pluralize from "pluralize";
 import { postgraphile } from "postgraphile";
 import { adminRouter } from "./admin.js";
 import { authRouter, requireAdmin } from "./auth.js";
+import { historialRouter } from "./historial.js";
 import { leadsRouter } from "./leads.js";
 import { seoRouter } from "./seo.js";
 
@@ -57,6 +58,7 @@ app.use(express.json());
 app.use("/api/auth", authRouter);
 app.use("/api/admin", requireAdmin(), adminRouter);
 app.use("/api/leads", leadsRouter);
+app.use("/api/historial", historialRouter);
 
 app.use(
   postgraphile(process.env.DATABASE_URL_API, "public", {

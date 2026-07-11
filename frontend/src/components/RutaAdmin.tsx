@@ -1,11 +1,15 @@
 import type { ReactNode } from "react";
-import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
+import NotFound from "../pages/NotFound";
 
 // Guard de /admin: exige sesión con admin=true. El flag admin sale de /me, que
 // lo relee de la base en cada carga (no de un claim viejo del token), así que
 // es confiable. Igual, la protección real vive en el backend: esto es solo UX
 // (todavía no hay endpoints admin que consumir).
+//
+// A propósito se muestra el mismo 404 genérico tanto si no hay sesión como si
+// no es admin, en vez de un "no autorizado": así no se revela desde afuera
+// que /admin existe.
 export function RutaAdmin({ children }: { children: ReactNode }) {
   const { usuario, cargando } = useAuth();
 
@@ -17,27 +21,8 @@ export function RutaAdmin({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!usuario) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (!usuario.admin) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-humo px-6 pt-20">
-        <div className="w-full max-w-md text-center">
-          <h1 className="text-3xl font-bold">No autorizado</h1>
-          <p className="mt-3 text-carbon/60">
-            Esta sección es solo para administradores.
-          </p>
-          <Link
-            to="/"
-            className="mt-8 inline-block rounded-full bg-vino px-6 py-3 text-sm font-bold text-white transition-transform hover:scale-105"
-          >
-            Volver al inicio
-          </Link>
-        </div>
-      </main>
-    );
+  if (!usuario || !usuario.admin) {
+    return <NotFound />;
   }
 
   return <>{children}</>;
