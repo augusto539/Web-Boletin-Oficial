@@ -187,28 +187,62 @@ export function GrafoExploracion({
     });
     try {
       const resultados = await Promise.all(pendientes.map((n) => obtenerAristas(n.tipo, n.id)));
+
+      // Centroide de TODO lo que ya está en pantalla (antes de agregar nada
+      // de esta tanda), fijo para todo el batch. Antes cada llamada a
+      // fusionarAristas recalculaba el "centro" a partir de la posición del
+      // nodo central/raíz — pero ese nodo no siempre queda geométricamente
+      // en el medio de su propio cluster (depende de dónde lo dejó el cose
+      // inicial, que arranca en posiciones aleatorias), así que el sentido
+      // "hacia afuera" salía a veces bien y a veces mal. El centroide de
+      // todos los nodos viejos es una referencia mucho más estable.
+      const nodosViejos = cy.nodes();
+      let centro = { x: 0, y: 0 };
+      if (nodosViejos.length > 0) {
+        let sumaX = 0;
+        let sumaY = 0;
+        nodosViejos.forEach((n) => {
+          const p = n.position();
+          sumaX += p.x;
+          sumaY += p.y;
+        });
+        centro = { x: sumaX / nodosViejos.length, y: sumaY / nodosViejos.length };
+      }
+
       const idsNuevosTotal: string[] = [];
       pendientes.forEach((nodo, i) => {
-        const { idsNuevos } = fusionarAristas(cy, resultados[i], nodo.clave);
+        const { idsNuevos } = fusionarAristas(cy, resultados[i], nodo.clave, centro);
         idsNuevosTotal.push(...idsNuevos);
         expandidosRef.current.add(nodo.clave);
       });
 
       if (idsNuevosTotal.length > 0) {
-        const nuevos = cy.nodes().filter((n) => idsNuevosTotal.includes(n.id()));
-        const viejos = cy.nodes().difference(nuevos);
-        viejos.lock();
+        // Versiones anteriores (ambas fallaban): bloqueaban los nodos viejos
+        // (viejos.lock()) y corrían cose solo sobre los nuevos. Con la
+        // repulsión altísima (200048) los nodos nuevos eran empujados por
+        // todo el cluster viejo bloqueado y salían despedidos al hueco más
+        // grande — casi siempre abajo a la derecha — sin importar la
+        // posición radial inicial. La pista era que "Retraer" quedaba limpio
+        // justo porque NO bloquea nada (cose global con todo libre).
+        //
+        // Ahora hacemos lo mismo que retraer: cose completo, sin bloquear,
+        // partiendo de la posición radial ya seteada en fusionarAristas
+        // (randomize:false) para conservar el sesgo direccional. Al estar
+        // todo libre, el layout se equilibra en conjunto en vez de exiliar a
+        // los nuevos a un rincón.
+        // const nuevos = cy.nodes().filter((n) => idsNuevosTotal.includes(n.id()));
+        // const viejos = cy.nodes().difference(nuevos);
+        // viejos.lock();  ← esto era lo que rompía todo
         cy.layout({
           name: "cose",
           animate: true,
-          animationDuration: 500,
+          animationDuration: 600,
           fit: true,
           padding: 40,
           idealEdgeLength: 64,
           nodeRepulsion: 200048,
           randomize: false,
         }).run();
-        viejos.unlock();
       } else {
         mostrarMensaje("Sin vínculos nuevos para mostrar.");
       }
@@ -222,7 +256,12 @@ export function GrafoExploracion({
   // `origenClave` (si viene) es el nodo que disparó la expansión: los nodos
   // nuevos arrancan cerca suyo para que el layout incremental no los tire
   // lejos del punto donde el usuario está mirando.
-  function fusionarAristas(cy: cytoscape.Core, aristas: Arista[], origenClave?: string) {
+  function fusionarAristas(
+    cy: cytoscape.Core,
+    aristas: Arista[],
+    origenClave?: string,
+    centroFijo?: { x: number; y: number },
+  ) {
     const central = centralRef.current;
     const nodosTocados = new Set<string>();
 
@@ -262,19 +301,71 @@ export function GrafoExploracion({
     const posicionBase = origenClave ? cy.getElementById(origenClave) : null;
     const base = posicionBase && posicionBase.length > 0 ? posicionBase.position() : null;
 
+    // Paso 1 de la expansión radial: en vez de un jitter aleatorio sin
+    // dirección alrededor del padre (versión anterior, comentada abajo), cada
+    // nodo nuevo arranca desplazado desde su padre en la dirección
+    // centro→padre — así el crecimiento sigue el cuadrante del padre en vez
+    // de depender de dónde el layout de fuerzas encuentre lugar libre.
+    // Primera versión: usaba la posición del nodo central/raíz como
+    // "centro", pero ese nodo no siempre queda geométricamente en el medio
+    // de su propio cluster (depende del cose inicial, que es aleatorio) —
+    // por eso a veces salía bien y a veces no. Ahora expandirTodos pasa un
+    // centroide fijo de todos los nodos existentes (más estable); si no
+    // viene (expandirNodo, expansión de un solo nodo), se usa el nodo
+    // central como antes.
+    // const nodoCentral = cy.getElementById(central);
+    // const centro = nodoCentral.length > 0 ? nodoCentral.position() : { x: 0, y: 0 };
+    const centro =
+      centroFijo ??
+      (() => {
+        const nodoCentral = cy.getElementById(central);
+        return nodoCentral.length > 0 ? nodoCentral.position() : { x: 0, y: 0 };
+      })();
+
+    // Todos los nodos nuevos de este llamado comparten el mismo padre (mismo
+    // `base`), así que sin abanico terminarían todos en el mismo ángulo — una
+    // cuña angosta y amontonada cuando un padre tiene muchos hijos nuevos a
+    // la vez. Se reparten en un arco de 90° alrededor de la dirección
+    // centro→padre, cada uno a una distancia levemente distinta para que no
+    // quede un arco perfecto.
+    const clavesNuevas = [...clavesMencionadas].filter((clave) => cy.getElementById(clave).length === 0);
+    const anguloBase = (() => {
+      if (!base) return 0;
+      const dx = base.x - centro.x;
+      const dy = base.y - centro.y;
+      const distanciaAlCentro = Math.hypot(dx, dy);
+      return distanciaAlCentro > 1 ? Math.atan2(dy, dx) : Math.random() * Math.PI * 2;
+    })();
+    const ARCO_TOTAL = Math.PI / 2;
+
     const nodosNuevos: cytoscape.ElementDefinition[] = [];
-    for (const clave of clavesMencionadas) {
-      if (cy.getElementById(clave).length > 0) continue;
+    clavesNuevas.forEach((clave, indice) => {
       const relaciones = [...(relacionesPorNodoRef.current.get(clave) ?? [])];
       const tipo = tiposPorNodoRef.current.get(clave) ?? "x";
       const def: cytoscape.ElementDefinition = {
         data: { id: clave, label: etiqueta(clave), tipo, central: clave === central, escribano: relaciones.some(esEscribano) },
       };
       if (base) {
-        def.position = { x: base.x + (Math.random() - 0.5) * 180, y: base.y + (Math.random() - 0.5) * 180 };
+        // Versión anterior (mismo ángulo para todos los hermanos, solo jitter):
+        // const dx = base.x - centro.x;
+        // const dy = base.y - centro.y;
+        // const distanciaAlCentro = Math.hypot(dx, dy);
+        // const angulo = distanciaAlCentro > 1 ? Math.atan2(dy, dx) : Math.random() * Math.PI * 2;
+        // const radialOffset = 220;
+        // def.position = {
+        //   x: base.x + Math.cos(angulo) * radialOffset + (Math.random() - 0.5) * 60,
+        //   y: base.y + Math.sin(angulo) * radialOffset + (Math.random() - 0.5) * 60,
+        // };
+        const desvio = clavesNuevas.length > 1 ? (indice / (clavesNuevas.length - 1) - 0.5) * ARCO_TOTAL : 0;
+        const angulo = anguloBase + desvio;
+        const radialOffset = 220 + (Math.random() - 0.5) * 60;
+        def.position = {
+          x: base.x + Math.cos(angulo) * radialOffset,
+          y: base.y + Math.sin(angulo) * radialOffset,
+        };
       }
       nodosNuevos.push(def);
-    }
+    });
 
     const aristasNuevas: cytoscape.ElementDefinition[] = [];
     for (const a of aristas) {

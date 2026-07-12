@@ -30,8 +30,18 @@ export default function OlvideContrasena() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-humo px-6 pt-20 pb-10">
-      <div className="w-full max-w-md rounded-3xl bg-white p-10 shadow-xl shadow-carbon/5">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-humo px-6 pt-20 pb-10">
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: "radial-gradient(circle, rgba(105,24,36,0.16) 1.5px, transparent 1.5px)",
+          backgroundSize: "20px 20px",
+          maskImage: "radial-gradient(black, transparent 80%)",
+          WebkitMaskImage: "radial-gradient(black, transparent 80%)",
+        }}
+        aria-hidden="true"
+      />
+      <div className="relative w-full max-w-md rounded-3xl bg-white p-10 shadow-xl shadow-carbon/5">
         <Link to="/" className="mb-8 block w-fit">
           <Logo variante="imagotipo" className="h-5 w-auto" />
         </Link>

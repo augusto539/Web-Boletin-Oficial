@@ -23,8 +23,18 @@ export default function BusquedaAvanzada() {
   const [pestana, setPestana] = useState<Pestana>("sociedades");
 
   return (
-    <main className="min-h-screen bg-humo px-6 pt-32 pb-20">
-      <div className="mx-auto max-w-5xl">
+    <main className="relative min-h-screen overflow-hidden bg-humo px-6 pt-32 pb-20">
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: "radial-gradient(circle, rgba(105,24,36,0.16) 1.5px, transparent 1.5px)",
+          backgroundSize: "20px 20px",
+          maskImage: "radial-gradient(black, transparent 80%)",
+          WebkitMaskImage: "radial-gradient(black, transparent 80%)",
+        }}
+        aria-hidden="true"
+      />
+      <div className="relative mx-auto max-w-5xl">
         <h1 className="text-4xl font-bold md:text-5xl">Búsqueda avanzada</h1>
         <p className="mt-3 text-lg text-carbon/60">
           Buscá sociedades o personas del Boletín Oficial de Mendoza con filtros combinados.
