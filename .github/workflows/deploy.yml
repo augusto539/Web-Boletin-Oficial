@@ -88,11 +88,19 @@ jobs:
             # Espera a que el healthcheck del contenedor pase antes de dar el
             # deploy por bueno; si no, el step falla y el commit queda
             # marcado en rojo en GitHub.
-            for i in $(seq 1 15); do
+            #
+            # 30s (15 x 2s) resultó insuficiente en la práctica: en la
+            # instancia E2.1.Micro (1 OCPU + swap) un arranque bajo contención
+            # -justo después del pull + las migraciones- puede tardar más que
+            # eso en dejar el healthcheck en "healthy", aunque el contenedor
+            # termine perfectamente sano segundos después (deploy real
+            # exitoso, pero el job marcado en rojo igual). Con más margen se
+            # evita el falso negativo sin dejar de detectar una falla real.
+            for i in $(seq 1 40); do
               status=$(docker inspect -f '{{.State.Health.Status}}' "$(docker compose -f docker-compose.prod.yml ps -q app)")
               [ "$status" = "healthy" ] && echo "app healthy" && break
-              [ "$i" = "15" ] && echo "timeout esperando healthcheck" && exit 1
-              sleep 2
+              [ "$i" = "40" ] && echo "timeout esperando healthcheck" && exit 1
+              sleep 3
             done
 
             docker image prune -f

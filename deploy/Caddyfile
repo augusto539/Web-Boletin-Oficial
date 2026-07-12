@@ -1,11 +1,4 @@
-# Sin dominio todavía: sirve por HTTP simple en el puerto 80 (":80" matchea
-# cualquier host, incluida la IP pública). Let's Encrypt no puede emitir un
-# certificado para una IP desnuda, así que no hay HTTPS automático hasta acá.
-#
-# Cuando tengas un dominio: reemplazá la línea ":80 {" por "tudominio.com {"
-# (sin el bloque http:// de abajo) y Caddy activa TLS automático solo con eso
-# — no hace falta tocar nada más.
-:80 {
+ingcome.com.ar, www.ingcome.com.ar {
 	reverse_proxy app:5050
 	encode gzip
 
