@@ -96,8 +96,18 @@ jobs:
             # termine perfectamente sano segundos después (deploy real
             # exitoso, pero el job marcado en rojo igual). Con más margen se
             # evita el falso negativo sin dejar de detectar una falla real.
+            #
+            # Además: justo después de "up -d", "ps -q app" puede devolver
+            # vacío por un instante (el daemon todavía no lo lista) bajo la
+            # contención de esta instancia chica. script_stop:true deja
+            # "set -e" activo, así que "status=$(docker inspect ... "")"
+            # fallando en la primera vuelta mataba TODO el script al toque,
+            # sin llegar siquiera a esperar — de ahí que fallara en <1s en vez
+            # de agotar el timeout. El "|| true" evita que ese hiccup
+            # transitorio aborte el loop antes de tiempo.
             for i in $(seq 1 40); do
-              status=$(docker inspect -f '{{.State.Health.Status}}' "$(docker compose -f docker-compose.prod.yml ps -q app)")
+              cid=$(docker compose -f docker-compose.prod.yml ps -q app || true)
+              status=$(docker inspect -f '{{.State.Health.Status}}' "$cid" 2>/dev/null || echo "")
               [ "$status" = "healthy" ] && echo "app healthy" && break
               [ "$i" = "40" ] && echo "timeout esperando healthcheck" && exit 1
               sleep 3
