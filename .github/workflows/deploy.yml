@@ -83,35 +83,17 @@ jobs:
 
             docker compose -f docker-compose.prod.yml pull app
             docker compose -f docker-compose.prod.yml run --rm app npm run migrate --workspace db
-            docker compose -f docker-compose.prod.yml up -d
 
-            # Espera a que el healthcheck del contenedor pase antes de dar el
-            # deploy por bueno; si no, el step falla y el commit queda
-            # marcado en rojo en GitHub.
-            #
-            # 30s (15 x 2s) resultó insuficiente en la práctica: en la
-            # instancia E2.1.Micro (1 OCPU + swap) un arranque bajo contención
-            # -justo después del pull + las migraciones- puede tardar más que
-            # eso en dejar el healthcheck en "healthy", aunque el contenedor
-            # termine perfectamente sano segundos después (deploy real
-            # exitoso, pero el job marcado en rojo igual). Con más margen se
-            # evita el falso negativo sin dejar de detectar una falla real.
-            #
-            # Además: justo después de "up -d", "ps -q app" puede devolver
-            # vacío por un instante (el daemon todavía no lo lista) bajo la
-            # contención de esta instancia chica. script_stop:true deja
-            # "set -e" activo, así que "status=$(docker inspect ... "")"
-            # fallando en la primera vuelta mataba TODO el script al toque,
-            # sin llegar siquiera a esperar — de ahí que fallara en <1s en vez
-            # de agotar el timeout. El "|| true" evita que ese hiccup
-            # transitorio aborte el loop antes de tiempo.
-            for i in $(seq 1 40); do
-              cid=$(docker compose -f docker-compose.prod.yml ps -q app || true)
-              status=$(docker inspect -f '{{.State.Health.Status}}' "$cid" 2>/dev/null || echo "")
-              [ "$status" = "healthy" ] && echo "app healthy" && break
-              [ "$i" = "40" ] && echo "timeout esperando healthcheck" && exit 1
-              sleep 3
-            done
+            # "--wait" deja que Compose mismo espere a que el healthcheck del
+            # contenedor pase antes de devolver el control (nativo desde
+            # Compose v2.1.1). Antes acá había un loop a mano con
+            # "docker inspect"/"ps -q" que fallaba de forma intermitente e
+            # impredecible bajo la contención de la instancia E2.1.Micro (1
+            # OCPU + swap) — a veces por timeout corto, a veces el propio
+            # script moría al toque por una race condition en el parseo del
+            # shell. "--wait" delega esa espera a Compose, que la maneja de
+            # forma mucho más robusta.
+            docker compose -f docker-compose.prod.yml up -d --wait --wait-timeout 120
 
             docker image prune -f
         env:
