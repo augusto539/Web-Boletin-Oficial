@@ -586,6 +586,111 @@ export function GrafoExploracion({
     trackEvent("grafo_interaccion", { accion: "ajustar_vista", origen: "exploracion" });
   }
 
+  function textoConteo(): string {
+    return `${conteo.sociedades} sociedad${conteo.sociedades === 1 ? "" : "es"} · ${conteo.personas} persona${conteo.personas === 1 ? "" : "s"} en pantalla`;
+  }
+
+  function dibujarRectRedondeado(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    radio: number,
+  ) {
+    ctx.beginPath();
+    ctx.moveTo(x + radio, y);
+    ctx.arcTo(x + w, y, x + w, y + h, radio);
+    ctx.arcTo(x + w, y + h, x, y + h, radio);
+    ctx.arcTo(x, y + h, x, y, radio);
+    ctx.arcTo(x, y, x + w, y, radio);
+    ctx.closePath();
+  }
+
+  function truncarTexto(ctx: CanvasRenderingContext2D, texto: string, anchoMax: number): string {
+    if (ctx.measureText(texto).width <= anchoMax) return texto;
+    let recortado = texto;
+    while (recortado.length > 1 && ctx.measureText(`${recortado}…`).width > anchoMax) {
+      recortado = recortado.slice(0, -1);
+    }
+    return `${recortado}…`;
+  }
+
+  // Exporta exactamente lo que se está viendo (no todo el grafo aunque haya
+  // nodos fuera de cámara): es una "foto de esta vista", coherente con lo que
+  // el usuario tiene en pantalla en ese momento. cy.png() solo captura el
+  // canvas del grafo, así que el panel "Explorando X" (HTML superpuesto) se
+  // redibuja a mano sobre un canvas compuesto nuevo.
+  async function descargarImagen() {
+    const cy = cyRef.current;
+    if (!cy) return;
+
+    const escala = 2;
+    const dataUrlGrafo = cy.png({ scale: escala, bg: "#efefef" });
+
+    const imgGrafo = new Image();
+    await new Promise<void>((resolve, reject) => {
+      imgGrafo.onload = () => resolve();
+      imgGrafo.onerror = () => reject(new Error("No se pudo generar la imagen del grafo."));
+      imgGrafo.src = dataUrlGrafo;
+    });
+
+    const canvas = document.createElement("canvas");
+    canvas.width = imgGrafo.width;
+    canvas.height = imgGrafo.height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.drawImage(imgGrafo, 0, 0);
+
+    // Mismos márgenes/padding que el overlay HTML (top-5 left-5, p-4),
+    // escalados x2 para que coincidan en proporción con la resolución 2x.
+    const margen = 20 * escala;
+    const padding = 16 * escala;
+    const anchoPanel = 340 * escala;
+
+    ctx.shadowColor = "rgba(0, 0, 0, 0.15)";
+    ctx.shadowBlur = 12 * escala;
+    ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+    dibujarRectRedondeado(ctx, margen, margen, anchoPanel, 96 * escala, 16 * escala);
+    ctx.fill();
+    ctx.shadowColor = "transparent";
+    ctx.shadowBlur = 0;
+
+    const textoX = margen + padding;
+    const anchoTexto = anchoPanel - padding * 2;
+    let cursorY = margen + padding;
+
+    ctx.textBaseline = "top";
+    ctx.fillStyle = "rgba(25, 29, 32, 0.5)";
+    ctx.font = `bold ${11 * escala}px sans-serif`;
+    ctx.fillText("EXPLORANDO", textoX, cursorY);
+    cursorY += 22 * escala;
+
+    ctx.fillStyle = "#191d20";
+    ctx.font = `bold ${18 * escala}px sans-serif`;
+    ctx.fillText(truncarTexto(ctx, raizNombre, anchoTexto), textoX, cursorY);
+    cursorY += 30 * escala;
+
+    ctx.fillStyle = "#691824";
+    ctx.font = `bold ${12 * escala}px sans-serif`;
+    ctx.fillText(truncarTexto(ctx, textoConteo(), anchoTexto), textoX, cursorY);
+
+    const nombreArchivo = raizNombre
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
+    const enlace = document.createElement("a");
+    enlace.href = canvas.toDataURL("image/png");
+    enlace.download = `red-${nombreArchivo || "exploracion"}.png`;
+    enlace.click();
+
+    trackEvent("grafo_interaccion", { accion: "descargar_imagen", origen: "exploracion" });
+  }
+
   return (
     <div className="relative h-full w-full">
       <div ref={contenedor} className="h-full w-full bg-humo" role="img" aria-label={`Red de vínculos de ${raizNombre}`} />
@@ -596,10 +701,7 @@ export function GrafoExploracion({
         <p className="mt-1 text-xs text-carbon/60">
           Click en un nodo para ver opciones · Ctrl/Cmd + rueda para zoom
         </p>
-        <p className="mt-2 text-xs font-bold text-vino">
-          {conteo.sociedades} sociedad{conteo.sociedades === 1 ? "" : "es"} · {conteo.personas} persona
-          {conteo.personas === 1 ? "" : "s"} en pantalla
-        </p>
+        <p className="mt-2 text-xs font-bold text-vino">{textoConteo()}</p>
       </div>
 
       {cargando && (
@@ -638,6 +740,15 @@ export function GrafoExploracion({
             ▼ Retraer
           </button>
         </div>
+        <button
+          type="button"
+          onClick={descargarImagen}
+          disabled={cargando || vacio}
+          title="Descargar esta vista como imagen"
+          className="cursor-pointer rounded-2xl bg-white/90 px-4 py-2.5 text-sm font-bold text-carbon shadow-md backdrop-blur transition-colors hover:bg-white disabled:cursor-not-allowed disabled:text-carbon/30"
+        >
+          ⭳ Descargar imagen
+        </button>
         {expandiendo && (
           <div className="rounded-full bg-white/90 px-4 py-2 text-xs font-bold text-carbon/70 shadow-md">
             Expandiendo…
