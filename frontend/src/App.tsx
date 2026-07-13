@@ -3,6 +3,7 @@ import { Route, Routes, useLocation } from "react-router-dom";
 import { Footer } from "./components/Footer";
 import { Nav } from "./components/Nav";
 import { RutaAdmin } from "./components/RutaAdmin";
+import { RutaSoloAdminSiActivo } from "./components/RutaSoloAdminSiActivo";
 import { iniciarAnalytics, trackPageview } from "./lib/analytics";
 import { lenis } from "./lib/scroll";
 import Admin from "./pages/Admin";
@@ -45,9 +46,30 @@ export default function App() {
         <Route path="/restablecer-contrasena" element={<RestablecerContrasena />} />
         <Route path="/sociedad/:id" element={<Sociedad />} />
         <Route path="/persona/:id" element={<Persona />} />
-        <Route path="/busqueda-avanzada" element={<BusquedaAvanzada />} />
-        <Route path="/exploracion" element={<Exploracion />} />
-        <Route path="/exploracion/:tipo/:id" element={<Exploracion />} />
+        <Route
+          path="/busqueda-avanzada"
+          element={
+            <RutaSoloAdminSiActivo>
+              <BusquedaAvanzada />
+            </RutaSoloAdminSiActivo>
+          }
+        />
+        <Route
+          path="/exploracion"
+          element={
+            <RutaSoloAdminSiActivo>
+              <Exploracion />
+            </RutaSoloAdminSiActivo>
+          }
+        />
+        <Route
+          path="/exploracion/:tipo/:id"
+          element={
+            <RutaSoloAdminSiActivo>
+              <Exploracion />
+            </RutaSoloAdminSiActivo>
+          }
+        />
         {/* <Route path="/notificaciones" element={<Notificaciones />} /> desactivado por ahora */}
         <Route path="/terminos" element={<Terminos />} />
         <Route path="/privacidad" element={<Privacidad />} />

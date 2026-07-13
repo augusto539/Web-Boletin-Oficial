@@ -1,8 +1,43 @@
 const API = import.meta.env.VITE_API_URL ?? "http://localhost:5050";
 
 export interface EstadisticasAdmin {
-  usuariosRegistrados: number;
-  notificacionesActivas: number;
+  baseDeDatos: {
+    sociedades: number;
+    personas: number;
+    relaciones: number;
+    dadosDeBaja: number;
+    ultimoBoletin: string | null;
+  };
+  usuarios: {
+    registrados: number;
+    leads: number;
+    busquedas: number;
+  };
+}
+
+export interface SociedadAdmin {
+  id: string;
+  nombre: string;
+  cuit: string | null;
+  fechaConstitucion: string | null;
+  domicilioElectronico: string | null;
+  oculta: boolean;
+  domicilioCompleto: string | null;
+  claeGrupoNombre: string | null;
+  claeDescripcion: string | null;
+  socios: string | null;
+}
+
+export interface PersonaAdmin {
+  id: string;
+  nombre: string;
+  documento: string | null;
+  cuit: string | null;
+  profesion: string | null;
+  fechaNacimiento: string | null;
+  domicilioElectronico: string | null;
+  oculta: boolean;
+  domicilioCompleto: string | null;
 }
 
 export interface UsuarioAdmin {
@@ -77,4 +112,40 @@ export function obtenerHistorialUsuario(
   offset: number,
 ): Promise<{ total: number; historial: HistorialItem[] }> {
   return get(`/api/admin/usuarios/${id}/historial?limit=${first}&offset=${offset}`);
+}
+
+export function obtenerSociedadesAdmin(
+  first: number,
+  offset: number,
+): Promise<{ total: number; sociedades: SociedadAdmin[] }> {
+  return get(`/api/admin/sociedades?limit=${first}&offset=${offset}`);
+}
+
+export function alternarOcultaSociedad(
+  id: string,
+  oculta: boolean,
+): Promise<{ sociedad: { id: string; oculta: boolean } }> {
+  return patch(`/api/admin/sociedades/${id}/oculta`, { oculta });
+}
+
+export function obtenerPersonasAdmin(
+  first: number,
+  offset: number,
+): Promise<{ total: number; personas: PersonaAdmin[] }> {
+  return get(`/api/admin/personas?limit=${first}&offset=${offset}`);
+}
+
+export function alternarOcultaPersona(
+  id: string,
+  oculta: boolean,
+): Promise<{ persona: { id: string; oculta: boolean } }> {
+  return patch(`/api/admin/personas/${id}/oculta`, { oculta });
+}
+
+export function obtenerConfiguracionAdmin(): Promise<{ modoSoloAdmin: boolean }> {
+  return get("/api/admin/configuracion");
+}
+
+export function actualizarModoSoloAdmin(modoSoloAdmin: boolean): Promise<{ modoSoloAdmin: boolean }> {
+  return patch("/api/admin/configuracion", { modoSoloAdmin });
 }

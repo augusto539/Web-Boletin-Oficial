@@ -1,27 +1,24 @@
-import { useQuery } from "@apollo/client/react";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FlechaIcon } from "../components/FlechaIcon";
 import {
+  actualizarModoSoloAdmin,
   alternarAdminUsuario,
+  alternarOcultaPersona,
+  alternarOcultaSociedad,
+  obtenerConfiguracionAdmin,
   obtenerEstadisticasAdmin,
   obtenerLeadsAdmin,
+  obtenerPersonasAdmin,
+  obtenerSociedadesAdmin,
   obtenerUsuariosAdmin,
   type EstadisticasAdmin,
   type LeadAdmin,
+  type PersonaAdmin,
+  type SociedadAdmin,
   type UsuarioAdmin,
 } from "../lib/adminApi";
 import { cuit as formatCuit, dato, fecha } from "../lib/format";
-import {
-  ADMIN_PERSONAS,
-  ADMIN_SOCIEDADES,
-  CONTEO_ADMIN,
-  type AdminPersona,
-  type AdminSociedad,
-  type DataAdminPersonas,
-  type DataAdminSociedades,
-  type DataConteoAdmin,
-} from "../lib/queries";
 
 type Pestana = "estadisticas" | "configuracion" | "datos";
 
@@ -66,13 +63,11 @@ export default function Admin() {
             </button>
           ))}
         </div>
+      </div>
 
+      <div className={`relative mx-auto ${pestana === "datos" ? "max-w-none" : "max-w-6xl"}`}>
         {pestana === "estadisticas" && <TabEstadisticas />}
-        {pestana === "configuracion" && (
-          <div className="mt-6 rounded-3xl bg-white p-14 text-center text-carbon/50">
-            Configuración — próximamente.
-          </div>
-        )}
+        {pestana === "configuracion" && <TabConfiguracion />}
         {pestana === "datos" && <TabDatos />}
       </div>
     </main>
@@ -88,33 +83,116 @@ function TarjetaEstadistica({ etiqueta, valor }: { etiqueta: string; valor: stri
   );
 }
 
+function CategoriaEstadisticas({ titulo, children }: { titulo: string; children: ReactNode }) {
+  return (
+    <section>
+      <h2 className="mb-4 text-xs font-bold uppercase tracking-widest text-carbon/50">{titulo}</h2>
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">{children}</div>
+    </section>
+  );
+}
+
 function TabEstadisticas() {
-  const { data } = useQuery<DataConteoAdmin>(CONTEO_ADMIN);
-  const [admin, setAdmin] = useState<EstadisticasAdmin | null>(null);
+  const [est, setEst] = useState<EstadisticasAdmin | null>(null);
 
   useEffect(() => {
     obtenerEstadisticasAdmin()
-      .then(setAdmin)
-      .catch(() => setAdmin(null));
+      .then(setEst)
+      .catch(() => setEst(null));
   }, []);
 
   const fmt = (n: number | undefined) => (n === undefined ? "…" : n.toLocaleString("es-AR"));
 
   return (
-    <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-      <TarjetaEstadistica etiqueta="Sociedades" valor={fmt(data?.allSociedades.totalCount)} />
-      <TarjetaEstadistica
-        etiqueta="Personas físicas"
-        valor={fmt(data?.allPersonasFisicas.totalCount)}
+    <div className="mt-6 space-y-10">
+      <CategoriaEstadisticas titulo="Base de datos">
+        <TarjetaEstadistica etiqueta="Sociedades" valor={fmt(est?.baseDeDatos.sociedades)} />
+        <TarjetaEstadistica etiqueta="Personas físicas" valor={fmt(est?.baseDeDatos.personas)} />
+        <TarjetaEstadistica etiqueta="Relaciones" valor={fmt(est?.baseDeDatos.relaciones)} />
+        <TarjetaEstadistica etiqueta="Dados de baja" valor={fmt(est?.baseDeDatos.dadosDeBaja)} />
+        <TarjetaEstadistica
+          etiqueta="Último boletín extraído"
+          valor={est ? fecha(est.baseDeDatos.ultimoBoletin) : "…"}
+        />
+      </CategoriaEstadisticas>
+
+      <CategoriaEstadisticas titulo="Usuarios">
+        <TarjetaEstadistica etiqueta="Usuarios registrados" valor={fmt(est?.usuarios.registrados)} />
+        <TarjetaEstadistica etiqueta="Leads" valor={fmt(est?.usuarios.leads)} />
+        <TarjetaEstadistica etiqueta="Búsquedas" valor={fmt(est?.usuarios.busquedas)} />
+      </CategoriaEstadisticas>
+    </div>
+  );
+}
+
+function Toggle({
+  activo,
+  disabled,
+  onClick,
+}: {
+  activo: boolean;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={activo}
+      disabled={disabled}
+      onClick={onClick}
+      className={`relative h-8 w-14 shrink-0 cursor-pointer rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+        activo ? "bg-vino" : "bg-carbon/20"
+      }`}
+    >
+      <span
+        className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-transform ${
+          activo ? "translate-x-7" : "translate-x-1"
+        }`}
       />
-      <TarjetaEstadistica
-        etiqueta="Usuarios registrados"
-        valor={fmt(admin?.usuariosRegistrados)}
-      />
-      <TarjetaEstadistica
-        etiqueta="Notificaciones activas"
-        valor={fmt(admin?.notificacionesActivas)}
-      />
+    </button>
+  );
+}
+
+function TabConfiguracion() {
+  const [modoSoloAdmin, setModoSoloAdmin] = useState<boolean | null>(null);
+  const [guardando, setGuardando] = useState(false);
+
+  useEffect(() => {
+    obtenerConfiguracionAdmin()
+      .then((d) => setModoSoloAdmin(d.modoSoloAdmin))
+      .catch(() => setModoSoloAdmin(false));
+  }, []);
+
+  function alAlternar() {
+    if (modoSoloAdmin === null) return;
+    const nuevoValor = !modoSoloAdmin;
+    setModoSoloAdmin(nuevoValor);
+    setGuardando(true);
+    actualizarModoSoloAdmin(nuevoValor)
+      .catch(() => setModoSoloAdmin(!nuevoValor))
+      .finally(() => setGuardando(false));
+  }
+
+  return (
+    <div className="mt-6">
+      <div className="rounded-3xl bg-white p-7">
+        <div className="flex items-center justify-between gap-6">
+          <div>
+            <p className="font-bold">Modo solo administradores</p>
+            <p className="mt-1.5 max-w-xl text-sm text-carbon/60">
+              Mientras esté activo, la búsqueda avanzada, la exploración del grafo y el
+              buscador de la portada quedan ocultos e inaccesibles para cualquier
+              visitante que no sea administrador.
+            </p>
+          </div>
+          <Toggle
+            activo={modoSoloAdmin ?? false}
+            disabled={modoSoloAdmin === null || guardando}
+            onClick={alAlternar}
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -176,7 +254,7 @@ function Paginador({
         onClick={() => onCambiar(pagina - 1)}
         className="cursor-pointer rounded-full bg-white px-5 py-2 text-sm font-bold text-carbon disabled:cursor-not-allowed disabled:opacity-40"
       >
-        ← Anterior
+        <FlechaIcon className="mr-1 scale-x-[-1]" /> Anterior
       </button>
       <span className="text-sm text-carbon/60">
         Página {pagina} de {totalPaginas}
@@ -193,30 +271,68 @@ function Paginador({
   );
 }
 
-function nombresSocios(v: AdminSociedad["vinculosBySociedadId"]["nodes"]): string {
-  const nombres = v
-    .map((x) => x.personaFisicaByPersonaId?.nombre ?? x.sociedadBySociedadMiembroId?.nombre ?? x.nombreJuridicoFallback)
-    .filter((n): n is string => Boolean(n));
-  return [...new Set(nombres)].join(", ");
+function BotonOculta({
+  oculta,
+  onClick,
+}: {
+  oculta: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`cursor-pointer rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${
+        oculta
+          ? "bg-vino text-white hover:bg-vino-oscuro"
+          : "bg-humo text-carbon/60 hover:bg-carbon/10"
+      }`}
+    >
+      {oculta ? "Desocultar" : "Ocultar"}
+    </button>
+  );
 }
 
 function TablaSociedades() {
   const [pagina, setPagina] = useState(1);
-  const { data, loading } = useQuery<DataAdminSociedades>(ADMIN_SOCIEDADES, {
-    variables: { first: POR_PAGINA, offset: (pagina - 1) * POR_PAGINA },
+  const [datos, setDatos] = useState<{ total: number; sociedades: SociedadAdmin[] }>({
+    total: 0,
+    sociedades: [],
   });
+  const [cargando, setCargando] = useState(true);
 
-  const total = data?.allSociedades.totalCount ?? 0;
-  const filas = data?.allSociedades.nodes ?? [];
-  const totalPaginas = Math.ceil(total / POR_PAGINA);
+  useEffect(() => {
+    setCargando(true);
+    obtenerSociedadesAdmin(POR_PAGINA, (pagina - 1) * POR_PAGINA)
+      .then(setDatos)
+      .finally(() => setCargando(false));
+  }, [pagina]);
+
+  function alAlternarOculta(s: SociedadAdmin) {
+    const nuevoValor = !s.oculta;
+    setDatos((d) => ({
+      ...d,
+      sociedades: d.sociedades.map((x) => (x.id === s.id ? { ...x, oculta: nuevoValor } : x)),
+    }));
+    alternarOcultaSociedad(s.id, nuevoValor).catch(() => {
+      setDatos((d) => ({
+        ...d,
+        sociedades: d.sociedades.map((x) => (x.id === s.id ? { ...x, oculta: s.oculta } : x)),
+      }));
+    });
+  }
+
+  const totalPaginas = Math.ceil(datos.total / POR_PAGINA);
 
   return (
     <div className="rounded-3xl bg-white p-7">
       <p className="mb-4 text-sm text-carbon/50">
-        {loading ? "Cargando…" : `Mostrando ${filas.length} de ${total.toLocaleString("es-AR")}`}
+        {cargando
+          ? "Cargando…"
+          : `Mostrando ${datos.sociedades.length} de ${datos.total.toLocaleString("es-AR")}`}
       </p>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[1200px] text-left text-sm">
+        <table className="w-full min-w-[1300px] text-left text-sm">
           <thead>
             <tr className="border-b border-carbon/10 text-xs uppercase tracking-widest text-carbon/50">
               <th className="py-3 pr-4">Nombre</th>
@@ -226,32 +342,36 @@ function TablaSociedades() {
               <th className="py-3 pr-4">Constitución</th>
               <th className="py-3 pr-4">Socios</th>
               <th className="py-3 pr-4">Domicilio</th>
-              <th className="py-3">Domicilio electrónico</th>
+              <th className="py-3 pr-4">Domicilio electrónico</th>
+              <th className="py-3">Visibilidad</th>
             </tr>
           </thead>
           <tbody>
-            {filas.map((s) => {
-              const principal = s.sociedadActividadesBySociedadId.nodes.find((a) => a.orden === 1);
-              return (
-                <tr key={s.id} className="border-b border-carbon/5 last:border-0 align-top">
-                  <td className="py-3 pr-4 font-bold">
-                    <Link
-                      to={`/sociedad/${s.id}`}
-                      className="text-vino underline-offset-4 hover:underline"
-                    >
-                      {s.nombre}
-                    </Link>
-                  </td>
-                  <td className="py-3 pr-4">{s.cuit ? formatCuit(s.cuit) : dato(null)}</td>
-                  <td className="py-3 pr-4">{dato(principal?.grupoClaeByClaeGrupo?.nombre)}</td>
-                  <td className="py-3 pr-4">{dato(principal?.actividadClaeByClaeCodigo?.descripcion)}</td>
-                  <td className="py-3 pr-4">{fecha(s.fechaConstitucion)}</td>
-                  <td className="py-3 pr-4">{dato(nombresSocios(s.vinculosBySociedadId.nodes))}</td>
-                  <td className="py-3 pr-4">{dato(s.domicilioByDomicilioId?.domicilioCompleto)}</td>
-                  <td className="py-3">{dato(s.domicilioElectronico)}</td>
-                </tr>
-              );
-            })}
+            {datos.sociedades.map((s) => (
+              <tr
+                key={s.id}
+                className={`border-b border-carbon/5 last:border-0 align-top ${s.oculta ? "opacity-50" : ""}`}
+              >
+                <td className="py-3 pr-4 font-bold">
+                  <Link
+                    to={`/sociedad/${s.id}`}
+                    className="text-vino underline-offset-4 hover:underline"
+                  >
+                    {s.nombre}
+                  </Link>
+                </td>
+                <td className="py-3 pr-4">{s.cuit ? formatCuit(s.cuit) : dato(null)}</td>
+                <td className="py-3 pr-4">{dato(s.claeGrupoNombre)}</td>
+                <td className="py-3 pr-4">{dato(s.claeDescripcion)}</td>
+                <td className="py-3 pr-4">{fecha(s.fechaConstitucion)}</td>
+                <td className="py-3 pr-4">{dato(s.socios)}</td>
+                <td className="py-3 pr-4">{dato(s.domicilioCompleto)}</td>
+                <td className="py-3 pr-4">{dato(s.domicilioElectronico)}</td>
+                <td className="py-3">
+                  <BotonOculta oculta={s.oculta} onClick={() => alAlternarOculta(s)} />
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -262,21 +382,44 @@ function TablaSociedades() {
 
 function TablaPersonas() {
   const [pagina, setPagina] = useState(1);
-  const { data, loading } = useQuery<DataAdminPersonas>(ADMIN_PERSONAS, {
-    variables: { first: POR_PAGINA, offset: (pagina - 1) * POR_PAGINA },
+  const [datos, setDatos] = useState<{ total: number; personas: PersonaAdmin[] }>({
+    total: 0,
+    personas: [],
   });
+  const [cargando, setCargando] = useState(true);
 
-  const total = data?.allPersonasFisicas.totalCount ?? 0;
-  const filas = data?.allPersonasFisicas.nodes ?? [];
-  const totalPaginas = Math.ceil(total / POR_PAGINA);
+  useEffect(() => {
+    setCargando(true);
+    obtenerPersonasAdmin(POR_PAGINA, (pagina - 1) * POR_PAGINA)
+      .then(setDatos)
+      .finally(() => setCargando(false));
+  }, [pagina]);
+
+  function alAlternarOculta(p: PersonaAdmin) {
+    const nuevoValor = !p.oculta;
+    setDatos((d) => ({
+      ...d,
+      personas: d.personas.map((x) => (x.id === p.id ? { ...x, oculta: nuevoValor } : x)),
+    }));
+    alternarOcultaPersona(p.id, nuevoValor).catch(() => {
+      setDatos((d) => ({
+        ...d,
+        personas: d.personas.map((x) => (x.id === p.id ? { ...x, oculta: p.oculta } : x)),
+      }));
+    });
+  }
+
+  const totalPaginas = Math.ceil(datos.total / POR_PAGINA);
 
   return (
     <div className="rounded-3xl bg-white p-7">
       <p className="mb-4 text-sm text-carbon/50">
-        {loading ? "Cargando…" : `Mostrando ${filas.length} de ${total.toLocaleString("es-AR")}`}
+        {cargando
+          ? "Cargando…"
+          : `Mostrando ${datos.personas.length} de ${datos.total.toLocaleString("es-AR")}`}
       </p>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[1100px] text-left text-sm">
+        <table className="w-full min-w-[1200px] text-left text-sm">
           <thead>
             <tr className="border-b border-carbon/10 text-xs uppercase tracking-widest text-carbon/50">
               <th className="py-3 pr-4">Nombre</th>
@@ -285,12 +428,16 @@ function TablaPersonas() {
               <th className="py-3 pr-4">Profesión</th>
               <th className="py-3 pr-4">Nacimiento</th>
               <th className="py-3 pr-4">Domicilio</th>
-              <th className="py-3">Domicilio electrónico</th>
+              <th className="py-3 pr-4">Domicilio electrónico</th>
+              <th className="py-3">Visibilidad</th>
             </tr>
           </thead>
           <tbody>
-            {filas.map((p: AdminPersona) => (
-              <tr key={p.id} className="border-b border-carbon/5 last:border-0 align-top">
+            {datos.personas.map((p) => (
+              <tr
+                key={p.id}
+                className={`border-b border-carbon/5 last:border-0 align-top ${p.oculta ? "opacity-50" : ""}`}
+              >
                 <td className="py-3 pr-4 font-bold">
                   <Link to={`/persona/${p.id}`} className="text-vino underline-offset-4 hover:underline">
                     {p.nombre}
@@ -300,8 +447,11 @@ function TablaPersonas() {
                 <td className="py-3 pr-4">{p.cuit ? formatCuit(p.cuit) : dato(null)}</td>
                 <td className="py-3 pr-4">{dato(p.profesion)}</td>
                 <td className="py-3 pr-4">{fecha(p.fechaNacimiento)}</td>
-                <td className="py-3 pr-4">{dato(p.domicilioByDomicilioId?.domicilioCompleto)}</td>
-                <td className="py-3">{dato(p.domicilioElectronico)}</td>
+                <td className="py-3 pr-4">{dato(p.domicilioCompleto)}</td>
+                <td className="py-3 pr-4">{dato(p.domicilioElectronico)}</td>
+                <td className="py-3">
+                  <BotonOculta oculta={p.oculta} onClick={() => alAlternarOculta(p)} />
+                </td>
               </tr>
             ))}
           </tbody>

@@ -10,6 +10,8 @@ import { SearchBox } from "../components/SearchBox";
 import { SplitText } from "../components/SplitText";
 import { Ticker } from "../components/Ticker";
 import { EMAIL_BAJA_DATOS, FUENTES } from "../lib/constantes";
+import { useAuth } from "../lib/auth";
+import { useConfiguracion } from "../lib/configuracion";
 import { fecha } from "../lib/format";
 import { ESTADISTICAS_LANDING, type DataEstadisticasLanding } from "../lib/queries";
 import { scrollToSection } from "../lib/scroll";
@@ -51,6 +53,10 @@ export default function Landing() {
 }
 
 function Hero() {
+  const { usuario } = useAuth();
+  const { modoSoloAdmin } = useConfiguracion();
+  const puedeBuscar = !modoSoloAdmin || usuario?.admin;
+
   return (
     <section className="relative flex min-h-screen flex-col justify-center overflow-hidden bg-vino px-6 pt-24 pb-16 text-white">
       {/* <motion.img
@@ -99,17 +105,19 @@ function Hero() {
           desde 2017. Cada dato con link a su fuente. Gratis durante la beta.
         </motion.p>
 
-        <motion.div
-          className="mt-10"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.05, duration: 0.7 }}
-        >
-          <p className="mb-2.5 text-sm font-bold text-white/70">
-            Buscá por razón social, nombre o CUIT/DNI
-          </p>
-          <SearchBox sobreOscuro />
-        </motion.div>
+        {puedeBuscar && (
+          <motion.div
+            className="mt-10"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.05, duration: 0.7 }}
+          >
+            <p className="mb-2.5 text-sm font-bold text-white/70">
+              Buscá por razón social, nombre o CUIT/DNI
+            </p>
+            <SearchBox sobreOscuro />
+          </motion.div>
+        )}
       </div>
     </section>
   );
@@ -185,6 +193,10 @@ const BLOQUES_QUE_ENCONTRAS = [
 ];
 
 function QueEncontras() {
+  const { usuario } = useAuth();
+  const { modoSoloAdmin } = useConfiguracion();
+  const puedeExplorar = !modoSoloAdmin || usuario?.admin;
+
   return (
     <section className="bg-white px-6 py-24">
       <div className="mx-auto max-w-7xl">
@@ -207,13 +219,15 @@ function QueEncontras() {
           <div className="mt-6 rounded-3xl bg-humo p-8">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <h3 className="text-xl font-bold">Red de vínculos navegable</h3>
-              <Link
-                to={`/exploracion/sociedad/${SOCIEDAD_DEMO_ID}`}
-                state={{ nombre: SOCIEDAD_DEMO_NOMBRE }}
-                className="inline-block shrink-0 cursor-pointer rounded-full bg-vino px-5 py-2.5 text-sm font-bold text-white transition-transform hover:scale-105"
-              >
-                Ver red completa
-              </Link>
+              {puedeExplorar && (
+                <Link
+                  to={`/exploracion/sociedad/${SOCIEDAD_DEMO_ID}`}
+                  state={{ nombre: SOCIEDAD_DEMO_NOMBRE }}
+                  className="inline-block shrink-0 cursor-pointer rounded-full bg-vino px-5 py-2.5 text-sm font-bold text-white transition-transform hover:scale-105"
+                >
+                  Ver red completa
+                </Link>
+              )}
             </div>
             <p className="mt-3 overflow-x-auto text-nowrap leading-relaxed text-carbon/70">
               Quién es socio de quién, y a través de qué otras empresas. Esta es la red real de{" "}

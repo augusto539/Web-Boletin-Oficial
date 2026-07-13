@@ -8,7 +8,13 @@ import express from "express";
 import pluralize from "pluralize";
 import { postgraphile } from "postgraphile";
 import { adminRouter } from "./admin.js";
-import { authRouter, requireAdmin } from "./auth.js";
+import { authRouter, requireAdmin, usuarioDesdeToken } from "./auth.js";
+import {
+  cargarConfiguracion,
+  configuracionAdminRouter,
+  configuracionPublicaRouter,
+  modoSoloAdminActivo,
+} from "./configuracion.js";
 import { historialRouter } from "./historial.js";
 import { leadsRouter } from "./leads.js";
 import { seoRouter } from "./seo.js";
@@ -57,8 +63,37 @@ app.use(express.json());
 // Auth (REST) va antes de PostGraphile; son rutas separadas de la API GraphQL.
 app.use("/api/auth", authRouter);
 app.use("/api/admin", requireAdmin(), adminRouter);
+app.use("/api/admin", requireAdmin(), configuracionAdminRouter);
+app.use("/api/configuracion", configuracionPublicaRouter);
 app.use("/api/leads", leadsRouter);
 app.use("/api/historial", historialRouter);
+
+// "Modo solo administradores" (tab Configuración de /admin): bloquea la
+// búsqueda avanzada para cualquiera que no sea admin. El front también
+// oculta el punto de entrada (Nav, rutas), pero eso es solo UX — esta es
+// la protección real, porque es una operación GraphQL pública que
+// cualquiera podría llamar directo sin pasar por la UI.
+//
+// grafoDeSociedad/grafoDePersona NO se bloquean acá a propósito: son las
+// mismas queries que usan los mini-grafos de vínculos embebidos en las
+// fichas de Sociedad/Persona (siempre públicas, no forman parte de este
+// toggle) — bloquearlas rompería esas páginas para todo el mundo. La
+// exploración interactiva (/exploracion) queda protegida solo a nivel de
+// ruta en el frontend (RutaSoloAdminSiActivo); no hay forma de distinguir
+// "vengo del mini-grafo" de "vengo de /exploracion" en la misma query.
+const OPERACIONES_SOLO_ADMIN = ["buscarSociedadesAvanzado", "buscarPersonasAvanzado"];
+app.use("/graphql", async (req, res, next) => {
+  if (!modoSoloAdminActivo()) return next();
+  const query = typeof req.body?.query === "string" ? req.body.query : "";
+  if (!OPERACIONES_SOLO_ADMIN.some((op) => query.includes(op))) return next();
+
+  const usuario = await usuarioDesdeToken(req.cookies?.access_token);
+  if (usuario?.admin) return next();
+
+  return res.status(200).json({
+    errors: [{ message: "Esta función está disponible solo para administradores por el momento." }],
+  });
+});
 
 app.use(
   postgraphile(process.env.DATABASE_URL_API, "public", {
@@ -99,6 +134,8 @@ if (existsSync(distDir)) {
     res.sendFile(join(distDir, "index.html"));
   });
 }
+
+await cargarConfiguracion();
 
 const port = Number(process.env.PORT ?? 5000);
 app.listen(port, () => {

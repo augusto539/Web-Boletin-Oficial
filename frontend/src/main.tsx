@@ -6,13 +6,16 @@ import App from "./App";
 import { apollo } from "./apollo";
 import "./index.css";
 import { AuthProvider } from "./lib/auth";
+import { ConfiguracionProvider } from "./lib/configuracion";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ApolloProvider client={apollo}>
       <BrowserRouter>
         <AuthProvider>
-          <App />
+          <ConfiguracionProvider>
+            <App />
+          </ConfiguracionProvider>
         </AuthProvider>
       </BrowserRouter>
     </ApolloProvider>

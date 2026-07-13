@@ -151,7 +151,7 @@ function Paginador({
         onClick={() => onCambiar(pagina - 1)}
         className="cursor-pointer rounded-full bg-humo px-5 py-2 text-sm font-bold text-carbon disabled:cursor-not-allowed disabled:opacity-40"
       >
-        ← Anterior
+        <FlechaIcon className="mr-1 scale-x-[-1]" /> Anterior
       </button>
       <span className="text-sm text-carbon/60">
         Página {pagina} de {totalPaginas}

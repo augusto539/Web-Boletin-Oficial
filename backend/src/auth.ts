@@ -329,7 +329,7 @@ declare module "express-serve-static-core" {
 // claims del JWT más allá del id (sub), siempre relee la base para que
 // plan/admin estén frescos (clave para que una promoción/degradación a admin
 // surta efecto en el próximo request, no recién cuando expire el access token).
-async function usuarioDesdeToken(token: unknown): Promise<UsuarioRow | null> {
+export async function usuarioDesdeToken(token: unknown): Promise<UsuarioRow | null> {
   if (typeof token !== "string" || !token) return null;
   let sub: string;
   try {

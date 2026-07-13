@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
+import { useConfiguracion } from "../lib/configuracion";
 import { scrollToSection } from "../lib/scroll";
 import { Logo } from "./Logo";
 
@@ -14,6 +15,8 @@ export function Nav() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { usuario, cargando, logout } = useAuth();
+  const { modoSoloAdmin } = useConfiguracion();
+  const puedeVerBusquedaAvanzada = !modoSoloAdmin || usuario?.admin;
 
   async function cerrarSesion() {
     await logout();
@@ -51,14 +54,16 @@ export function Nav() {
         </Link>
 
         <div className="hidden items-center gap-8 md:flex">
-          <Link
-            to="/busqueda-avanzada"
-            className={`text-sm transition-opacity hover:opacity-70 ${
-              claro ? "text-white" : "text-carbon"
-            }`}
-          >
-            Búsqueda avanzada
-          </Link>
+          {puedeVerBusquedaAvanzada && (
+            <Link
+              to="/busqueda-avanzada"
+              className={`text-sm transition-opacity hover:opacity-70 ${
+                claro ? "text-white" : "text-carbon"
+              }`}
+            >
+              Búsqueda avanzada
+            </Link>
+          )}
           {/* <Link
             to="/notificaciones"
             className={`text-sm transition-opacity hover:opacity-70 ${
