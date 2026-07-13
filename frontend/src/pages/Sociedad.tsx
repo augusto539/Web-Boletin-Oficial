@@ -1,5 +1,6 @@
 import { useQuery } from "@apollo/client/react";
 import { Link, useParams } from "react-router-dom";
+import { DescargarFicha } from "../components/DescargarFicha";
 import { FlechaIcon } from "../components/FlechaIcon";
 import { GrafoSociedad } from "../components/GrafoSociedad";
 import { Reveal } from "../components/Reveal";
@@ -9,6 +10,8 @@ import {
   dato,
   enlaceBoletin,
   fecha,
+  formatDomicilio,
+  listaConY,
   moneda,
   porcentaje,
   siNo,
@@ -60,10 +63,25 @@ export default function Sociedad() {
       {/* Encabezado */}
       <section className="bg-vino px-6 pt-32 pb-14 text-white">
         <div className="mx-auto max-w-7xl">
-          <p className="mb-3 text-sm uppercase tracking-[0.3em] text-white/50">
-            {sociedad.tipoSociedadByTipoSociedadId?.nombre ?? "Sociedad"}
-          </p>
-          <h1 className="text-4xl font-bold md:text-6xl">{sociedad.nombre}</h1>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="mb-3 text-sm uppercase tracking-[0.3em] text-white/50">
+                {sociedad.tipoSociedadByTipoSociedadId?.nombre ?? "Sociedad"}
+              </p>
+              <h1 className="text-4xl font-bold md:text-6xl">{sociedad.nombre}</h1>
+            </div>
+            <DescargarFicha
+              tipo="sociedad"
+              onPDF={async () => {
+                const { exportarSociedadPDF } = await import("../lib/exportarFicha");
+                await exportarSociedadPDF(sociedad, vinculos, actos);
+              }}
+              onExcel={async () => {
+                const { exportarSociedadExcel } = await import("../lib/exportarFicha");
+                await exportarSociedadExcel(sociedad, vinculos, actos);
+              }}
+            />
+          </div>
           <div className="mt-5 flex flex-wrap items-center gap-3 text-sm">
             {sociedad.cuit && <span className="text-white/70">CUIT {formatCuit(sociedad.cuit)}</span>}
             {sociedad.fechaConstitucion && (
@@ -92,22 +110,7 @@ export default function Sociedad() {
                 etiqueta="Cotejo con ARCA"
                 valor={dato(sociedad.tipoMatchArcaByTipoMatchArcaId?.nombre)}
               />
-              <Campo
-                etiqueta="Domicilio"
-                valor={
-                  domicilio
-                    ? `${domicilio.domicilioCompleto}${
-                        domicilio.localidadByLocalidadId
-                          ? ` (${domicilio.localidadByLocalidadId.nombre}${
-                              domicilio.localidadByLocalidadId.departamentoByDepartamentoId
-                                ? `, ${domicilio.localidadByLocalidadId.departamentoByDepartamentoId.nombre}`
-                                : ""
-                            })`
-                          : ""
-                      }`
-                    : SIN_DATO
-                }
-              />
+              <Campo etiqueta="Domicilio" valor={formatDomicilio(domicilio)} />
               <div className="md:col-span-3">
                 <Campo etiqueta="Objeto social" valor={dato(sociedad.objetoSocial)} />
               </div>
@@ -249,7 +252,7 @@ function EtiquetaActividad({ actividad: a }: { actividad: Actividad }) {
 // mismo tiempo (ej: Socio y Presidente, dados de alta juntos o por separado).
 // Se agrupan por "quién es" + vigencia para mostrar una sola fila con los
 // roles combinados ("Socio y Presidente") en vez de una fila por rol.
-interface VinculoAgrupado {
+export interface VinculoAgrupado {
   clave: string;
   personaFisicaByPersonaId: Vinculo["personaFisicaByPersonaId"];
   sociedadBySociedadMiembroId: Vinculo["sociedadBySociedadMiembroId"];
@@ -261,7 +264,7 @@ interface VinculoAgrupado {
   fechaSalida: string | null;
 }
 
-function agruparVinculos(vinculos: Vinculo[]): VinculoAgrupado[] {
+export function agruparVinculos(vinculos: Vinculo[]): VinculoAgrupado[] {
   const grupos = new Map<string, VinculoAgrupado>();
   for (const v of vinculos) {
     const quien =
@@ -292,13 +295,6 @@ function agruparVinculos(vinculos: Vinculo[]): VinculoAgrupado[] {
     }
   }
   return [...grupos.values()];
-}
-
-// "Socio" / "Socio y Presidente" / "Socio, Presidente y Apoderado"
-function listaConY(items: string[]): string {
-  if (items.length === 0) return SIN_DATO;
-  if (items.length === 1) return items[0];
-  return `${items.slice(0, -1).join(", ")} y ${items[items.length - 1]}`;
 }
 
 function FilaVinculo({ vinculo: v }: { vinculo: VinculoAgrupado }) {
@@ -360,7 +356,7 @@ function FilaVinculo({ vinculo: v }: { vinculo: VinculoAgrupado }) {
 // agrupan por contenido — sin la fecha del acto ni el boletín, que son
 // justamente los datos que pueden variar entre duplicados — y se muestran
 // una sola vez, listando todas las fechas/fuentes que lo citan.
-interface ActoAgrupado {
+export interface ActoAgrupado {
   clave: string;
   tipoActoByTipoActoId: Acto["tipoActoByTipoActoId"];
   descripcion: string | null;
@@ -373,7 +369,7 @@ interface ActoAgrupado {
   fechaOrden: string;
 }
 
-function agruparActos(actos: Acto[]): ActoAgrupado[] {
+export function agruparActos(actos: Acto[]): ActoAgrupado[] {
   const grupos = new Map<string, ActoAgrupado>();
   for (const a of actos) {
     const clave = [

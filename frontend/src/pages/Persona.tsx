@@ -1,10 +1,20 @@
 import { useQuery } from "@apollo/client/react";
 import { Link, useParams } from "react-router-dom";
+import { DescargarFicha } from "../components/DescargarFicha";
 import { FlechaIcon } from "../components/FlechaIcon";
 import { GrafoPersona } from "../components/GrafoPersona";
 import { Reveal } from "../components/Reveal";
 import { SearchBox } from "../components/SearchBox";
-import { cuit as formatCuit, dato, enlaceBoletin, fecha, porcentaje, SIN_DATO } from "../lib/format";
+import {
+  cuit as formatCuit,
+  dato,
+  enlaceBoletin,
+  fecha,
+  formatDomicilio,
+  listaConY,
+  porcentaje,
+  SIN_DATO,
+} from "../lib/format";
 import { PERSONA, type DataPersona, type VinculoPersona } from "../lib/queries";
 
 export default function Persona() {
@@ -47,10 +57,25 @@ export default function Persona() {
       {/* Encabezado */}
       <section className="bg-vino px-6 pt-32 pb-14 text-white">
         <div className="mx-auto max-w-7xl">
-          <p className="mb-3 text-sm uppercase tracking-[0.3em] text-white/50">
-            {persona.profesion ?? "Persona física"}
-          </p>
-          <h1 className="text-4xl font-bold md:text-6xl">{persona.nombre}</h1>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="mb-3 text-sm uppercase tracking-[0.3em] text-white/50">
+                {persona.profesion ?? "Persona física"}
+              </p>
+              <h1 className="text-4xl font-bold md:text-6xl">{persona.nombre}</h1>
+            </div>
+            <DescargarFicha
+              tipo="persona"
+              onPDF={async () => {
+                const { exportarPersonaPDF } = await import("../lib/exportarFicha");
+                await exportarPersonaPDF(persona, sociedades);
+              }}
+              onExcel={async () => {
+                const { exportarPersonaExcel } = await import("../lib/exportarFicha");
+                await exportarPersonaExcel(persona, sociedades);
+              }}
+            />
+          </div>
           <div className="mt-5 flex flex-wrap items-center gap-3 text-sm">
             {persona.documento && <span className="text-white/70">DNI {persona.documento}</span>}
             {persona.cuit && <span className="text-white/70">CUIT {formatCuit(persona.cuit)}</span>}
@@ -71,22 +96,7 @@ export default function Persona() {
               />
               <Campo etiqueta="Profesión" valor={dato(persona.profesion)} />
               <Campo etiqueta="Fecha de nacimiento" valor={fecha(persona.fechaNacimiento)} />
-              <Campo
-                etiqueta="Domicilio"
-                valor={
-                  domicilio
-                    ? `${domicilio.domicilioCompleto}${
-                        domicilio.localidadByLocalidadId
-                          ? ` (${domicilio.localidadByLocalidadId.nombre}${
-                              domicilio.localidadByLocalidadId.departamentoByDepartamentoId
-                                ? `, ${domicilio.localidadByLocalidadId.departamentoByDepartamentoId.nombre}`
-                                : ""
-                            })`
-                          : ""
-                      }`
-                    : SIN_DATO
-                }
-              />
+              <Campo etiqueta="Domicilio" valor={formatDomicilio(domicilio)} />
               <Campo etiqueta="Domicilio electrónico" valor={dato(persona.domicilioElectronico)} />
             </dl>
           </section>
@@ -171,7 +181,7 @@ function Vacio({ texto }: { texto: string }) {
 // lado: acá "quién" es fijo (la persona) y se agrupa por sociedad+vigencia,
 // para mostrar una sola fila con los roles combinados ("Socio y Presidente")
 // en vez de una fila por rol.
-interface SociedadAgrupada {
+export interface SociedadAgrupada {
   clave: string;
   sociedad: { id: string; nombre: string } | null;
   roles: string[];
@@ -181,7 +191,7 @@ interface SociedadAgrupada {
   fuente: { fecha: string; enlace: string | null } | null;
 }
 
-function agruparSociedades(vinculos: VinculoPersona[]): SociedadAgrupada[] {
+export function agruparSociedades(vinculos: VinculoPersona[]): SociedadAgrupada[] {
   const grupos = new Map<string, SociedadAgrupada>();
   for (const v of vinculos) {
     const sociedadId = v.sociedadBySociedadId?.id ?? `sin-sociedad-${v.id}`;
@@ -213,12 +223,6 @@ function agruparSociedades(vinculos: VinculoPersona[]): SociedadAgrupada[] {
     }
   }
   return [...grupos.values()].sort((a, b) => (b.fechaEntrada ?? "").localeCompare(a.fechaEntrada ?? ""));
-}
-
-function listaConY(items: string[]): string {
-  if (items.length === 0) return SIN_DATO;
-  if (items.length === 1) return items[0];
-  return `${items.slice(0, -1).join(", ")} y ${items[items.length - 1]}`;
 }
 
 function FilaSociedad({ sociedad: s }: { sociedad: SociedadAgrupada }) {

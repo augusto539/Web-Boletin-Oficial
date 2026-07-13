@@ -54,6 +54,31 @@ export function enlaceBoletin(boletin: { idPdf: string | null }): string | null 
   return null;
 }
 
+interface DomicilioConLocalidad {
+  domicilioCompleto: string;
+  localidadByLocalidadId: {
+    nombre: string;
+    departamentoByDepartamentoId: { nombre: string } | null;
+  } | null;
+}
+
+// "Calle X 123 (Localidad, Departamento)" — la localidad/departamento son
+// opcionales porque el pipeline no siempre logra geolocalizar el domicilio.
+export function formatDomicilio(domicilio: DomicilioConLocalidad | null | undefined): string {
+  if (!domicilio) return SIN_DATO;
+  const localidad = domicilio.localidadByLocalidadId;
+  if (!localidad) return domicilio.domicilioCompleto;
+  const departamento = localidad.departamentoByDepartamentoId;
+  return `${domicilio.domicilioCompleto} (${localidad.nombre}${departamento ? `, ${departamento.nombre}` : ""})`;
+}
+
+// "Socio" / "Socio y Presidente" / "Socio, Presidente y Apoderado"
+export function listaConY(items: string[]): string {
+  if (items.length === 0) return SIN_DATO;
+  if (items.length === 1) return items[0];
+  return `${items.slice(0, -1).join(", ")} y ${items[items.length - 1]}`;
+}
+
 // Fecha de hoy en formato "YYYY-MM-DD" (hora local, no UTC) para precargar
 // inputs type="date".
 export function hoyISO(): string {

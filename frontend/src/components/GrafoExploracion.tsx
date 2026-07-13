@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apollo } from "../apollo";
 import { trackEvent } from "../lib/analytics";
+import { DescargarIcon } from "./DescargarIcon";
 import {
   GRAFO,
   GRAFO_PERSONA,
@@ -747,7 +748,7 @@ export function GrafoExploracion({
           title="Descargar esta vista como imagen"
           className="cursor-pointer rounded-2xl bg-white/90 px-4 py-2.5 text-sm font-bold text-carbon shadow-md backdrop-blur transition-colors hover:bg-white disabled:cursor-not-allowed disabled:text-carbon/30"
         >
-          ⭳ Descargar imagen
+          <DescargarIcon /> Descargar imagen
         </button>
         {expandiendo && (
           <div className="rounded-full bg-white/90 px-4 py-2 text-xs font-bold text-carbon/70 shadow-md">
