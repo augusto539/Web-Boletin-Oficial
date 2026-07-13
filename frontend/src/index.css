@@ -21,13 +21,14 @@ body {
   @apply bg-white font-sans text-carbon antialiased;
 }
 
-/* Ticker/marquee continuo estilo ventriloc */
+/* Ticker/marquee continuo estilo ventriloc. -25% porque Ticker.tsx renderiza
+   4 copias de los items (ver comentario ahí sobre por qué). */
 @keyframes ticker {
   from {
     transform: translateX(0);
   }
   to {
-    transform: translateX(-50%);
+    transform: translateX(-25%);
   }
 }
 

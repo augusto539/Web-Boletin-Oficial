@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { trackEvent } from "../lib/analytics";
+import { useAccionConSesion } from "../lib/useAccionConSesion";
+import { ModalRegistro } from "./auth/ModalRegistro";
 import { DescargarIcon } from "./DescargarIcon";
 
 // Botón + menú desplegable genérico: quien lo usa (Sociedad.tsx / Persona.tsx)
@@ -17,6 +19,7 @@ export function DescargarFicha({
   const [abierto, setAbierto] = useState(false);
   const [generando, setGenerando] = useState<"pdf" | "excel" | null>(null);
   const contenedorRef = useRef<HTMLDivElement>(null);
+  const { modalAbierto, ejecutar, alExito, cerrar } = useAccionConSesion();
 
   useEffect(() => {
     if (!abierto) return;
@@ -27,8 +30,7 @@ export function DescargarFicha({
     return () => document.removeEventListener("mousedown", alClickAfuera);
   }, [abierto]);
 
-  async function alElegir(formato: "pdf" | "excel") {
-    setAbierto(false);
+  async function generar(formato: "pdf" | "excel") {
     setGenerando(formato);
     try {
       await (formato === "pdf" ? onPDF() : onExcel());
@@ -36,6 +38,11 @@ export function DescargarFicha({
     } finally {
       setGenerando(null);
     }
+  }
+
+  function alElegir(formato: "pdf" | "excel") {
+    setAbierto(false);
+    ejecutar(() => generar(formato));
   }
 
   return (
@@ -72,6 +79,14 @@ export function DescargarFicha({
             Como Excel
           </button>
         </div>
+      )}
+
+      {modalAbierto && (
+        <ModalRegistro
+          titulo="Registrate gratis para descargar"
+          onExito={alExito}
+          onCerrar={cerrar}
+        />
       )}
     </div>
   );

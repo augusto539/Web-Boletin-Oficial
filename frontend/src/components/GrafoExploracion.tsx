@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apollo } from "../apollo";
 import { trackEvent } from "../lib/analytics";
+import { useAccionConSesion } from "../lib/useAccionConSesion";
+import { ModalRegistro } from "./auth/ModalRegistro";
 import { DescargarIcon } from "./DescargarIcon";
 import {
   GRAFO,
@@ -110,6 +112,7 @@ export function GrafoExploracion({
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [conteo, setConteo] = useState({ sociedades: 0, personas: 0 });
   const [puedeRetraer, setPuedeRetraer] = useState(false);
+  const { modalAbierto, ejecutar, alExito, cerrar } = useAccionConSesion();
 
   function mostrarMensaje(texto: string) {
     setMensaje(texto);
@@ -743,7 +746,7 @@ export function GrafoExploracion({
         </div>
         <button
           type="button"
-          onClick={descargarImagen}
+          onClick={() => ejecutar(descargarImagen)}
           disabled={cargando || vacio}
           title="Descargar esta vista como imagen"
           className="cursor-pointer rounded-2xl bg-white/90 px-4 py-2.5 text-sm font-bold text-carbon shadow-md backdrop-blur transition-colors hover:bg-white disabled:cursor-not-allowed disabled:text-carbon/30"
@@ -820,6 +823,14 @@ export function GrafoExploracion({
         <LeyendaLinea punteada={false} texto="Es socio de" />
         <LeyendaLinea punteada texto="Otro vínculo" />
       </div>
+
+      {modalAbierto && (
+        <ModalRegistro
+          titulo="Registrate gratis para descargar"
+          onExito={alExito}
+          onCerrar={cerrar}
+        />
+      )}
     </div>
   );
 }
