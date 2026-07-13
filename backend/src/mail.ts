@@ -1,10 +1,7 @@
 import { Resend } from "resend";
 
-// Wrapper de mail transaccional (bienvenida, reset de contraseña). Sin
-// dominio propio verificado en Resend, MAIL_FROM usa el dominio de pruebas
-// @resend.dev, que solo entrega al mail de la cuenta de Resend — no a
-// usuarios reales (ver docs/pendientes.md). El día que se verifique un
-// dominio, el único cambio necesario es la env var MAIL_FROM.
+// Wrapper de mail transaccional (bienvenida, reset de contraseña). MAIL_FROM
+// usa el dominio propio verificado en Resend (ingcome.com.ar).
 let resendSingleton: Resend | null = null;
 function resend(): Resend {
   if (!resendSingleton) {
@@ -14,7 +11,7 @@ function resend(): Resend {
 }
 
 function mailFrom(): string {
-  return process.env.MAIL_FROM ?? "INGcome <onboarding@resend.dev>";
+  return process.env.MAIL_FROM ?? "INGcome <no-responder@ingcome.com.ar>";
 }
 
 const VINO = "#691824";

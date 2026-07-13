@@ -1,5 +1,6 @@
-// TODO: reemplazar por la casilla real cuando exista.
-export const EMAIL_BAJA_DATOS = "ejemplo@gmail.com";
+// Reenvía a un mail personal vía Cloudflare Email Routing (no es una casilla
+// nueva a revisar aparte).
+export const EMAIL_BAJA_DATOS = "privacidad@ingcome.com.ar";
 
 export const FUENTES = [
   {
