@@ -64,6 +64,14 @@ export function Nav() {
               Búsqueda avanzada
             </Link>
           )}
+          <Link
+            to="/informes"
+            className={`text-sm transition-opacity hover:opacity-70 ${
+              claro ? "text-white" : "text-carbon"
+            }`}
+          >
+            Informes
+          </Link>
           {/* <Link
             to="/notificaciones"
             className={`text-sm transition-opacity hover:opacity-70 ${

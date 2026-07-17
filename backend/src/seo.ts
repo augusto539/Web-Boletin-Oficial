@@ -302,6 +302,174 @@ seoRouter.get(
   }),
 );
 
+// /informes/*: mismo patrón que sociedad/persona arriba (leerIndexHtml +
+// renderHtml + contentHtml server-rendered), pero sobre las tablas
+// precomputadas por backend/src/informes.ts (ver migraciones 031/034) en
+// vez de calcular por request — son las páginas que más va a crawlear
+// Google, no vale la pena pagar el join pesado en cada visita.
+seoRouter.get(
+  "/informes",
+  asyncHandler(async (_req: Request, res: Response, next) => {
+    const base = leerIndexHtml();
+    if (!base) return next();
+
+    const { rows: anios } = await pool().query<{ anio: number }>(
+      "SELECT anio FROM informe_anuario ORDER BY anio DESC",
+    );
+
+    const title = "Informes | INGcome";
+    const description =
+      "Estadísticas de sociedades constituidas en Mendoza: departamentos más activos y anuarios por año, con fuente citada en cada dato.";
+    const canonical = `${siteUrl()}/informes`;
+
+    const anuarioLinksHtml = anios
+      .map((a) => `<li><a href="/informes/anuario-${a.anio}">Anuario ${a.anio}</a></li>`)
+      .join("");
+
+    const contentHtml = `
+    <main>
+      <h1>Informes</h1>
+      <p>${escapeHtml(description)}</p>
+      <h2>Estudios</h2>
+      <ul>
+        <li><a href="/informes/departamentos-mas-activos">Departamentos más activos</a></li>
+      </ul>
+      ${anios.length > 0 ? `<h2>Anuarios</h2><ul>${anuarioLinksHtml}</ul>` : ""}
+    </main>
+  `.trim();
+
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.send(renderHtml(base, { title, description, canonical, noindex: false, contentHtml }));
+  }),
+);
+
+seoRouter.get(
+  "/informes/departamentos-mas-activos",
+  asyncHandler(async (_req: Request, res: Response, next) => {
+    const base = leerIndexHtml();
+    if (!base) return next();
+
+    const { rows } = await pool().query<{
+      nombre: string;
+      cantidad_sociedades: number;
+      cantidad_ultimo_anio: number;
+      actualizado_el: string;
+    }>(
+      `SELECT d.nombre, i.cantidad_sociedades, i.cantidad_ultimo_anio, i.actualizado_el
+       FROM informe_departamentos_activos i
+       JOIN departamentos d ON d.id = i.departamento_id
+       ORDER BY i.cantidad_sociedades DESC`,
+    );
+
+    const actualizadoEl = rows[0] ? formatFecha(rows[0].actualizado_el) : null;
+    const title = "Departamentos más activos en Mendoza | INGcome";
+    const description =
+      "Ranking de departamentos de Mendoza por cantidad de sociedades constituidas, con la actividad del último año. Datos del Boletín Oficial de Mendoza.";
+    const canonical = `${siteUrl()}/informes/departamentos-mas-activos`;
+
+    const filasHtml = rows
+      .map(
+        (r) =>
+          `<tr><td>${escapeHtml(r.nombre)}</td><td>${r.cantidad_sociedades}</td><td>${r.cantidad_ultimo_anio}</td></tr>`,
+      )
+      .join("");
+
+    const contentHtml = `
+    <main>
+      <h1>Departamentos más activos en Mendoza</h1>
+      ${actualizadoEl ? `<p>Actualizado el ${escapeHtml(actualizadoEl)}.</p>` : ""}
+      <table>
+        <thead><tr><th>Departamento</th><th>Sociedades constituidas (histórico)</th><th>Último año</th></tr></thead>
+        <tbody>${filasHtml}</tbody>
+      </table>
+    </main>
+  `.trim();
+
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      name: title,
+      description,
+      url: canonical,
+      creator: { "@type": "Organization", name: "INGcome" },
+      ...(rows[0]?.actualizado_el ? { dateModified: rows[0].actualizado_el } : {}),
+    };
+
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.send(renderHtml(base, { title, description, canonical, noindex: false, jsonLd, contentHtml }));
+  }),
+);
+
+seoRouter.get(
+  "/informes/anuario-:anio(\\d+)",
+  asyncHandler(async (req: Request, res: Response, next) => {
+    const base = leerIndexHtml();
+    if (!base) return next();
+
+    const anio = Number(req.params.anio);
+    const { rows } = await pool().query<{
+      anio: number;
+      sociedades_constituidas: number;
+      personas_involucradas: number;
+      grupo_clae_mas_activo: string | null;
+      departamento_mas_activo: string | null;
+      tipo_sociedad_mas_comun: string | null;
+      actualizado_el: string;
+    }>(
+      `SELECT anio, sociedades_constituidas, personas_involucradas,
+              grupo_clae_mas_activo, departamento_mas_activo, tipo_sociedad_mas_comun, actualizado_el
+       FROM informe_anuario WHERE anio = $1`,
+      [anio],
+    );
+    const a = rows[0];
+    const canonical = `${siteUrl()}/informes/anuario-${anio}`;
+    if (!a) {
+      res.status(404).set("Content-Type", "text/html; charset=utf-8");
+      return res.send(
+        renderHtml(base, {
+          title: `Anuario ${anio} no encontrado | INGcome`,
+          description: `No hay un informe anual para ${anio} en la base.`,
+          canonical,
+          noindex: true,
+          contentHtml: "",
+        }),
+      );
+    }
+
+    const title = `Anuario ${anio}: sociedades constituidas en Mendoza | INGcome`;
+    const description = `En ${anio} se constituyeron ${a.sociedades_constituidas} sociedades en Mendoza, con ${a.personas_involucradas} personas involucradas. Actividad más común: ${a.grupo_clae_mas_activo ?? "sin datos"}.`;
+
+    const actualizadoEl = formatFecha(a.actualizado_el);
+    const contentHtml = `
+    <main>
+      <h1>Anuario ${anio}: sociedades constituidas en Mendoza</h1>
+      ${actualizadoEl ? `<p>Actualizado el ${escapeHtml(actualizadoEl)}.</p>` : ""}
+      <ul>
+        <li>Sociedades constituidas: ${a.sociedades_constituidas}</li>
+        <li>Personas involucradas: ${a.personas_involucradas}</li>
+        ${a.grupo_clae_mas_activo ? `<li>Actividad más común: ${escapeHtml(a.grupo_clae_mas_activo)}</li>` : ""}
+        ${a.departamento_mas_activo ? `<li>Departamento más activo: ${escapeHtml(a.departamento_mas_activo)}</li>` : ""}
+        ${a.tipo_sociedad_mas_comun ? `<li>Tipo de sociedad más común: ${escapeHtml(a.tipo_sociedad_mas_comun)}</li>` : ""}
+      </ul>
+    </main>
+  `.trim();
+
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      name: title,
+      description,
+      url: canonical,
+      creator: { "@type": "Organization", name: "INGcome" },
+      temporalCoverage: String(anio),
+      dateModified: a.actualizado_el,
+    };
+
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.send(renderHtml(base, { title, description, canonical, noindex: false, jsonLd, contentHtml }));
+  }),
+);
+
 seoRouter.get("/robots.txt", (_req: Request, res: Response) => {
   res.type("text/plain").send(
     [
@@ -324,9 +492,42 @@ seoRouter.get("/sitemap.xml", (_req: Request, res: Response) => {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap><loc>${siteUrl()}/sitemap-sociedades.xml</loc></sitemap>
+  <sitemap><loc>${siteUrl()}/sitemap-informes.xml</loc></sitemap>
 </sitemapindex>`;
   res.type("application/xml").send(xml);
 });
+
+seoRouter.get(
+  "/sitemap-informes.xml",
+  asyncHandler(async (_req: Request, res: Response) => {
+    const { rows: anios } = await pool().query<{ anio: number; actualizado_el: string }>(
+      "SELECT anio, actualizado_el FROM informe_anuario ORDER BY anio",
+    );
+    const { rows: depto } = await pool().query<{ actualizado_el: string }>(
+      "SELECT max(actualizado_el) AS actualizado_el FROM informe_departamentos_activos",
+    );
+
+    const hoy = new Date().toISOString().slice(0, 10);
+    const urls = [
+      `  <url><loc>${siteUrl()}/informes</loc><lastmod>${hoy}</lastmod></url>`,
+      depto[0]?.actualizado_el
+        ? `  <url><loc>${siteUrl()}/informes/departamentos-mas-activos</loc><lastmod>${new Date(depto[0].actualizado_el).toISOString().slice(0, 10)}</lastmod></url>`
+        : "",
+      ...anios.map(
+        (a) =>
+          `  <url><loc>${siteUrl()}/informes/anuario-${a.anio}</loc><lastmod>${new Date(a.actualizado_el).toISOString().slice(0, 10)}</lastmod></url>`,
+      ),
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>`;
+    res.type("application/xml").send(xml);
+  }),
+);
 
 seoRouter.get(
   "/sitemap-sociedades.xml",

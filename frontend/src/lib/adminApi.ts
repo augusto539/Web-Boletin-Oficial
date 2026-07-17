@@ -82,6 +82,12 @@ async function patch<T>(path: string, body: unknown): Promise<T> {
   return res.json();
 }
 
+async function post<T>(path: string): Promise<T> {
+  const res = await fetch(`${API}${path}`, { method: "POST", credentials: "include" });
+  if (!res.ok) throw new Error(`Error ${res.status} pidiendo ${path}`);
+  return res.json();
+}
+
 export function obtenerEstadisticasAdmin(): Promise<EstadisticasAdmin> {
   return get("/api/admin/estadisticas");
 }
@@ -150,4 +156,8 @@ export function obtenerConfiguracionAdmin(): Promise<{ modoSoloAdmin: boolean }>
 
 export function actualizarModoSoloAdmin(modoSoloAdmin: boolean): Promise<{ modoSoloAdmin: boolean }> {
   return patch("/api/admin/configuracion", { modoSoloAdmin });
+}
+
+export function recalcularInformesAdmin(): Promise<{ departamentos: number; anios: number }> {
+  return post("/api/admin/informes/recalcular");
 }

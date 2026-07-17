@@ -12,6 +12,7 @@ import {
   obtenerPersonasAdmin,
   obtenerSociedadesAdmin,
   obtenerUsuariosAdmin,
+  recalcularInformesAdmin,
   type EstadisticasAdmin,
   type LeadAdmin,
   type PersonaAdmin,
@@ -157,6 +158,8 @@ function Toggle({
 function TabConfiguracion() {
   const [modoSoloAdmin, setModoSoloAdmin] = useState<boolean | null>(null);
   const [guardando, setGuardando] = useState(false);
+  const [recalculando, setRecalculando] = useState(false);
+  const [resultadoRecalculo, setResultadoRecalculo] = useState<string | null>(null);
 
   useEffect(() => {
     obtenerConfiguracionAdmin()
@@ -174,8 +177,17 @@ function TabConfiguracion() {
       .finally(() => setGuardando(false));
   }
 
+  function alRecalcularInformes() {
+    setRecalculando(true);
+    setResultadoRecalculo(null);
+    recalcularInformesAdmin()
+      .then((r) => setResultadoRecalculo(`Listo: ${r.departamentos} departamentos, ${r.anios} años.`))
+      .catch(() => setResultadoRecalculo("Hubo un error, probá de nuevo."))
+      .finally(() => setRecalculando(false));
+  }
+
   return (
-    <div className="mt-6">
+    <div className="mt-6 space-y-5">
       <div className="rounded-3xl bg-white p-7">
         <div className="flex items-center justify-between gap-6">
           <div>
@@ -191,6 +203,29 @@ function TabConfiguracion() {
             disabled={modoSoloAdmin === null || guardando}
             onClick={alAlternar}
           />
+        </div>
+      </div>
+
+      <div className="rounded-3xl bg-white p-7">
+        <div className="flex items-center justify-between gap-6">
+          <div>
+            <p className="font-bold">Informes</p>
+            <p className="mt-1.5 max-w-xl text-sm text-carbon/60">
+              Los datos de "/informes" se recalculan solos todos los días. Usá esto para
+              forzar el recálculo ahora (ej. después de una carga grande de datos).
+            </p>
+            {resultadoRecalculo && (
+              <p className="mt-2 text-sm font-bold text-vino">{resultadoRecalculo}</p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={alRecalcularInformes}
+            disabled={recalculando}
+            className="shrink-0 cursor-pointer rounded-full bg-vino px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-vino-oscuro disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {recalculando ? "Recalculando…" : "Recalcular ahora"}
+          </button>
         </div>
       </div>
     </div>

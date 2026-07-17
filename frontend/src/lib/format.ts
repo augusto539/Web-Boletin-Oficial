@@ -7,11 +7,12 @@ export function dato(valor: string | number | null | undefined): string {
   return String(valor);
 }
 
-// Las fechas llegan como "YYYY-MM-DD"; se formatean sin pasar por Date para
-// evitar el corrimiento de día por zona horaria (UTC-3).
+// Las fechas llegan como "YYYY-MM-DD" (o "YYYY-MM-DDTHH:mm:ss.sssZ" para
+// columnas timestamptz); se formatean sin pasar por Date para evitar el
+// corrimiento de día por zona horaria (UTC-3).
 export function fecha(iso: string | null | undefined): string {
   if (!iso) return SIN_DATO;
-  const [anio, mes, dia] = iso.split("-");
+  const [anio, mes, dia] = iso.split("T")[0].split("-");
   return `${dia}/${mes}/${anio}`;
 }
 

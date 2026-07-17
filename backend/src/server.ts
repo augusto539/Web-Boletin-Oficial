@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import { config } from "dotenv";
 import express, { type NextFunction, type Request, type Response } from "express";
+import cron from "node-cron";
 import pluralize from "pluralize";
 import { postgraphile } from "postgraphile";
 import { adminRouter } from "./admin.js";
@@ -16,6 +17,7 @@ import {
   modoSoloAdminActivo,
 } from "./configuracion.js";
 import { historialRouter } from "./historial.js";
+import { informesPublicoRouter, recalcularInformes } from "./informes.js";
 import { leadsRouter } from "./leads.js";
 import { seoRouter } from "./seo.js";
 
@@ -82,6 +84,7 @@ app.use("/api/admin", requireAdmin(), configuracionAdminRouter);
 app.use("/api/configuracion", configuracionPublicaRouter);
 app.use("/api/leads", leadsRouter);
 app.use("/api/historial", historialRouter);
+app.use("/api/informes", informesPublicoRouter);
 
 // "Modo solo administradores" (tab Configuración de /admin): bloquea la
 // búsqueda avanzada para cualquiera que no sea admin. El front también
@@ -163,6 +166,16 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 await cargarConfiguracion();
+
+// Precómputo de /informes: una vez al arrancar (no bloquea el arranque si
+// falla — un error acá no debería tirar abajo todo el servidor) + una vez
+// por día. El botón manual en el panel admin (POST
+// /api/admin/informes/recalcular, ver admin.ts) cubre el caso de querer
+// forzarlo antes del próximo horario.
+recalcularInformes().catch((err) => console.error("[informes] error en el recálculo inicial:", err));
+cron.schedule("0 4 * * *", () => {
+  recalcularInformes().catch((err) => console.error("[informes] error en el recálculo diario:", err));
+});
 
 const port = Number(process.env.PORT ?? 5000);
 app.listen(port, () => {

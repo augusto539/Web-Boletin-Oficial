@@ -1,10 +1,22 @@
 import { type Request, type Response, Router } from "express";
 import { asyncHandler } from "./asyncHandler.js";
 import { pool } from "./auth.js";
+import { recalcularInformes } from "./informes.js";
 
 // Todas las rutas de acá abajo ya pasaron por requireAdmin() (ver server.ts),
 // así que req.usuario existe y es admin=true.
 export const adminRouter = Router();
+
+// Recálculo manual de /informes (además del job diario, ver cron en
+// server.ts) — útil justo después de una carga grande de datos del pipeline
+// externo, sin esperar al próximo horario del cron.
+adminRouter.post(
+  "/informes/recalcular",
+  asyncHandler(async (_req: Request, res: Response) => {
+    const resultado = await recalcularInformes();
+    return res.json(resultado);
+  }),
+);
 
 adminRouter.get(
   "/estadisticas",

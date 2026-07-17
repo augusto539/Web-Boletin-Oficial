@@ -10,6 +10,9 @@ import Admin from "./pages/Admin";
 import AdminUsuario from "./pages/AdminUsuario";
 import BusquedaAvanzada from "./pages/BusquedaAvanzada";
 import Exploracion from "./pages/Exploracion";
+import InformeAnuario from "./pages/InformeAnuario";
+import InformeDepartamentosActivos from "./pages/InformeDepartamentosActivos";
+import InformesHub from "./pages/InformesHub";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
@@ -70,6 +73,9 @@ export default function App() {
             </RutaSoloAdminSiActivo>
           }
         />
+        <Route path="/informes" element={<InformesHub />} />
+        <Route path="/informes/departamentos-mas-activos" element={<InformeDepartamentosActivos />} />
+        <Route path="/informes/:anuarioSlug" element={<InformeAnuario />} />
         {/* <Route path="/notificaciones" element={<Notificaciones />} /> desactivado por ahora */}
         <Route path="/terminos" element={<Terminos />} />
         <Route path="/privacidad" element={<Privacidad />} />
