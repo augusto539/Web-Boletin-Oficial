@@ -185,6 +185,19 @@ adminRouter.get("/sociedades", async (req: Request, res: Response) => {
          LEFT JOIN personas_fisicas pf ON pf.id = v.persona_id
          LEFT JOIN sociedades sm ON sm.id = v.sociedad_miembro_id
          GROUP BY v.sociedad_id
+       ),
+       -- "orden = 1" no es único por sociedad en los datos reales (1063
+       -- sociedades tienen más de una fila así, típicamente una AC y una BD
+       -- vieja de cuando cambió el rubro declarado sin renumerar orden) — un
+       -- JOIN directo por orden=1 multiplicaba esas filas y la sociedad
+       -- aparecía repetida en el panel con un CLAE distinto cada vez.
+       -- DISTINCT ON fuerza una sola fila por sociedad, priorizando la
+       -- actividad activa (AC) y de menor orden.
+       actividad_principal AS (
+         SELECT DISTINCT ON (sa.sociedad_id)
+                sa.sociedad_id, sa.clae_codigo, sa.clae_grupo
+         FROM sociedad_actividades sa
+         ORDER BY sa.sociedad_id, (sa.estado = 'AC') DESC, sa.orden ASC
        )
        SELECT
          s.id, s.nombre, s.cuit, s.fecha_constitucion::text AS fecha_constitucion, s.domicilio_electronico, s.oculta,
@@ -194,9 +207,9 @@ adminRouter.get("/sociedades", async (req: Request, res: Response) => {
          soc.nombres AS socios
        FROM sociedades s
        LEFT JOIN domicilios d ON d.id = s.domicilio_id
-       LEFT JOIN sociedad_actividades sa ON sa.sociedad_id = s.id AND sa.orden = 1
-       LEFT JOIN actividades_clae ac ON ac.codigo = sa.clae_codigo
-       LEFT JOIN grupos_clae gc ON gc.codigo = sa.clae_grupo
+       LEFT JOIN actividad_principal ap ON ap.sociedad_id = s.id
+       LEFT JOIN actividades_clae ac ON ac.codigo = ap.clae_codigo
+       LEFT JOIN grupos_clae gc ON gc.codigo = ap.clae_grupo
        LEFT JOIN socios soc ON soc.sociedad_id = s.id
        ORDER BY s.nombre
        LIMIT $1 OFFSET $2`,

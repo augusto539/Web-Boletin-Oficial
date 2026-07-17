@@ -213,13 +213,18 @@ function TabDatos() {
 
   return (
     <div className="mt-6">
-      <div className="mb-5 flex gap-2">
+      {/* overflow-x-auto solo hasta sm: en desktop ya entran todas las
+          pestañas en una línea. Sin esto (y sin shrink-0 en los botones) el
+          <main> con overflow-hidden de más arriba directamente recortaba las
+          últimas pestañas ("Usuarios", "Leads") fuera de pantalla en mobile,
+          sin ninguna forma de llegar a ellas. */}
+      <div className="mb-5 flex gap-2 overflow-x-auto sm:overflow-visible">
         {SUBPESTANAS.map((s) => (
           <button
             key={s.id}
             type="button"
             onClick={() => setSub(s.id)}
-            className={`cursor-pointer rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+            className={`shrink-0 cursor-pointer rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
               sub === s.id ? "bg-vino text-white" : "bg-white text-carbon/60 hover:bg-carbon/10"
             }`}
           >

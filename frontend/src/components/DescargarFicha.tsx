@@ -63,7 +63,12 @@ export function DescargarFicha({
       </button>
 
       {abierto && (
-        <div className="absolute top-full right-0 z-20 mt-2 w-48 overflow-hidden rounded-2xl bg-white shadow-2xl">
+        // left-0 en mobile (default): en Sociedad.tsx/Persona.tsx el header
+        // envuelve a su propia línea con el botón pegado al borde izquierdo,
+        // así que anclar el menú a la derecha (right-0) lo mandaba fuera de
+        // pantalla por la izquierda. Desde sm (donde el botón sí queda a la
+        // derecha del header) vuelve al anclaje original.
+        <div className="absolute top-full left-0 z-20 mt-2 w-48 overflow-hidden rounded-2xl bg-white shadow-2xl sm:left-auto sm:right-0">
           <button
             type="button"
             onClick={() => alElegir("pdf")}

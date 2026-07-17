@@ -56,7 +56,22 @@ const app = express();
 // credentials: true para que el navegador mande/reciba las cookies de auth en
 // los fetch cross-origin (front 5173 -> back 5050). Requiere origin explícito,
 // no "*".
-app.use(cors({ origin: process.env.CORS_ORIGIN ?? "http://localhost:5173", credentials: true }));
+//
+// En dev siempre se acepta cualquier origin puerto 5173 (no solo
+// localhost, aunque el .env de dev traiga CORS_ORIGIN=http://localhost:5173
+// como default documentado): así se puede entrar desde el celu por la IP de
+// LAN de la máquina (para revisar el sitio en mobile) sin tocar el .env cada
+// vez que esa IP cambia. En producción NODE_ENV=production fuerza el
+// whitelist estricto de CORS_ORIGIN (ver docker-compose.prod.yml).
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === "production"
+        ? (process.env.CORS_ORIGIN ?? "http://localhost:5173")
+        : /^http:\/\/[^/]+:5173$/,
+    credentials: true,
+  }),
+);
 app.use(cookieParser());
 app.use(express.json());
 

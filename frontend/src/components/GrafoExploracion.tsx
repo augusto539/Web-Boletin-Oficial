@@ -112,6 +112,9 @@ export function GrafoExploracion({
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [conteo, setConteo] = useState({ sociedades: 0, personas: 0 });
   const [puedeRetraer, setPuedeRetraer] = useState(false);
+  // Solo se usa en mobile (el botón que la togglea es sm:hidden): en desktop
+  // la referencia de nodos/aristas siempre está expandida, sin este estado.
+  const [leyendaAbierta, setLeyendaAbierta] = useState(false);
   const { modalAbierto, ejecutar, alExito, cerrar } = useAccionConSesion();
 
   function mostrarMensaje(texto: string) {
@@ -699,10 +702,12 @@ export function GrafoExploracion({
     <div className="relative h-full w-full">
       <div ref={contenedor} className="h-full w-full bg-humo" role="img" aria-label={`Red de vínculos de ${raizNombre}`} />
 
-      <div className="pointer-events-none absolute top-5 left-5 max-w-sm rounded-2xl bg-white/90 p-4 shadow-md backdrop-blur">
+      <div className="pointer-events-none absolute inset-x-3 top-3 max-w-sm rounded-2xl bg-white/90 p-4 shadow-md backdrop-blur sm:inset-x-auto sm:top-5 sm:left-5">
         <p className="text-xs font-bold uppercase tracking-widest text-carbon/50">Explorando</p>
         <p className="text-lg font-bold text-carbon">{raizNombre}</p>
-        <p className="mt-1 text-xs text-carbon/60">
+        {/* "Click"/"Ctrl+rueda" no aplican a touch, y en mobile este panel ya
+            compite por espacio con los controles — afuera. */}
+        <p className="mt-1 hidden text-xs text-carbon/60 sm:block">
           Click en un nodo para ver opciones · Ctrl/Cmd + rueda para zoom
         </p>
         <p className="mt-2 text-xs font-bold text-vino">{textoConteo()}</p>
@@ -721,43 +726,72 @@ export function GrafoExploracion({
         </div>
       )}
 
-      {/* Controles de prueba: expandir todo el grafo visible un nivel, o
-          deshacer la última expansión masiva. No son para el usuario final. */}
-      <div className="absolute top-5 right-5 flex flex-col items-end gap-2">
-        <div className="flex overflow-hidden rounded-2xl bg-white/90 shadow-md backdrop-blur">
+      {/* Controles de prueba (expandir todo/retraer/descargar) + la
+          referencia de nodos y aristas. En mobile van los tres agrupados en
+          una sola columna en la esquina inferior izquierda, con el mismo
+          margen (12px, bottom-3/left-3) que el cartel "Explorando" de
+          arriba, al mismo nivel que los controles de zoom (abajo a la
+          derecha) — de abajo hacia arriba: Expandir/Retraer, Descargar,
+          Referencias (flex-col-reverse: el primer hijo en el DOM queda
+          anclado abajo). En desktop cada pieza vuelve a su posición
+          original (arriba a la derecha las dos primeras, abajo a la
+          izquierda la leyenda) — los "contents" sacan a cada una del flujo
+          de esta columna en sm: para que se posicionen de forma
+          independiente, como antes. */}
+      <div className="absolute bottom-3 left-3 flex flex-col-reverse items-start gap-2 sm:contents">
+        <div className="contents sm:absolute sm:top-5 sm:right-5 sm:flex sm:flex-col sm:items-end sm:gap-2">
+          <div className="flex overflow-hidden rounded-2xl bg-white/90 shadow-md backdrop-blur">
+            <button
+              type="button"
+              onClick={expandirTodos}
+              disabled={expandiendo || cargando}
+              title="Expandir todos los nodos visibles un nivel"
+              className="cursor-pointer px-4 py-2.5 text-sm font-bold text-carbon transition-colors hover:bg-humo disabled:cursor-not-allowed disabled:text-carbon/30 disabled:hover:bg-transparent"
+            >
+              ▲ Expandir todo
+            </button>
+            <button
+              type="button"
+              onClick={retraerUnPaso}
+              disabled={!puedeRetraer || expandiendo || cargando}
+              title="Deshacer la última expansión masiva"
+              className="cursor-pointer border-l border-carbon/10 px-4 py-2.5 text-sm font-bold text-carbon transition-colors hover:bg-humo disabled:cursor-not-allowed disabled:text-carbon/30 disabled:hover:bg-transparent"
+            >
+              ▼ Retraer
+            </button>
+          </div>
           <button
             type="button"
-            onClick={expandirTodos}
-            disabled={expandiendo || cargando}
-            title="Expandir todos los nodos visibles un nivel"
-            className="cursor-pointer px-4 py-2.5 text-sm font-bold text-carbon transition-colors hover:bg-humo disabled:cursor-not-allowed disabled:text-carbon/30 disabled:hover:bg-transparent"
+            onClick={() => ejecutar(descargarImagen)}
+            disabled={cargando || vacio}
+            title="Descargar esta vista como imagen"
+            className="cursor-pointer rounded-2xl bg-white/90 px-4 py-2.5 text-sm font-bold text-carbon shadow-md backdrop-blur transition-colors hover:bg-white disabled:cursor-not-allowed disabled:text-carbon/30"
           >
-            ▲ Expandir todo
+            <DescargarIcon /> Descargar imagen
           </button>
-          <button
-            type="button"
-            onClick={retraerUnPaso}
-            disabled={!puedeRetraer || expandiendo || cargando}
-            title="Deshacer la última expansión masiva"
-            className="cursor-pointer border-l border-carbon/10 px-4 py-2.5 text-sm font-bold text-carbon transition-colors hover:bg-humo disabled:cursor-not-allowed disabled:text-carbon/30 disabled:hover:bg-transparent"
-          >
-            ▼ Retraer
-          </button>
+          {expandiendo && (
+            <div className="rounded-full bg-white/90 px-4 py-2 text-xs font-bold text-carbon/70 shadow-md">
+              Expandiendo…
+            </div>
+          )}
         </div>
+
         <button
           type="button"
-          onClick={() => ejecutar(descargarImagen)}
-          disabled={cargando || vacio}
-          title="Descargar esta vista como imagen"
-          className="cursor-pointer rounded-2xl bg-white/90 px-4 py-2.5 text-sm font-bold text-carbon shadow-md backdrop-blur transition-colors hover:bg-white disabled:cursor-not-allowed disabled:text-carbon/30"
+          onClick={() => setLeyendaAbierta((a) => !a)}
+          className="cursor-pointer rounded-full bg-white/90 px-4 py-2 text-xs font-bold text-carbon shadow-md backdrop-blur sm:hidden"
         >
-          <DescargarIcon /> Descargar imagen
+          Referencias {leyendaAbierta ? "▲" : "▼"}
         </button>
-        {expandiendo && (
-          <div className="rounded-full bg-white/90 px-4 py-2 text-xs font-bold text-carbon/70 shadow-md">
-            Expandiendo…
-          </div>
-        )}
+        <div
+          className={`pointer-events-none ${leyendaAbierta ? "flex" : "hidden"} flex-col gap-2 rounded-2xl bg-white/90 p-4 shadow-md backdrop-blur sm:absolute sm:bottom-5 sm:left-5 sm:flex`}
+        >
+          <Leyenda color={COLORES.sociedad} texto="Sociedad" />
+          <Leyenda color={COLORES.persona} texto="Persona física" />
+          <Leyenda color={COLORES.escribano} texto="Escribano" />
+          <LeyendaLinea punteada={false} texto="Es socio de" />
+          <LeyendaLinea punteada texto="Otro vínculo" />
+        </div>
       </div>
       {mensaje && (
         <div className="absolute bottom-24 left-1/2 -translate-x-1/2 rounded-full bg-carbon px-4 py-2 text-xs font-bold text-white shadow-lg">
@@ -789,7 +823,10 @@ export function GrafoExploracion({
         </div>
       )}
 
-      <div className="absolute right-5 bottom-5 flex flex-col overflow-hidden rounded-xl bg-white shadow-md">
+      {/* right-3/bottom-3 en mobile: mismo margen (12px) que el cartel
+          "Explorando" y que el grupo de Expandir/Descargar/Referencias, al
+          mismo nivel — quedan uno al lado del otro, no superpuestos. */}
+      <div className="absolute right-3 bottom-3 flex flex-col overflow-hidden rounded-xl bg-white shadow-md sm:right-5 sm:bottom-5">
         <button
           type="button"
           onClick={() => zoom(FACTOR_ZOOM)}
@@ -814,14 +851,6 @@ export function GrafoExploracion({
         >
           −
         </button>
-      </div>
-
-      <div className="pointer-events-none absolute bottom-5 left-5 flex flex-col gap-2 rounded-2xl bg-white/90 p-4 shadow-md backdrop-blur">
-        <Leyenda color={COLORES.sociedad} texto="Sociedad" />
-        <Leyenda color={COLORES.persona} texto="Persona física" />
-        <Leyenda color={COLORES.escribano} texto="Escribano" />
-        <LeyendaLinea punteada={false} texto="Es socio de" />
-        <LeyendaLinea punteada texto="Otro vínculo" />
       </div>
 
       {modalAbierto && (

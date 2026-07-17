@@ -19,7 +19,7 @@ import { PERSONA, type DataPersona, type VinculoPersona } from "../lib/queries";
 
 export default function Persona() {
   const { id } = useParams();
-  const { data, loading, error } = useQuery<DataPersona>(PERSONA, {
+  const { data, loading, error, refetch } = useQuery<DataPersona>(PERSONA, {
     variables: { id },
     skip: !id,
   });
@@ -32,9 +32,33 @@ export default function Persona() {
     );
   }
 
+  // Un error de red/servidor no es lo mismo que "no existe": lo primero es
+  // transitorio (ApolloClient ya reintenta solo, ver apollo.ts) y merece la
+  // opción de reintentar, no un 404 permanente que solo se arregla recargando
+  // la página a mano.
+  if (error) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-humo px-6 pt-18">
+        <div className="w-full max-w-xl text-center">
+          <h1 className="text-4xl font-bold">Hubo un problema al cargar esta persona</h1>
+          <p className="mt-3 mb-8 text-carbon/60">
+            Puede ser un corte de conexión momentáneo. Probá de nuevo.
+          </p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="cursor-pointer rounded-full bg-vino px-6 py-2.5 text-sm font-bold text-white transition-colors hover:bg-vino-oscuro"
+          >
+            Reintentar
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   const persona = data?.personaFisicaById;
 
-  if (error || !persona) {
+  if (!persona) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-humo px-6 pt-18">
         <div className="w-full max-w-xl text-center">

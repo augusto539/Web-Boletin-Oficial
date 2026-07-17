@@ -1,4 +1,6 @@
-const API = import.meta.env.VITE_API_URL ?? "http://localhost:5050";
+// Ver apollo.ts: mismo criterio, usar el host actual en vez de "localhost"
+// fijo para que funcione igual entrando por LAN desde el celu.
+const API = import.meta.env.VITE_API_URL ?? `http://${window.location.hostname}:5050`;
 
 export interface EstadisticasAdmin {
   baseDeDatos: {

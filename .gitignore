@@ -14,6 +14,7 @@ build/
 
 *.pem
 *.key
+*keys/
 
 # Manual de marca (PDF 192MB, AI 423MB): no son código y GitHub rechaza
 # archivos >100MB. Guardarlos aparte (Drive/Notion/etc.), no en el repo.

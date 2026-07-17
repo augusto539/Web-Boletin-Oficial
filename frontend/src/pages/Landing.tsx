@@ -217,19 +217,8 @@ function QueEncontras() {
 
         <Reveal delay={0.3}>
           <div className="mt-6 rounded-3xl bg-humo p-8">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <h3 className="text-xl font-bold">Red de vínculos navegable</h3>
-              {puedeExplorar && (
-                <Link
-                  to={`/exploracion/sociedad/${SOCIEDAD_DEMO_ID}`}
-                  state={{ nombre: SOCIEDAD_DEMO_NOMBRE }}
-                  className="inline-block shrink-0 cursor-pointer rounded-full bg-vino px-5 py-2.5 text-sm font-bold text-white transition-transform hover:scale-105"
-                >
-                  Ver red completa
-                </Link>
-              )}
-            </div>
-            <p className="mt-3 overflow-x-auto text-nowrap leading-relaxed text-carbon/70">
+            <h3 className="text-xl font-bold">Red de vínculos navegable</h3>
+            <p className="mt-3 leading-relaxed text-carbon/70">
               Quién es socio de quién, y a través de qué otras empresas. Esta es la red real de{" "}
               <Link
                 to={`/sociedad/${SOCIEDAD_DEMO_ID}`}
@@ -239,6 +228,15 @@ function QueEncontras() {
               </Link>{" "}
               — probala, se puede tocar.
             </p>
+            {puedeExplorar && (
+              <Link
+                to={`/exploracion/sociedad/${SOCIEDAD_DEMO_ID}`}
+                state={{ nombre: SOCIEDAD_DEMO_NOMBRE }}
+                className="mt-5 inline-block cursor-pointer rounded-full bg-vino px-5 py-2.5 text-sm font-bold text-white transition-transform hover:scale-105"
+              >
+                Ver red completa
+              </Link>
+            )}
             <div className="mt-6">
               <GrafoSociedad sociedadId={SOCIEDAD_DEMO_ID} nombre={SOCIEDAD_DEMO_NOMBRE} />
             </div>

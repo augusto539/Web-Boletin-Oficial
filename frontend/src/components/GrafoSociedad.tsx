@@ -91,6 +91,14 @@ export function GrafoSociedad({ sociedadId, nombre }: { sociedadId: Id; nombre: 
       })),
     ];
 
+    // En mobile, arrastrar con un dedo es el mismo gesto que hace scroll de
+    // página: si el grafo lo capta para paneo, queda atrapado el toque entre
+    // "mover el grafo" y "scrollear" (ver conversación). Este es solo un
+    // preview embebido (no la vista de exploración de pantalla completa), así
+    // que en mobile directamente se apaga el paneo con el dedo y el arrastre
+    // de nodos — sigue funcionando el tap para navegar y los botones de zoom.
+    const esMobile = window.innerWidth < 768;
+
     const cy = cytoscape({
       container: contenedor.current,
       elements: elementos,
@@ -98,6 +106,8 @@ export function GrafoSociedad({ sociedadId, nombre }: { sociedadId: Id; nombre: 
       // wheel más abajo) para que scrollear la página sobre el grafo no quede
       // atrapado haciendo zoom en vez de scrollear.
       userZoomingEnabled: false,
+      userPanningEnabled: !esMobile,
+      autoungrabify: esMobile,
       autounselectify: true,
       style: [
         {
@@ -169,6 +179,14 @@ export function GrafoSociedad({ sociedadId, nombre }: { sociedadId: Id; nombre: 
     });
     cyRef.current = cy;
     const contenedorEl = contenedor.current;
+
+    // Arranca more zoomeado que el "ajustar vista" inicial del layout: mismo
+    // factor que aplica cada click del botón "+" (ver zoom() más abajo),
+    // elevado a la 6ta, centrado en el medio del canvas.
+    cy.zoom({
+      level: cy.zoom() * FACTOR_ZOOM ** 6,
+      renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 },
+    });
 
     // Click en otro nodo del grafo → navegar a su ficha (sociedad o persona).
     cy.on("tap", "node", (evento) => {
