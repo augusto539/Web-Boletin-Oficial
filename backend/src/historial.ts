@@ -1,4 +1,5 @@
 import { type Request, type Response, Router } from "express";
+import { asyncHandler } from "./asyncHandler.js";
 import { pool, requireUsuario } from "./auth.js";
 
 // Historial de búsquedas: cualquier usuario logueado puede registrar las
@@ -14,7 +15,7 @@ const TIPOS_VALIDOS = new Set([
   "persona_avanzada",
 ]);
 
-historialRouter.post("/", requireUsuario(), async (req: Request, res: Response) => {
+historialRouter.post("/", requireUsuario(), asyncHandler(async (req: Request, res: Response) => {
   const tipo = typeof req.body?.tipo === "string" ? req.body.tipo : "";
   const termino = typeof req.body?.termino === "string" ? req.body.termino.trim().slice(0, 300) || null : null;
   const resultados = Number.isFinite(req.body?.resultados)
@@ -28,4 +29,4 @@ historialRouter.post("/", requireUsuario(), async (req: Request, res: Response) 
     [req.usuario!.id, tipo, termino, resultados],
   );
   return res.status(201).json({ ok: true });
-});
+}));

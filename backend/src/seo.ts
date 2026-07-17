@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { type Request, type Response, Router } from "express";
 import { Pool } from "pg";
+import { asyncHandler } from "./asyncHandler.js";
 
 // Middleware de SEO: sirve el mismo index.html de la SPA pero con
 // title/description/canonical/JSON-LD únicos por entidad, más un bloque de
@@ -103,7 +104,9 @@ function renderHtml(base: string, i: Inyeccion): string {
 
 export const seoRouter = Router();
 
-seoRouter.get("/sociedad/:id", async (req: Request, res: Response, next) => {
+seoRouter.get(
+  "/sociedad/:id",
+  asyncHandler(async (req: Request, res: Response, next) => {
   const base = leerIndexHtml();
   if (!base) return next(); // sin build de prod, deja que el dev server de Vite maneje la ruta
 
@@ -249,7 +252,8 @@ seoRouter.get("/sociedad/:id", async (req: Request, res: Response, next) => {
   res.send(
     renderHtml(base, { title, description, canonical, noindex, jsonLd, contentHtml }),
   );
-});
+  }),
+);
 
 // Personas: siempre noindex. A diferencia de las sociedades, publicar en
 // buscadores nombre + domicilio + fecha de nacimiento de una persona física
@@ -257,7 +261,9 @@ seoRouter.get("/sociedad/:id", async (req: Request, res: Response, next) => {
 // — la sociedad ya es indexable y cubre la búsqueda relevante ("quién es
 // socio de tal empresa"). Si en el futuro se decide indexar personas, nunca
 // debe ir el DNI en title/description.
-seoRouter.get("/persona/:id", async (req: Request, res: Response, next) => {
+seoRouter.get(
+  "/persona/:id",
+  asyncHandler(async (req: Request, res: Response, next) => {
   const base = leerIndexHtml();
   if (!base) return next();
 
@@ -293,7 +299,8 @@ seoRouter.get("/persona/:id", async (req: Request, res: Response, next) => {
       contentHtml,
     }),
   );
-});
+  }),
+);
 
 seoRouter.get("/robots.txt", (_req: Request, res: Response) => {
   res.type("text/plain").send(
@@ -321,11 +328,13 @@ seoRouter.get("/sitemap.xml", (_req: Request, res: Response) => {
   res.type("application/xml").send(xml);
 });
 
-seoRouter.get("/sitemap-sociedades.xml", async (_req: Request, res: Response) => {
-  // Mismo criterio de "thin content" que en la inyección de meta tags: solo
-  // van al sitemap las sociedades con algo sustancial para mostrar.
-  const { rows } = await pool().query<{ id: string; updated_at: string }>(
-    `SELECT s.id, s.updated_at
+seoRouter.get(
+  "/sitemap-sociedades.xml",
+  asyncHandler(async (_req: Request, res: Response) => {
+    // Mismo criterio de "thin content" que en la inyección de meta tags: solo
+    // van al sitemap las sociedades con algo sustancial para mostrar.
+    const { rows } = await pool().query<{ id: string; updated_at: string }>(
+      `SELECT s.id, s.updated_at
      FROM sociedades s
      WHERE s.oculta = FALSE
        AND (
@@ -335,16 +344,17 @@ seoRouter.get("/sitemap-sociedades.xml", async (_req: Request, res: Response) =>
          OR EXISTS (SELECT 1 FROM actos a WHERE a.sociedad_id = s.id)
        )
      ORDER BY s.id`,
-  );
-  const urls = rows
-    .map(
-      (r) =>
-        `  <url><loc>${siteUrl()}/sociedad/${r.id}</loc><lastmod>${new Date(r.updated_at).toISOString().slice(0, 10)}</lastmod></url>`,
-    )
-    .join("\n");
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+    );
+    const urls = rows
+      .map(
+        (r) =>
+          `  <url><loc>${siteUrl()}/sociedad/${r.id}</loc><lastmod>${new Date(r.updated_at).toISOString().slice(0, 10)}</lastmod></url>`,
+      )
+      .join("\n");
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls}
 </urlset>`;
-  res.type("application/xml").send(xml);
-});
+    res.type("application/xml").send(xml);
+  }),
+);

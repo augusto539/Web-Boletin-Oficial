@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import { config } from "dotenv";
-import express from "express";
+import express, { type NextFunction, type Request, type Response } from "express";
 import pluralize from "pluralize";
 import { postgraphile } from "postgraphile";
 import { adminRouter } from "./admin.js";
@@ -149,6 +149,18 @@ if (existsSync(distDir)) {
     res.sendFile(join(distDir, "index.html"));
   });
 }
+
+// Error handler global, al final de todos los app.use()/app.get() (Express
+// solo lo reconoce como error handler por tener 4 parámetros). Sin esto, un
+// error en un handler async que ya pasó por asyncHandler() (ver
+// asyncHandler.ts) igual tumbaba el proceso entero: Express no tiene a quién
+// más mandarle el error, y sin un handler acá la promesa rechazada quedaba
+// sin manejar. Ahora responde 500 y el proceso sigue vivo.
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  console.error(err);
+  if (res.headersSent) return;
+  res.status(500).json({ error: "Error interno del servidor." });
+});
 
 await cargarConfiguracion();
 

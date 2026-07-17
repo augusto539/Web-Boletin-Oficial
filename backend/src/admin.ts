@@ -1,22 +1,25 @@
 import { type Request, type Response, Router } from "express";
+import { asyncHandler } from "./asyncHandler.js";
 import { pool } from "./auth.js";
 
 // Todas las rutas de acá abajo ya pasaron por requireAdmin() (ver server.ts),
 // así que req.usuario existe y es admin=true.
 export const adminRouter = Router();
 
-adminRouter.get("/estadisticas", async (_req: Request, res: Response) => {
-  const { rows } = await pool().query<{
-    sociedades: string;
-    personas: string;
-    relaciones: string;
-    sociedades_baja: string;
-    personas_baja: string;
-    ultimo_boletin: string | null;
-    usuarios: string;
-    leads: string;
-    busquedas: string;
-  }>(`
+adminRouter.get(
+  "/estadisticas",
+  asyncHandler(async (_req: Request, res: Response) => {
+    const { rows } = await pool().query<{
+      sociedades: string;
+      personas: string;
+      relaciones: string;
+      sociedades_baja: string;
+      personas_baja: string;
+      ultimo_boletin: string | null;
+      usuarios: string;
+      leads: string;
+      busquedas: string;
+    }>(`
     SELECT
       (SELECT count(*) FROM sociedades) AS sociedades,
       (SELECT count(*) FROM personas_fisicas) AS personas,
@@ -28,23 +31,24 @@ adminRouter.get("/estadisticas", async (_req: Request, res: Response) => {
       (SELECT count(*) FROM leads_informe) AS leads,
       (SELECT count(*) FROM historial_busquedas) AS busquedas
   `);
-  const r = rows[0];
+    const r = rows[0];
 
-  return res.json({
-    baseDeDatos: {
-      sociedades: Number(r.sociedades),
-      personas: Number(r.personas),
-      relaciones: Number(r.relaciones),
-      dadosDeBaja: Number(r.sociedades_baja) + Number(r.personas_baja),
-      ultimoBoletin: r.ultimo_boletin,
-    },
-    usuarios: {
-      registrados: Number(r.usuarios),
-      leads: Number(r.leads),
-      busquedas: Number(r.busquedas),
-    },
-  });
-});
+    return res.json({
+      baseDeDatos: {
+        sociedades: Number(r.sociedades),
+        personas: Number(r.personas),
+        relaciones: Number(r.relaciones),
+        dadosDeBaja: Number(r.sociedades_baja) + Number(r.personas_baja),
+        ultimoBoletin: r.ultimo_boletin,
+      },
+      usuarios: {
+        registrados: Number(r.usuarios),
+        leads: Number(r.leads),
+        busquedas: Number(r.busquedas),
+      },
+    });
+  }),
+);
 
 interface UsuarioAdminRow {
   id: string;
@@ -59,99 +63,114 @@ function usuarioAdminJson(u: UsuarioAdminRow) {
   return { id: u.id, nombre: u.nombre, mail: u.mail, plan: u.plan, admin: u.admin, creadoEl: u.creado_el };
 }
 
-adminRouter.get("/usuarios", async (req: Request, res: Response) => {
-  const limite = Math.min(Number(req.query.limit) || 100, 500);
-  const offset = Number(req.query.offset) || 0;
+adminRouter.get(
+  "/usuarios",
+  asyncHandler(async (req: Request, res: Response) => {
+    const limite = Math.min(Number(req.query.limit) || 100, 500);
+    const offset = Number(req.query.offset) || 0;
 
-  const [{ rows: totalRows }, { rows }] = await Promise.all([
-    pool().query<{ count: string }>("SELECT count(*) FROM usuarios"),
-    pool().query<UsuarioAdminRow>(
-      "SELECT id, nombre, mail, plan, admin, creado_el FROM usuarios ORDER BY creado_el DESC LIMIT $1 OFFSET $2",
-      [limite, offset],
-    ),
-  ]);
+    const [{ rows: totalRows }, { rows }] = await Promise.all([
+      pool().query<{ count: string }>("SELECT count(*) FROM usuarios"),
+      pool().query<UsuarioAdminRow>(
+        "SELECT id, nombre, mail, plan, admin, creado_el FROM usuarios ORDER BY creado_el DESC LIMIT $1 OFFSET $2",
+        [limite, offset],
+      ),
+    ]);
 
-  return res.json({
-    total: Number(totalRows[0].count),
-    usuarios: rows.map(usuarioAdminJson),
-  });
-});
+    return res.json({
+      total: Number(totalRows[0].count),
+      usuarios: rows.map(usuarioAdminJson),
+    });
+  }),
+);
 
-adminRouter.get("/usuarios/:id", async (req: Request, res: Response) => {
-  const { rows } = await pool().query<UsuarioAdminRow>(
-    "SELECT id, nombre, mail, plan, admin, creado_el FROM usuarios WHERE id = $1",
-    [req.params.id],
-  );
-  const usuario = rows[0];
-  if (!usuario) return res.status(404).json({ error: "Usuario no encontrado." });
-  return res.json({ usuario: usuarioAdminJson(usuario) });
-});
+adminRouter.get(
+  "/usuarios/:id",
+  asyncHandler(async (req: Request, res: Response) => {
+    const { rows } = await pool().query<UsuarioAdminRow>(
+      "SELECT id, nombre, mail, plan, admin, creado_el FROM usuarios WHERE id = $1",
+      [req.params.id],
+    );
+    const usuario = rows[0];
+    if (!usuario) return res.status(404).json({ error: "Usuario no encontrado." });
+    return res.json({ usuario: usuarioAdminJson(usuario) });
+  }),
+);
 
 // Toggle de admin=true/false. Se bloquea la auto-degradación para que un
 // admin no pueda quitarse el permiso por error y quedar afuera del panel.
-adminRouter.patch("/usuarios/:id/admin", async (req: Request, res: Response) => {
-  const nuevoAdmin = req.body?.admin;
-  if (typeof nuevoAdmin !== "boolean") {
-    return res.status(400).json({ error: "Falta el campo admin (boolean)." });
-  }
-  if (String(req.usuario?.id) === String(req.params.id) && !nuevoAdmin) {
-    return res.status(400).json({ error: "No podés quitarte tu propio permiso de admin." });
-  }
+adminRouter.patch(
+  "/usuarios/:id/admin",
+  asyncHandler(async (req: Request, res: Response) => {
+    const nuevoAdmin = req.body?.admin;
+    if (typeof nuevoAdmin !== "boolean") {
+      return res.status(400).json({ error: "Falta el campo admin (boolean)." });
+    }
+    if (String(req.usuario?.id) === String(req.params.id) && !nuevoAdmin) {
+      return res.status(400).json({ error: "No podés quitarte tu propio permiso de admin." });
+    }
 
-  const { rows } = await pool().query<UsuarioAdminRow>(
-    "UPDATE usuarios SET admin = $1 WHERE id = $2 RETURNING id, nombre, mail, plan, admin, creado_el",
-    [nuevoAdmin, req.params.id],
-  );
-  const usuario = rows[0];
-  if (!usuario) return res.status(404).json({ error: "Usuario no encontrado." });
-  return res.json({ usuario: usuarioAdminJson(usuario) });
-});
+    const { rows } = await pool().query<UsuarioAdminRow>(
+      "UPDATE usuarios SET admin = $1 WHERE id = $2 RETURNING id, nombre, mail, plan, admin, creado_el",
+      [nuevoAdmin, req.params.id],
+    );
+    const usuario = rows[0];
+    if (!usuario) return res.status(404).json({ error: "Usuario no encontrado." });
+    return res.json({ usuario: usuarioAdminJson(usuario) });
+  }),
+);
 
-adminRouter.get("/usuarios/:id/historial", async (req: Request, res: Response) => {
-  const limite = Math.min(Number(req.query.limit) || 100, 500);
-  const offset = Number(req.query.offset) || 0;
-  const usuarioId = req.params.id;
+adminRouter.get(
+  "/usuarios/:id/historial",
+  asyncHandler(async (req: Request, res: Response) => {
+    const limite = Math.min(Number(req.query.limit) || 100, 500);
+    const offset = Number(req.query.offset) || 0;
+    const usuarioId = req.params.id;
 
-  const [{ rows: totalRows }, { rows }] = await Promise.all([
-    pool().query<{ count: string }>("SELECT count(*) FROM historial_busquedas WHERE usuario_id = $1", [
-      usuarioId,
-    ]),
-    pool().query<{ id: string; tipo: string; termino: string | null; resultados: number; creado_el: string }>(
-      `SELECT id, tipo, termino, resultados, creado_el FROM historial_busquedas
+    const [{ rows: totalRows }, { rows }] = await Promise.all([
+      pool().query<{ count: string }>("SELECT count(*) FROM historial_busquedas WHERE usuario_id = $1", [
+        usuarioId,
+      ]),
+      pool().query<{ id: string; tipo: string; termino: string | null; resultados: number; creado_el: string }>(
+        `SELECT id, tipo, termino, resultados, creado_el FROM historial_busquedas
        WHERE usuario_id = $1 ORDER BY creado_el DESC LIMIT $2 OFFSET $3`,
-      [usuarioId, limite, offset],
-    ),
-  ]);
+        [usuarioId, limite, offset],
+      ),
+    ]);
 
-  return res.json({
-    total: Number(totalRows[0].count),
-    historial: rows.map((h) => ({
-      id: h.id,
-      tipo: h.tipo,
-      termino: h.termino,
-      resultados: h.resultados,
-      creadoEl: h.creado_el,
-    })),
-  });
-});
+    return res.json({
+      total: Number(totalRows[0].count),
+      historial: rows.map((h) => ({
+        id: h.id,
+        tipo: h.tipo,
+        termino: h.termino,
+        resultados: h.resultados,
+        creadoEl: h.creado_el,
+      })),
+    });
+  }),
+);
 
-adminRouter.get("/leads", async (req: Request, res: Response) => {
-  const limite = Math.min(Number(req.query.limit) || 100, 500);
-  const offset = Number(req.query.offset) || 0;
+adminRouter.get(
+  "/leads",
+  asyncHandler(async (req: Request, res: Response) => {
+    const limite = Math.min(Number(req.query.limit) || 100, 500);
+    const offset = Number(req.query.offset) || 0;
 
-  const [{ rows: totalRows }, { rows }] = await Promise.all([
-    pool().query<{ count: string }>("SELECT count(*) FROM leads_informe"),
-    pool().query<{ id: string; mail: string; creado_el: string }>(
-      "SELECT id, mail, creado_el FROM leads_informe ORDER BY creado_el DESC LIMIT $1 OFFSET $2",
-      [limite, offset],
-    ),
-  ]);
+    const [{ rows: totalRows }, { rows }] = await Promise.all([
+      pool().query<{ count: string }>("SELECT count(*) FROM leads_informe"),
+      pool().query<{ id: string; mail: string; creado_el: string }>(
+        "SELECT id, mail, creado_el FROM leads_informe ORDER BY creado_el DESC LIMIT $1 OFFSET $2",
+        [limite, offset],
+      ),
+    ]);
 
-  return res.json({
-    total: Number(totalRows[0].count),
-    leads: rows.map((l) => ({ id: l.id, mail: l.mail, creadoEl: l.creado_el })),
-  });
-});
+    return res.json({
+      total: Number(totalRows[0].count),
+      leads: rows.map((l) => ({ id: l.id, mail: l.mail, creadoEl: l.creado_el })),
+    });
+  }),
+);
 
 // A diferencia de la búsqueda pública (GraphQL vía boletin_api, filtrada por
 // RLS a oculta=false), estos dos listados usan boletin_auth para mostrar
@@ -171,14 +190,16 @@ interface SociedadAdminRow {
   socios: string | null;
 }
 
-adminRouter.get("/sociedades", async (req: Request, res: Response) => {
-  const limite = Math.min(Number(req.query.limit) || 100, 500);
-  const offset = Number(req.query.offset) || 0;
+adminRouter.get(
+  "/sociedades",
+  asyncHandler(async (req: Request, res: Response) => {
+    const limite = Math.min(Number(req.query.limit) || 100, 500);
+    const offset = Number(req.query.offset) || 0;
 
-  const [{ rows: totalRows }, { rows }] = await Promise.all([
-    pool().query<{ count: string }>("SELECT count(*) FROM sociedades"),
-    pool().query<SociedadAdminRow>(
-      `WITH socios AS (
+    const [{ rows: totalRows }, { rows }] = await Promise.all([
+      pool().query<{ count: string }>("SELECT count(*) FROM sociedades"),
+      pool().query<SociedadAdminRow>(
+        `WITH socios AS (
          SELECT v.sociedad_id,
                 string_agg(DISTINCT COALESCE(pf.nombre, sm.nombre, v.nombre_juridico_fallback), ', ') AS nombres
          FROM vinculos v
@@ -213,39 +234,43 @@ adminRouter.get("/sociedades", async (req: Request, res: Response) => {
        LEFT JOIN socios soc ON soc.sociedad_id = s.id
        ORDER BY s.nombre
        LIMIT $1 OFFSET $2`,
-      [limite, offset],
-    ),
-  ]);
+        [limite, offset],
+      ),
+    ]);
 
-  return res.json({
-    total: Number(totalRows[0].count),
-    sociedades: rows.map((s) => ({
-      id: s.id,
-      nombre: s.nombre,
-      cuit: s.cuit,
-      fechaConstitucion: s.fecha_constitucion,
-      domicilioElectronico: s.domicilio_electronico,
-      oculta: s.oculta,
-      domicilioCompleto: s.domicilio_completo,
-      claeGrupoNombre: s.clae_grupo_nombre,
-      claeDescripcion: s.clae_descripcion,
-      socios: s.socios,
-    })),
-  });
-});
+    return res.json({
+      total: Number(totalRows[0].count),
+      sociedades: rows.map((s) => ({
+        id: s.id,
+        nombre: s.nombre,
+        cuit: s.cuit,
+        fechaConstitucion: s.fecha_constitucion,
+        domicilioElectronico: s.domicilio_electronico,
+        oculta: s.oculta,
+        domicilioCompleto: s.domicilio_completo,
+        claeGrupoNombre: s.clae_grupo_nombre,
+        claeDescripcion: s.clae_descripcion,
+        socios: s.socios,
+      })),
+    });
+  }),
+);
 
-adminRouter.patch("/sociedades/:id/oculta", async (req: Request, res: Response) => {
-  const oculta = req.body?.oculta;
-  if (typeof oculta !== "boolean") {
-    return res.status(400).json({ error: "Falta el campo oculta (boolean)." });
-  }
-  const { rows } = await pool().query<{ id: string; oculta: boolean }>(
-    "UPDATE sociedades SET oculta = $1 WHERE id = $2 RETURNING id, oculta",
-    [oculta, req.params.id],
-  );
-  if (!rows[0]) return res.status(404).json({ error: "Sociedad no encontrada." });
-  return res.json({ sociedad: rows[0] });
-});
+adminRouter.patch(
+  "/sociedades/:id/oculta",
+  asyncHandler(async (req: Request, res: Response) => {
+    const oculta = req.body?.oculta;
+    if (typeof oculta !== "boolean") {
+      return res.status(400).json({ error: "Falta el campo oculta (boolean)." });
+    }
+    const { rows } = await pool().query<{ id: string; oculta: boolean }>(
+      "UPDATE sociedades SET oculta = $1 WHERE id = $2 RETURNING id, oculta",
+      [oculta, req.params.id],
+    );
+    if (!rows[0]) return res.status(404).json({ error: "Sociedad no encontrada." });
+    return res.json({ sociedad: rows[0] });
+  }),
+);
 
 interface PersonaAdminRow {
   id: string;
@@ -259,14 +284,16 @@ interface PersonaAdminRow {
   domicilio_completo: string | null;
 }
 
-adminRouter.get("/personas", async (req: Request, res: Response) => {
-  const limite = Math.min(Number(req.query.limit) || 100, 500);
-  const offset = Number(req.query.offset) || 0;
+adminRouter.get(
+  "/personas",
+  asyncHandler(async (req: Request, res: Response) => {
+    const limite = Math.min(Number(req.query.limit) || 100, 500);
+    const offset = Number(req.query.offset) || 0;
 
-  const [{ rows: totalRows }, { rows }] = await Promise.all([
-    pool().query<{ count: string }>("SELECT count(*) FROM personas_fisicas"),
-    pool().query<PersonaAdminRow>(
-      `SELECT
+    const [{ rows: totalRows }, { rows }] = await Promise.all([
+      pool().query<{ count: string }>("SELECT count(*) FROM personas_fisicas"),
+      pool().query<PersonaAdminRow>(
+        `SELECT
          p.id, p.nombre, p.documento, p.cuit, p.profesion,
          p.fecha_nacimiento::text AS fecha_nacimiento,
          p.domicilio_electronico, p.oculta,
@@ -275,35 +302,39 @@ adminRouter.get("/personas", async (req: Request, res: Response) => {
        LEFT JOIN domicilios d ON d.id = p.domicilio_id
        ORDER BY p.nombre
        LIMIT $1 OFFSET $2`,
-      [limite, offset],
-    ),
-  ]);
+        [limite, offset],
+      ),
+    ]);
 
-  return res.json({
-    total: Number(totalRows[0].count),
-    personas: rows.map((p) => ({
-      id: p.id,
-      nombre: p.nombre,
-      documento: p.documento,
-      cuit: p.cuit,
-      profesion: p.profesion,
-      fechaNacimiento: p.fecha_nacimiento,
-      domicilioElectronico: p.domicilio_electronico,
-      oculta: p.oculta,
-      domicilioCompleto: p.domicilio_completo,
-    })),
-  });
-});
+    return res.json({
+      total: Number(totalRows[0].count),
+      personas: rows.map((p) => ({
+        id: p.id,
+        nombre: p.nombre,
+        documento: p.documento,
+        cuit: p.cuit,
+        profesion: p.profesion,
+        fechaNacimiento: p.fecha_nacimiento,
+        domicilioElectronico: p.domicilio_electronico,
+        oculta: p.oculta,
+        domicilioCompleto: p.domicilio_completo,
+      })),
+    });
+  }),
+);
 
-adminRouter.patch("/personas/:id/oculta", async (req: Request, res: Response) => {
-  const oculta = req.body?.oculta;
-  if (typeof oculta !== "boolean") {
-    return res.status(400).json({ error: "Falta el campo oculta (boolean)." });
-  }
-  const { rows } = await pool().query<{ id: string; oculta: boolean }>(
-    "UPDATE personas_fisicas SET oculta = $1 WHERE id = $2 RETURNING id, oculta",
-    [oculta, req.params.id],
-  );
-  if (!rows[0]) return res.status(404).json({ error: "Persona no encontrada." });
-  return res.json({ persona: rows[0] });
-});
+adminRouter.patch(
+  "/personas/:id/oculta",
+  asyncHandler(async (req: Request, res: Response) => {
+    const oculta = req.body?.oculta;
+    if (typeof oculta !== "boolean") {
+      return res.status(400).json({ error: "Falta el campo oculta (boolean)." });
+    }
+    const { rows } = await pool().query<{ id: string; oculta: boolean }>(
+      "UPDATE personas_fisicas SET oculta = $1 WHERE id = $2 RETURNING id, oculta",
+      [oculta, req.params.id],
+    );
+    if (!rows[0]) return res.status(404).json({ error: "Persona no encontrada." });
+    return res.json({ persona: rows[0] });
+  }),
+);
