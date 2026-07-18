@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { FuenteDatos } from "../components/FuenteDatos";
 import { Reveal } from "../components/Reveal";
 import { obtenerAniosDisponibles } from "../lib/informesApi";
 
@@ -64,6 +65,12 @@ export default function InformesHub() {
             </div>
           </Reveal>
         )}
+
+        <Reveal delay={0.22}>
+          <div className="mt-12">
+            <FuenteDatos />
+          </div>
+        </Reveal>
       </div>
     </main>
   );

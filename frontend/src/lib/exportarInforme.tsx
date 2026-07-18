@@ -21,9 +21,14 @@ function descargarBlob(blob: Blob, nombreArchivo: string) {
 export async function exportarDepartamentosPDF(
   departamentos: DepartamentoActivo[],
   actualizadoEl: string | null,
+  sinDepartamento: number,
 ) {
   const blob = await pdf(
-    <InformeDepartamentosPDF departamentos={departamentos} actualizadoEl={actualizadoEl} />,
+    <InformeDepartamentosPDF
+      departamentos={departamentos}
+      actualizadoEl={actualizadoEl}
+      sinDepartamento={sinDepartamento}
+    />,
   ).toBlob();
   descargarBlob(blob, "departamentos-mas-activos.pdf");
 }

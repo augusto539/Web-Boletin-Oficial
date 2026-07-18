@@ -64,6 +64,44 @@ async function recalcularDepartamentos(): Promise<number> {
   return rows.length;
 }
 
+interface DepartamentoPorAnioRow {
+  departamento_id: number;
+  anio: number;
+  cantidad_sociedades: number;
+}
+
+// Serie histórica por departamento, para el gráfico de líneas de
+// /informes/departamentos-mas-activos. Tabla aparte de
+// informe_departamentos_activos (que es un total por departamento, no una
+// serie) para no forzar ese shape a cargar años que no necesita.
+async function recalcularDepartamentosPorAnio(): Promise<number> {
+  const { rows } = await pool().query<DepartamentoPorAnioRow>(`
+    SELECT
+      dep.id AS departamento_id,
+      extract(year FROM a.fecha_publicacion)::int AS anio,
+      count(*)::int AS cantidad_sociedades
+    FROM actos a
+    JOIN tipos_acto ta ON ta.id = a.tipo_acto_id AND ta.nombre = 'Constitucion'
+    JOIN sociedades s ON s.id = a.sociedad_id AND s.oculta = FALSE
+    JOIN domicilios d ON d.id = s.domicilio_id
+    JOIN localidades loc ON loc.id = d.localidad_id
+    JOIN departamentos dep ON dep.id = loc.departamento_id
+    GROUP BY dep.id, anio
+  `);
+
+  for (const r of rows) {
+    await pool().query(
+      `INSERT INTO informe_departamento_por_anio (departamento_id, anio, cantidad_sociedades, actualizado_el)
+       VALUES ($1, $2, $3, now())
+       ON CONFLICT (departamento_id, anio) DO UPDATE SET
+         cantidad_sociedades = EXCLUDED.cantidad_sociedades,
+         actualizado_el = now()`,
+      [r.departamento_id, r.anio, r.cantidad_sociedades],
+    );
+  }
+  return rows.length;
+}
+
 interface AnuarioAcumulado {
   sociedadesConstituidas: number;
   personasInvolucradas: number;
@@ -173,11 +211,18 @@ async function recalcularAnuario(): Promise<number> {
   return porAnio.size;
 }
 
-export async function recalcularInformes(): Promise<{ departamentos: number; anios: number }> {
+export async function recalcularInformes(): Promise<{
+  departamentos: number;
+  anios: number;
+  departamentosPorAnio: number;
+}> {
   const departamentos = await recalcularDepartamentos();
   const anios = await recalcularAnuario();
-  console.log(`[informes] recalculado: ${departamentos} departamentos, ${anios} años`);
-  return { departamentos, anios };
+  const departamentosPorAnio = await recalcularDepartamentosPorAnio();
+  console.log(
+    `[informes] recalculado: ${departamentos} departamentos, ${anios} años, ${departamentosPorAnio} filas departamento×año`,
+  );
+  return { departamentos, anios, departamentosPorAnio };
 }
 
 // --- Endpoints públicos (sin auth): el frontend los consulta para hidratar
@@ -200,6 +245,15 @@ informesPublicoRouter.get(
        JOIN departamentos d ON d.id = i.departamento_id
        ORDER BY i.cantidad_sociedades DESC`,
     );
+    // No precomputado (a diferencia del resto): es un único COUNT con filtro,
+    // mucho más liviano que las agregaciones por departamento/año de arriba,
+    // así que no vale la pena la complejidad de guardarlo en una tabla.
+    const { rows: sinDepto } = await pool().query<{ sin_departamento: number }>(
+      `SELECT count(*)::int AS sin_departamento
+       FROM sociedades s
+       LEFT JOIN domicilios d ON d.id = s.domicilio_id
+       WHERE s.oculta = FALSE AND (s.domicilio_id IS NULL OR d.localidad_id IS NULL)`,
+    );
     return res.json({
       departamentos: rows.map((r) => ({
         departamentoId: r.departamento_id,
@@ -208,7 +262,46 @@ informesPublicoRouter.get(
         cantidadUltimoAnio: r.cantidad_ultimo_anio,
       })),
       actualizadoEl: rows[0]?.actualizado_el ?? null,
+      sinDepartamento: sinDepto[0]?.sin_departamento ?? 0,
     });
+  }),
+);
+
+// Serie por año y departamento, para el gráfico de líneas. Shape pensado
+// para consumo directo del gráfico: un array de años (eje X compartido) +
+// un array de departamentos con un array de valores alineado a esos años
+// (0 en los años sin sociedades constituidas en ese departamento).
+informesPublicoRouter.get(
+  "/departamentos-por-anio",
+  asyncHandler(async (_req, res) => {
+    const { rows } = await pool().query<{
+      departamento_id: number;
+      nombre: string;
+      anio: number;
+      cantidad_sociedades: number;
+    }>(
+      `SELECT i.departamento_id, d.nombre, i.anio, i.cantidad_sociedades
+       FROM informe_departamento_por_anio i
+       JOIN departamentos d ON d.id = i.departamento_id
+       ORDER BY d.nombre, i.anio`,
+    );
+
+    const anios = [...new Set(rows.map((r) => r.anio))].sort((a, b) => a - b);
+    const indicePorAnio = new Map(anios.map((anio, i) => [anio, i]));
+    const porDepartamento = new Map<
+      number,
+      { departamentoId: number; nombre: string; valores: number[] }
+    >();
+    for (const r of rows) {
+      let entrada = porDepartamento.get(r.departamento_id);
+      if (!entrada) {
+        entrada = { departamentoId: r.departamento_id, nombre: r.nombre, valores: anios.map(() => 0) };
+        porDepartamento.set(r.departamento_id, entrada);
+      }
+      entrada.valores[indicePorAnio.get(r.anio)!] = r.cantidad_sociedades;
+    }
+
+    return res.json({ anios, departamentos: [...porDepartamento.values()] });
   }),
 );
 

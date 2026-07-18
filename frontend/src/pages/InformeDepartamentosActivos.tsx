@@ -1,22 +1,41 @@
 import { useEffect, useState } from "react";
 import { DescargarIcon } from "../components/DescargarIcon";
+import { FuenteDatos } from "../components/FuenteDatos";
+import { GraficoLineaDepartamentos } from "../components/GraficoLineaDepartamentos";
+import { MapaDepartamentos } from "../components/MapaDepartamentos";
 import { Reveal } from "../components/Reveal";
 import { ModalRegistro } from "../components/auth/ModalRegistro";
 import { fecha } from "../lib/format";
-import { type DepartamentoActivo, obtenerDepartamentosActivos } from "../lib/informesApi";
+import {
+  type DepartamentosActivos,
+  type DepartamentosPorAnio,
+  obtenerDepartamentosActivos,
+  obtenerDepartamentosPorAnio,
+} from "../lib/informesApi";
 import { useAccionConSesion } from "../lib/useAccionConSesion";
 
+function porcentaje(parte: number, total: number): string {
+  if (total <= 0) return "0";
+  return ((parte / total) * 100).toFixed(1);
+}
+
 export default function InformeDepartamentosActivos() {
-  const [datos, setDatos] = useState<{ departamentos: DepartamentoActivo[]; actualizadoEl: string | null } | null>(
-    null,
-  );
+  const [datos, setDatos] = useState<DepartamentosActivos | null>(null);
+  const [serie, setSerie] = useState<DepartamentosPorAnio | null>(null);
   const [generando, setGenerando] = useState(false);
   const { modalAbierto, ejecutar, alExito, cerrar } = useAccionConSesion();
+
+  const totalConSinDepartamento = datos
+    ? datos.departamentos.reduce((acc, d) => acc + d.cantidadSociedades, 0) + datos.sinDepartamento
+    : 0;
 
   useEffect(() => {
     obtenerDepartamentosActivos()
       .then(setDatos)
-      .catch(() => setDatos({ departamentos: [], actualizadoEl: null }));
+      .catch(() => setDatos({ departamentos: [], actualizadoEl: null, sinDepartamento: 0 }));
+    obtenerDepartamentosPorAnio()
+      .then(setSerie)
+      .catch(() => setSerie({ anios: [], departamentos: [] }));
   }, []);
 
   async function descargar() {
@@ -24,7 +43,7 @@ export default function InformeDepartamentosActivos() {
     setGenerando(true);
     try {
       const { exportarDepartamentosPDF } = await import("../lib/exportarInforme");
-      await exportarDepartamentosPDF(datos.departamentos, datos.actualizadoEl);
+      await exportarDepartamentosPDF(datos.departamentos, datos.actualizadoEl, datos.sinDepartamento);
     } finally {
       setGenerando(false);
     }
@@ -72,7 +91,23 @@ export default function InformeDepartamentosActivos() {
           </div>
         </Reveal>
 
-        <Reveal delay={0.1}>
+        {datos && datos.departamentos.length > 0 && (
+          <Reveal delay={0.1}>
+            <div className="mt-10">
+              <MapaDepartamentos departamentos={datos.departamentos} />
+            </div>
+          </Reveal>
+        )}
+
+        {serie && serie.departamentos.length > 0 && (
+          <Reveal delay={0.15}>
+            <div className="mt-10">
+              <GraficoLineaDepartamentos datos={serie} />
+            </div>
+          </Reveal>
+        )}
+
+        <Reveal delay={0.2}>
           <div className="mt-10 overflow-hidden rounded-3xl bg-white shadow-sm">
             {!datos ? (
               <p className="p-8 text-center text-sm text-carbon/50">Cargando…</p>
@@ -100,6 +135,46 @@ export default function InformeDepartamentosActivos() {
                 </tbody>
               </table>
             )}
+          </div>
+          {datos && datos.sinDepartamento > 0 && (
+            <p className="mt-3 px-1 text-sm text-carbon/50">
+              Además, <strong className="text-carbon/70">{datos.sinDepartamento.toLocaleString("es-AR")}</strong>{" "}
+              sociedades ({porcentaje(datos.sinDepartamento, totalConSinDepartamento)}% del total) no tienen un
+              departamento asignado en este informe. Ver el motivo en "Fuente y metodología", más abajo.
+            </p>
+          )}
+        </Reveal>
+
+        <Reveal delay={0.25}>
+          <div className="mt-10">
+            <FuenteDatos>
+              <p>
+                <strong className="text-carbon">Sobre las sociedades sin departamento asignado.</strong>{" "}
+                {datos && (
+                  <>
+                    De las {totalConSinDepartamento.toLocaleString("es-AR")} sociedades activas consideradas en
+                    este informe, {datos.sinDepartamento.toLocaleString("es-AR")} (
+                    {porcentaje(datos.sinDepartamento, totalConSinDepartamento)}%) no tienen un departamento
+                    asignado.{" "}
+                  </>
+                )}
+                Esto ocurre por dos motivos distintos. Primero, hay sociedades cuyo domicilio publicado no
+                indica ninguna localidad: en la práctica, muchas veces el domicilio informado es literalmente
+                "Provincia de Mendoza" o, más escuetamente, "Mendoza" — sin calle, sin localidad, sin ningún
+                dato que permita ubicarlas en un departamento puntual. Segundo, hay domicilios que sí incluyen
+                una calle y un número, pero cuya localidad es simplemente "Mendoza" (por ejemplo, "Martínez de
+                Rozas 263, Mendoza, Mendoza"), lo que no alcanza para distinguir con certeza entre el
+                departamento Capital y el resto del área metropolitana. En ambos casos, el proceso de
+                extracción prefiere dejar el departamento sin informar antes que asumir uno de forma incorrecta.
+              </p>
+              <p>
+                A esto se suma un caso menos frecuente: domicilios que sí mencionan un departamento real, pero
+                escrito de forma abreviada o no estandarizada — por ejemplo, "G. Cruz" en lugar de "Godoy Cruz",
+                o "Mza." en lugar de "Mendoza" — que el proceso de coincidencia automática no siempre reconoce.
+                Estas sociedades sí existen y están incluidas en el total de la provincia, pero no aparecen en
+                el desglose por departamento ni en el mapa de esta página.
+              </p>
+            </FuenteDatos>
           </div>
         </Reveal>
       </div>

@@ -158,6 +158,10 @@ export function actualizarModoSoloAdmin(modoSoloAdmin: boolean): Promise<{ modoS
   return patch("/api/admin/configuracion", { modoSoloAdmin });
 }
 
-export function recalcularInformesAdmin(): Promise<{ departamentos: number; anios: number }> {
+export function recalcularInformesAdmin(): Promise<{
+  departamentos: number;
+  anios: number;
+  departamentosPorAnio: number;
+}> {
   return post("/api/admin/informes/recalcular");
 }

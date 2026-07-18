@@ -2,13 +2,17 @@ import { Document, Page, Text, View } from "@react-pdf/renderer";
 import { fecha, hoyISO } from "../../lib/format";
 import type { DepartamentoActivo } from "../../lib/informesApi";
 import { estilosPDF as e } from "./estilosPDF";
+import { FuenteDatosPDF } from "./FuenteDatosPDF";
+import { MapaDepartamentosPDF } from "./MapaDepartamentosPDF";
 
 export function InformeDepartamentosPDF({
   departamentos,
   actualizadoEl,
+  sinDepartamento,
 }: {
   departamentos: DepartamentoActivo[];
   actualizadoEl: string | null;
+  sinDepartamento: number;
 }) {
   return (
     <Document title="INGcome — Departamentos más activos">
@@ -20,6 +24,8 @@ export function InformeDepartamentosPDF({
             {actualizadoEl ? `Actualizado el ${fecha(actualizadoEl)}` : ""}
           </Text>
         </View>
+
+        <MapaDepartamentosPDF departamentos={departamentos} />
 
         <View style={e.seccion}>
           <View style={e.filaEncabezado}>
@@ -35,6 +41,14 @@ export function InformeDepartamentosPDF({
             </View>
           ))}
         </View>
+
+        <FuenteDatosPDF
+          extra={
+            sinDepartamento > 0
+              ? `Además, ${sinDepartamento.toLocaleString("es-AR")} sociedades no tienen un departamento asignado en este informe (domicilio sin localidad determinable, p. ej. "Provincia de Mendoza" o direcciones ambiguas).`
+              : undefined
+          }
+        />
 
         <View style={e.piePagina} fixed>
           <Text>INGcome Consultora — ingcome.com.ar</Text>

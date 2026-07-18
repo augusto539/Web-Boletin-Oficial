@@ -181,7 +181,11 @@ function TabConfiguracion() {
     setRecalculando(true);
     setResultadoRecalculo(null);
     recalcularInformesAdmin()
-      .then((r) => setResultadoRecalculo(`Listo: ${r.departamentos} departamentos, ${r.anios} años.`))
+      .then((r) =>
+        setResultadoRecalculo(
+          `Listo: ${r.departamentos} departamentos, ${r.anios} años, ${r.departamentosPorAnio} filas de serie histórica.`,
+        ),
+      )
       .catch(() => setResultadoRecalculo("Hubo un error, probá de nuevo."))
       .finally(() => setRecalculando(false));
   }

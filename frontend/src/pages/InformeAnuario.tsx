@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { DescargarIcon } from "../components/DescargarIcon";
+import { FuenteDatos } from "../components/FuenteDatos";
 import { Reveal } from "../components/Reveal";
 import { ModalRegistro } from "../components/auth/ModalRegistro";
 import { dato, fecha } from "../lib/format";
@@ -111,6 +112,12 @@ export default function InformeAnuario() {
               <Dato etiqueta="Tipo de sociedad más común" valor={dato(anuario.tipoSociedadMasComun)} />
             </div>
           )}
+        </Reveal>
+
+        <Reveal delay={0.15}>
+          <div className="mt-10">
+            <FuenteDatos />
+          </div>
         </Reveal>
       </div>
 

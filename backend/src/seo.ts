@@ -43,6 +43,37 @@ function escapeHtml(valor: string): string {
     .replace(/'/g, "&#39;");
 }
 
+// Sección final compartida por las tres páginas de /informes (ver
+// FuenteDatos.tsx en el frontend, mismo texto). `extraHtml` deja que
+// /informes/departamentos-mas-activos agregue su propio párrafo sobre
+// sociedades sin departamento dentro de la misma sección.
+function fuenteDatosHtml(extraHtml = ""): string {
+  return `
+    <h2>Fuente y metodología</h2>
+    <p>Este informe se elabora a partir de las publicaciones del Boletín Oficial de Mendoza —
+    específicamente los edictos de constitución, modificación y demás actos societarios que la
+    provincia publica de forma pública. Un proceso de extracción automatizado procesa cada
+    publicación y estructura la información (nombre, domicilio, capital, actividad, fecha de
+    constitución) en la base de datos que alimenta tanto la búsqueda del sitio como este informe.</p>
+    <p>Por tratarse de datos extraídos de forma automatizada a partir de texto publicado en
+    formatos heterogéneos a lo largo de los años, pueden existir imprecisiones. Distinguimos dos
+    fuentes de error:</p>
+    <p><strong>Errores del Boletín de origen.</strong> El proceso de extracción no corrige ni
+    verifica el contenido de la publicación: si el Boletín Oficial publicó un dato con un error de
+    tipeo, una fecha inconsistente o un capital mal transcripto, ese mismo error se refleja en
+    nuestra base.</p>
+    <p><strong>Limitaciones del proceso de extracción.</strong> Cuando un dato del Boletín es
+    ambiguo, está incompleto o redactado de una forma que el proceso automatizado no puede
+    interpretar con certeza, optamos por dejarlo sin informar antes que asignarle un valor que
+    podría ser incorrecto.</p>
+    ${extraHtml}
+    <p>Este y el resto de los informes de esta sección son agregados estadísticos construidos
+    sobre esa misma base, así que heredan sus limitaciones. Para un caso puntual, recomendamos
+    verificar el dato contra la ficha de la sociedad correspondiente — que cita la publicación de
+    origen del Boletín — o contra el Boletín Oficial directamente.</p>
+  `;
+}
+
 function siteUrl(): string {
   return (process.env.SITE_URL ?? "http://localhost:5050").replace(/\/$/, "");
 }
@@ -335,6 +366,7 @@ seoRouter.get(
         <li><a href="/informes/departamentos-mas-activos">Departamentos más activos</a></li>
       </ul>
       ${anios.length > 0 ? `<h2>Anuarios</h2><ul>${anuarioLinksHtml}</ul>` : ""}
+      ${fuenteDatosHtml()}
     </main>
   `.trim();
 
@@ -361,6 +393,29 @@ seoRouter.get(
        ORDER BY i.cantidad_sociedades DESC`,
     );
 
+    const { rows: filasPorAnio } = await pool().query<{
+      nombre: string;
+      anio: number;
+      cantidad_sociedades: number;
+    }>(
+      `SELECT d.nombre, i.anio, i.cantidad_sociedades
+       FROM informe_departamento_por_anio i
+       JOIN departamentos d ON d.id = i.departamento_id
+       ORDER BY d.nombre, i.anio`,
+    );
+
+    const { rows: sinDepto } = await pool().query<{ sin_departamento: number }>(
+      `SELECT count(*)::int AS sin_departamento
+       FROM sociedades s
+       LEFT JOIN domicilios d ON d.id = s.domicilio_id
+       WHERE s.oculta = FALSE AND (s.domicilio_id IS NULL OR d.localidad_id IS NULL)`,
+    );
+    const sinDepartamento = sinDepto[0]?.sin_departamento ?? 0;
+    const totalConSinDepartamento =
+      rows.reduce((acc, r) => acc + r.cantidad_sociedades, 0) + sinDepartamento;
+    const porcentajeSinDepartamento =
+      totalConSinDepartamento > 0 ? ((sinDepartamento / totalConSinDepartamento) * 100).toFixed(1) : "0";
+
     const actualizadoEl = rows[0] ? formatFecha(rows[0].actualizado_el) : null;
     const title = "Departamentos más activos en Mendoza | INGcome";
     const description =
@@ -374,6 +429,24 @@ seoRouter.get(
       )
       .join("");
 
+    // Misma tabla que ve el gráfico de líneas del lado del cliente, pero
+    // como HTML real (fila = departamento, columna = año): un crawler no
+    // ejecuta el SVG interactivo, así que el dato tiene que existir acá
+    // también, igual que la tabla de arriba respecto del mapa.
+    const aniosPorAnio = [...new Set(filasPorAnio.map((r) => r.anio))].sort((a, b) => a - b);
+    const porDepartamento = new Map<string, Map<number, number>>();
+    for (const r of filasPorAnio) {
+      if (!porDepartamento.has(r.nombre)) porDepartamento.set(r.nombre, new Map());
+      porDepartamento.get(r.nombre)!.set(r.anio, r.cantidad_sociedades);
+    }
+    const filasSerieHtml = [...porDepartamento.entries()]
+      .map(([nombre, valores]) => {
+        const celdas = aniosPorAnio.map((a) => `<td>${valores.get(a) ?? 0}</td>`).join("");
+        return `<tr><td>${escapeHtml(nombre)}</td>${celdas}</tr>`;
+      })
+      .join("");
+    const encabezadoSerieHtml = aniosPorAnio.map((a) => `<th>${a}</th>`).join("");
+
     const contentHtml = `
     <main>
       <h1>Departamentos más activos en Mendoza</h1>
@@ -382,6 +455,41 @@ seoRouter.get(
         <thead><tr><th>Departamento</th><th>Sociedades constituidas (histórico)</th><th>Último año</th></tr></thead>
         <tbody>${filasHtml}</tbody>
       </table>
+      ${
+        aniosPorAnio.length > 0
+          ? `<h2>Sociedades constituidas por año</h2>
+      <table>
+        <thead><tr><th>Departamento</th>${encabezadoSerieHtml}</tr></thead>
+        <tbody>${filasSerieHtml}</tbody>
+      </table>`
+          : ""
+      }
+      ${
+        sinDepartamento > 0
+          ? `<p>Además, ${sinDepartamento.toLocaleString("es-AR")} sociedades (${porcentajeSinDepartamento}% del total) no tienen un departamento asignado en este informe. Ver el motivo en "Fuente y metodología", más abajo.</p>`
+          : ""
+      }
+      ${fuenteDatosHtml(
+        sinDepartamento > 0
+          ? `<p><strong>Sobre las sociedades sin departamento asignado.</strong> De las
+      ${totalConSinDepartamento.toLocaleString("es-AR")} sociedades activas consideradas en este
+      informe, ${sinDepartamento.toLocaleString("es-AR")} (${porcentajeSinDepartamento}%) no tienen
+      un departamento asignado. Esto ocurre por dos motivos distintos. Primero, hay sociedades cuyo
+      domicilio publicado no indica ninguna localidad: en la práctica, muchas veces el domicilio
+      informado es literalmente "Provincia de Mendoza" o, más escuetamente, "Mendoza" — sin calle,
+      sin localidad, sin ningún dato que permita ubicarlas en un departamento puntual. Segundo, hay
+      domicilios que sí incluyen una calle y un número, pero cuya localidad es simplemente
+      "Mendoza" (por ejemplo, "Martínez de Rozas 263, Mendoza, Mendoza"), lo que no alcanza para
+      distinguir con certeza entre el departamento Capital y el resto del área metropolitana. En
+      ambos casos, el proceso de extracción prefiere dejar el departamento sin informar antes que
+      asumir uno de forma incorrecta.</p>
+      <p>A esto se suma un caso menos frecuente: domicilios que sí mencionan un departamento real,
+      pero escrito de forma abreviada o no estandarizada — por ejemplo, "G. Cruz" en lugar de
+      "Godoy Cruz", o "Mza." en lugar de "Mendoza" — que el proceso de coincidencia automática no
+      siempre reconoce. Estas sociedades sí existen y están incluidas en el total de la provincia,
+      pero no aparecen en el desglose por departamento ni en el mapa de esta página.</p>`
+          : "",
+      )}
     </main>
   `.trim();
 
@@ -451,6 +559,7 @@ seoRouter.get(
         ${a.departamento_mas_activo ? `<li>Departamento más activo: ${escapeHtml(a.departamento_mas_activo)}</li>` : ""}
         ${a.tipo_sociedad_mas_comun ? `<li>Tipo de sociedad más común: ${escapeHtml(a.tipo_sociedad_mas_comun)}</li>` : ""}
       </ul>
+      ${fuenteDatosHtml()}
     </main>
   `.trim();
 

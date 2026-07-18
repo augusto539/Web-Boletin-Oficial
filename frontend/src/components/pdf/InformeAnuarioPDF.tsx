@@ -2,6 +2,7 @@ import { Document, Page, Text, View } from "@react-pdf/renderer";
 import { dato, fecha, hoyISO } from "../../lib/format";
 import type { Anuario } from "../../lib/informesApi";
 import { estilosPDF as e } from "./estilosPDF";
+import { FuenteDatosPDF } from "./FuenteDatosPDF";
 
 function Campo({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   return (
@@ -32,6 +33,8 @@ export function InformeAnuarioPDF({ anuario }: { anuario: Anuario }) {
             <Campo etiqueta="Tipo de sociedad más común" valor={dato(anuario.tipoSociedadMasComun)} />
           </View>
         </View>
+
+        <FuenteDatosPDF />
 
         <View style={e.piePagina} fixed>
           <Text>INGcome Consultora — ingcome.com.ar</Text>

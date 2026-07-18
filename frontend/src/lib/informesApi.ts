@@ -15,6 +15,18 @@ export interface DepartamentoActivo {
 export interface DepartamentosActivos {
   departamentos: DepartamentoActivo[];
   actualizadoEl: string | null;
+  sinDepartamento: number;
+}
+
+export interface DepartamentoPorAnio {
+  departamentoId: number;
+  nombre: string;
+  valores: number[];
+}
+
+export interface DepartamentosPorAnio {
+  anios: number[];
+  departamentos: DepartamentoPorAnio[];
 }
 
 export interface Anuario {
@@ -35,6 +47,10 @@ async function get<T>(path: string): Promise<T> {
 
 export function obtenerDepartamentosActivos(): Promise<DepartamentosActivos> {
   return get("/api/informes/departamentos-activos");
+}
+
+export function obtenerDepartamentosPorAnio(): Promise<DepartamentosPorAnio> {
+  return get("/api/informes/departamentos-por-anio");
 }
 
 export function obtenerAnuario(anio: number): Promise<Anuario> {
