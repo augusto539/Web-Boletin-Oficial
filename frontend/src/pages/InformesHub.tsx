@@ -4,6 +4,28 @@ import { FuenteDatos } from "../components/FuenteDatos";
 import { Reveal } from "../components/Reveal";
 import { obtenerAniosDisponibles } from "../lib/informesApi";
 
+// Informes de nicho: a diferencia de "Estudios" y "Anuarios" (tablas
+// precomputadas), estos son contenido estático (texto + cifras ya
+// redactados a mano) — ver InformeNichoCannabis.tsx. La lista se actualiza
+// a mano acá cada vez que se agrega uno nuevo.
+const NICHOS = [
+  {
+    slug: "cannabis",
+    nombre: "Cannabis y Cáñamo en Mendoza",
+    descripcion: "Entidades registradas en el Boletín Oficial, 2017–2026.",
+  },
+  {
+    slug: "enoturismo",
+    nombre: "Enoturismo en Mendoza",
+    descripcion: "El negocio detrás de la Ruta del Vino, 2017–2026.",
+  },
+  {
+    slug: "bodegas-boutique",
+    nombre: "Bodegas Boutique en Mendoza",
+    descripcion: "La otra vitivinicultura mendocina, 2017–2026.",
+  },
+];
+
 export default function InformesHub() {
   const [anios, setAnios] = useState<number[]>([]);
 
@@ -48,6 +70,24 @@ export default function InformesHub() {
             </Link>
           </div>
         </Reveal>
+
+        {NICHOS.length > 0 && (
+          <Reveal delay={0.12}>
+            <h2 className="mt-12 text-2xl font-bold">Nichos sectoriales</h2>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              {NICHOS.map((n) => (
+                <Link
+                  key={n.slug}
+                  to={`/informes/nicho-${n.slug}`}
+                  className="block rounded-3xl bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+                >
+                  <h3 className="text-lg font-bold text-vino">{n.nombre}</h3>
+                  <p className="mt-2 text-sm text-carbon/60">{n.descripcion}</p>
+                </Link>
+              ))}
+            </div>
+          </Reveal>
+        )}
 
         {anios.length > 0 && (
           <Reveal delay={0.16}>

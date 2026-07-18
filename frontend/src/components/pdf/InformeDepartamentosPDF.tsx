@@ -5,6 +5,11 @@ import { estilosPDF as e } from "./estilosPDF";
 import { FuenteDatosPDF } from "./FuenteDatosPDF";
 import { MapaDepartamentosPDF } from "./MapaDepartamentosPDF";
 
+function porcentaje(parte: number, total: number): string {
+  if (total <= 0) return "0";
+  return ((parte / total) * 100).toFixed(1);
+}
+
 export function InformeDepartamentosPDF({
   departamentos,
   actualizadoEl,
@@ -14,6 +19,9 @@ export function InformeDepartamentosPDF({
   actualizadoEl: string | null;
   sinDepartamento: number;
 }) {
+  const totalConSinDepartamento =
+    departamentos.reduce((acc, d) => acc + d.cantidadSociedades, 0) + sinDepartamento;
+
   return (
     <Document title="INGcome — Departamentos más activos">
       <Page size="A4" style={e.pagina} wrap>
@@ -29,15 +37,21 @@ export function InformeDepartamentosPDF({
 
         <View style={e.seccion}>
           <View style={e.filaEncabezado}>
-            <Text style={[e.celdaEncabezado, { width: "50%" }]}>Departamento</Text>
-            <Text style={[e.celdaEncabezado, { width: "25%" }]}>Sociedades (histórico)</Text>
-            <Text style={[e.celdaEncabezado, { width: "25%" }]}>Último año</Text>
+            <Text style={[e.celdaEncabezado, { width: "10%" }]}>Puesto</Text>
+            <Text style={[e.celdaEncabezado, { width: "35%" }]}>Departamento</Text>
+            <Text style={[e.celdaEncabezado, { width: "20%" }]}>Sociedades (histórico)</Text>
+            <Text style={[e.celdaEncabezado, { width: "17.5%" }]}>Último año</Text>
+            <Text style={[e.celdaEncabezado, { width: "17.5%" }]}>% del total</Text>
           </View>
-          {departamentos.map((d) => (
+          {departamentos.map((d, i) => (
             <View key={d.departamentoId} style={e.fila} wrap={false}>
-              <Text style={[e.celda, { width: "50%" }]}>{d.nombre}</Text>
-              <Text style={[e.celda, { width: "25%" }]}>{d.cantidadSociedades}</Text>
-              <Text style={[e.celda, { width: "25%" }]}>{d.cantidadUltimoAnio}</Text>
+              <Text style={[e.celda, { width: "10%" }]}>{i + 1}</Text>
+              <Text style={[e.celda, { width: "35%" }]}>{d.nombre}</Text>
+              <Text style={[e.celda, { width: "20%" }]}>{d.cantidadSociedades}</Text>
+              <Text style={[e.celda, { width: "17.5%" }]}>{d.cantidadUltimoAnio}</Text>
+              <Text style={[e.celda, { width: "17.5%" }]}>
+                {porcentaje(d.cantidadSociedades, totalConSinDepartamento)}%
+              </Text>
             </View>
           ))}
         </View>

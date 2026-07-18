@@ -119,17 +119,21 @@ export default function InformeDepartamentosActivos() {
               <table className="w-full text-left text-sm">
                 <thead className="bg-humo text-xs tracking-wider text-carbon/50 uppercase">
                   <tr>
+                    <th className="px-6 py-4">Puesto</th>
                     <th className="px-6 py-4">Departamento</th>
                     <th className="px-6 py-4">Sociedades (histórico)</th>
                     <th className="px-6 py-4">Último año</th>
+                    <th className="px-6 py-4">% del total</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {datos.departamentos.map((d) => (
+                  {datos.departamentos.map((d, i) => (
                     <tr key={d.departamentoId} className="border-t border-carbon/10">
+                      <td className="px-6 py-4 text-carbon/50">{i + 1}</td>
                       <td className="px-6 py-4 font-bold">{d.nombre}</td>
                       <td className="px-6 py-4">{d.cantidadSociedades}</td>
                       <td className="px-6 py-4">{d.cantidadUltimoAnio}</td>
+                      <td className="px-6 py-4">{porcentaje(d.cantidadSociedades, totalConSinDepartamento)}%</td>
                     </tr>
                   ))}
                 </tbody>

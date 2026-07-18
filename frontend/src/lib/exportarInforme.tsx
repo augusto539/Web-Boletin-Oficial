@@ -1,6 +1,9 @@
 import { pdf } from "@react-pdf/renderer";
 import { InformeAnuarioPDF } from "../components/pdf/InformeAnuarioPDF";
 import { InformeDepartamentosPDF } from "../components/pdf/InformeDepartamentosPDF";
+import { InformeNichoCannabisPDF } from "../components/pdf/InformeNichoCannabisPDF";
+import { InformeNichoBodegasBoutiquePDF } from "../components/pdf/InformeNichoBodegasBoutiquePDF";
+import { InformeNichoEnoturismoPDF } from "../components/pdf/InformeNichoEnoturismoPDF";
 import type { Anuario, DepartamentoActivo } from "./informesApi";
 
 // Duplicado a propósito (no importado de exportarFicha.tsx): ese módulo se
@@ -36,4 +39,19 @@ export async function exportarDepartamentosPDF(
 export async function exportarAnuarioPDF(anuario: Anuario) {
   const blob = await pdf(<InformeAnuarioPDF anuario={anuario} />).toBlob();
   descargarBlob(blob, `anuario-${anuario.anio}.pdf`);
+}
+
+export async function exportarNichoCannabisPDF() {
+  const blob = await pdf(<InformeNichoCannabisPDF />).toBlob();
+  descargarBlob(blob, "cannabis-y-canamo-en-mendoza.pdf");
+}
+
+export async function exportarNichoEnoturismoPDF() {
+  const blob = await pdf(<InformeNichoEnoturismoPDF />).toBlob();
+  descargarBlob(blob, "enoturismo-en-mendoza.pdf");
+}
+
+export async function exportarNichoBodegasBoutiquePDF() {
+  const blob = await pdf(<InformeNichoBodegasBoutiquePDF />).toBlob();
+  descargarBlob(blob, "bodegas-boutique-en-mendoza.pdf");
 }
