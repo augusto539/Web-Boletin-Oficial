@@ -1,14 +1,16 @@
-// Escala secuencial de un solo hue (blanco -> vino -> vino-oscuro) para el
-// mapa de departamentos. Se interpola en OKLCH en vez de RGB para que la
-// luminosidad baje de forma monótona y prolija (interpolar RGB directo da un
-// tramo medio grisáceo/lavado, nada que ver con "cada vez más rojo").
+// Escala secuencial de un solo hue (piso casi blanco -> vino -> vino-oscuro)
+// para el mapa de departamentos. Se interpola en OKLCH en vez de RGB para
+// que la luminosidad baje de forma monótona y prolija (interpolar RGB
+// directo da un tramo medio grisáceo/lavado, nada que ver con "cada vez más
+// rojo").
 //
 // 3 paradas fijas, tomadas de los colores de marca ya definidos en
-// index.css/estilosPDF.ts (no son valores inventados):
-//   t=0    blanco puro           (cero sociedades)
+// index.css/estilosPDF.ts (no son valores inventados), salvo el piso:
+//   t=0    piso casi blanco #fce9ea (cero sociedades) — no blanco puro para
+//          que el mapa se distinga de la tarjeta blanca que lo contiene
 //   t=0.55 vino     #691824      (el rojo de marca)
 //   t=1    vino-oscuro #4a0f19   (el máximo de la escala)
-const PARADA_BLANCO = { L: 1, C: 0, H: 17.2 };
+const PARADA_BLANCO = { L: 0.95, C: 0.02, H: 17.2 };
 const PARADA_VINO = { L: 0.3499, C: 0.1134, H: 17.2231 };
 const PARADA_VINO_OSCURO = { L: 0.2764, C: 0.088, H: 15.6109 };
 const T_VINO = 0.55;

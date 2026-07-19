@@ -3,6 +3,7 @@ import { InformeAnuarioPDF } from "../components/pdf/InformeAnuarioPDF";
 import { InformeDepartamentosPDF } from "../components/pdf/InformeDepartamentosPDF";
 import { InformeNichoCannabisPDF } from "../components/pdf/InformeNichoCannabisPDF";
 import { InformeNichoBodegasBoutiquePDF } from "../components/pdf/InformeNichoBodegasBoutiquePDF";
+import { InformeNichoEnergiaRenovablePDF } from "../components/pdf/InformeNichoEnergiaRenovablePDF";
 import { InformeNichoEnoturismoPDF } from "../components/pdf/InformeNichoEnoturismoPDF";
 import type { Anuario, DepartamentoActivo } from "./informesApi";
 
@@ -54,4 +55,9 @@ export async function exportarNichoEnoturismoPDF() {
 export async function exportarNichoBodegasBoutiquePDF() {
   const blob = await pdf(<InformeNichoBodegasBoutiquePDF />).toBlob();
   descargarBlob(blob, "bodegas-boutique-en-mendoza.pdf");
+}
+
+export async function exportarNichoEnergiaRenovablePDF() {
+  const blob = await pdf(<InformeNichoEnergiaRenovablePDF />).toBlob();
+  descargarBlob(blob, "energia-solar-y-eolica-en-mendoza.pdf");
 }

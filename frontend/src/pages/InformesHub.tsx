@@ -24,6 +24,11 @@ const NICHOS = [
     nombre: "Bodegas Boutique en Mendoza",
     descripcion: "La otra vitivinicultura mendocina, 2017–2026.",
   },
+  {
+    slug: "energia-renovable",
+    nombre: "Energía Solar y Eólica en Mendoza",
+    descripcion: "Dos olas, un mismo objetivo, 2017–2026.",
+  },
 ];
 
 export default function InformesHub() {

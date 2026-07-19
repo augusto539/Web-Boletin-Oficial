@@ -14,6 +14,7 @@ import InformeAnuario from "./pages/InformeAnuario";
 import InformeDepartamentosActivos from "./pages/InformeDepartamentosActivos";
 import InformeNichoBodegasBoutique from "./pages/InformeNichoBodegasBoutique";
 import InformeNichoCannabis from "./pages/InformeNichoCannabis";
+import InformeNichoEnergiaRenovable from "./pages/InformeNichoEnergiaRenovable";
 import InformeNichoEnoturismo from "./pages/InformeNichoEnoturismo";
 import InformesHub from "./pages/InformesHub";
 import Landing from "./pages/Landing";
@@ -81,6 +82,7 @@ export default function App() {
         <Route path="/informes/nicho-cannabis" element={<InformeNichoCannabis />} />
         <Route path="/informes/nicho-enoturismo" element={<InformeNichoEnoturismo />} />
         <Route path="/informes/nicho-bodegas-boutique" element={<InformeNichoBodegasBoutique />} />
+        <Route path="/informes/nicho-energia-renovable" element={<InformeNichoEnergiaRenovable />} />
         <Route path="/informes/:anuarioSlug" element={<InformeAnuario />} />
         {/* <Route path="/notificaciones" element={<Notificaciones />} /> desactivado por ahora */}
         <Route path="/terminos" element={<Terminos />} />

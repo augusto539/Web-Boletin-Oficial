@@ -25,6 +25,13 @@ import {
   EVOLUCION_ANUAL as EVOLUCION_ANUAL_BODEGAS,
   TIPO_ENTIDAD as TIPO_ENTIDAD_BODEGAS,
 } from "./data/nichoBodegasBoutique.js";
+import {
+  DEPARTAMENTOS_ENERGIA,
+  type EntidadEnergia,
+  ENTIDADES as ENTIDADES_ENERGIA,
+  EVOLUCION_ANUAL as EVOLUCION_ANUAL_ENERGIA,
+  TIPO_ENTIDAD as TIPO_ENTIDAD_ENERGIA,
+} from "./data/nichoEnergiaRenovable.js";
 
 // Middleware de SEO: sirve el mismo index.html de la SPA pero con
 // title/description/canonical/JSON-LD únicos por entidad, más un bloque de
@@ -156,6 +163,27 @@ function entidadBodegaHtml(e: EntidadBodega): string {
 
 function entidadesBodegasHtml(): string {
   return ENTIDADES_BODEGAS.map(entidadBodegaHtml).join("");
+}
+
+function entidadEnergiaHtml(e: EntidadEnergia): string {
+  const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
+  const sociosLinks = e.socios
+    .map((s) =>
+      s.personaId
+        ? `<a href="/persona/${s.personaId}">${escapeHtml(s.nombre)}</a>`
+        : escapeHtml(s.nombre),
+    )
+    .join(" · ");
+  return `
+    <h3>${escapeHtml(e.tipo)} — ${nombreLink}</h3>
+    <p>CUIT: ${e.cuit ? escapeHtml(e.cuit) : "—"} · Capital: ${e.capital ? escapeHtml(e.capital) : "—"} · Publicación: ${e.publicacion ? escapeHtml(e.publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
+    ${e.socios.length > 0 ? `<p>Socios/Integrantes: ${sociosLinks}</p>` : ""}
+    <p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>
+  `;
+}
+
+function entidadesEnergiaHtml(): string {
+  return ENTIDADES_ENERGIA.map(entidadEnergiaHtml).join("");
 }
 
 function siteUrl(): string {
@@ -454,6 +482,7 @@ seoRouter.get(
         <li><a href="/informes/nicho-cannabis">Cannabis y Cáñamo en Mendoza</a></li>
         <li><a href="/informes/nicho-enoturismo">Enoturismo en Mendoza</a></li>
         <li><a href="/informes/nicho-bodegas-boutique">Bodegas Boutique en Mendoza</a></li>
+        <li><a href="/informes/nicho-energia-renovable">Energía Solar y Eólica en Mendoza</a></li>
       </ul>
       ${anios.length > 0 ? `<h2>Anuarios</h2><ul>${anuarioLinksHtml}</ul>` : ""}
       ${fuenteDatosHtml()}
@@ -894,6 +923,78 @@ seoRouter.get(
   }),
 );
 
+// Informe de nicho sectorial, cuarto de la serie: mismo criterio que los
+// tres anteriores — contenido estático duplicado a mano desde
+// frontend/src/data/nichoEnergiaRenovable.ts.
+seoRouter.get(
+  "/informes/nicho-energia-renovable",
+  asyncHandler(async (_req: Request, res: Response, next) => {
+    const base = leerIndexHtml();
+    if (!base) return next();
+
+    const title = "Energía solar y eólica en Mendoza: 50 empresas 2017–2026 | INGcome";
+    const description =
+      "50 empresas de energía solar, eólica y renovable en Mendoza registradas en el Boletín Oficial (2017–2026): la ola RenovAr de 2017, el vacío posterior y la ola de generación distribuida 2024–2026.";
+    const canonical = `${siteUrl()}/informes/nicho-energia-renovable`;
+
+    const contentHtml = `
+    <main>
+      <h1>Energía solar y eólica en Mendoza</h1>
+      <p>Dos olas, un mismo objetivo</p>
+      <p>Entre 2017 y 2026 se constituyeron 50 empresas de energía solar, eólica o renovable en Mendoza. Pero no llegaron de a poco: los datos muestran dos olas bien diferenciadas —una explosión en 2017 y un rebrote en 2024-2026—, separadas por un vacío de años que en 2023 fue absoluto.</p>
+      <h2>Resumen ejecutivo</h2>
+      <ul>
+        <li>50 empresas de energía solar, eólica o renovable identificadas entre 2017 y 2026 en el Boletín Oficial de la Provincia de Mendoza.</li>
+        <li>Dos olas separadas por un vacío casi total: 18 constituciones en 2017 (más de un tercio del total), 2023 en cero, y una segunda ola en 2024-2026 (7, 4 y 2).</li>
+        <li>La primera ola coincide con el Programa RenovAr (rondas de licitación 2016-2017); varias empresas se constituyeron el mismo día, en tandas de sociedades de propósito específico.</li>
+        <li>La S.A. domina el total (27 de 50, 54 %), empujada por la ola de 2017 con capital nominal idéntico de $100.000. La ola 2024-2026 es mayoritariamente S.A.S.: 11 de 13.</li>
+        <li>Luján de Cuyo (13) y San Rafael (11) juntas superan a Capital (8) — a diferencia del resto de la serie, acá el domicilio legal tiende a coincidir con la zona real del proyecto.</li>
+      </ul>
+      <h2>El contexto: RenovAr primero, generación distribuida después</h2>
+      <p>El Programa RenovAr (2016-2017) adjudicó 147 proyectos por 4.466,5 MW en todo el país. Cada proyecto de gran escala —un "parque solar" o "parque eólico"— se organiza como una sociedad de propósito específico con capital nominal mínimo, porque el financiamiento real viene de deuda de proyecto o inversores. La segunda ola (2024-2026) responde a un fenómeno distinto: la generación distribuida habilitada por la Ley 27.424, con empresas de instalación y servicios (Solarenergy, Suntec Energía, Solarix, Soluciones Renovables) mayoritariamente S.A.S.</p>
+      <h2>Evolución temporal: dos olas separadas por un vacío</h2>
+      <table>
+        <thead><tr><th>Año</th><th>Empresas constituidas</th></tr></thead>
+        <tbody>${EVOLUCION_ANUAL_ENERGIA.map((d) => `<tr><td>${d.etiqueta}</td><td>${d.valor}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>* 2026 es un año parcial: boletines relevados hasta julio de 2026. ** 2 de las 50 empresas no tienen fecha de constitución capturada y no figuran en esta tabla, aunque sí en el directorio. El arranque es un pico altísimo (18 en 2017, más de un tercio de toda la muestra); entre 2018 y 2022 ningún año supera las 7 constituciones y 2023 no tiene ni una sola; recién en 2024-2026 aparece la segunda ola, más chica y pareja (7, 4, 2).</p>
+      <h2>Tipo societario y capital: cada ola tiene su propio perfil</h2>
+      <table>
+        <thead><tr><th>Tipo</th><th>Cantidad</th></tr></thead>
+        <tbody>${TIPO_ENTIDAD_ENERGIA.map((d) => `<tr><td>${d.tipo}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>La S.A. lidera el total (27 de 50, 54 %) casi enteramente por arrastre de la ola de 2017. La ola 2024-2026 es mayoritariamente S.A.S. (11 de 13). 46 de las 50 empresas declaran capital inicial: mediana $100.000, mínimo $30.000, máximo $30.000.000 (Energías Renovables El Diamante S.A., 2024). Para los vehículos de 2017, $100.000 era el mínimo legal nominal, sin relación con la inversión real de un parque solar o eólico, que se financia aparte vía deuda o inversores.</p>
+      <h2>Dónde están: acá la capital no manda</h2>
+      <table>
+        <thead><tr><th>Departamento</th><th>Cantidad</th></tr></thead>
+        <tbody>${DEPARTAMENTOS_ENERGIA.map((d) => `<tr><td>${d.departamento}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>47 de las 50 empresas tienen departamento identificado; 3 no.</p>
+      <p><strong>Advertencia metodológica:</strong> el departamento corresponde al domicilio LEGAL, no necesariamente a la ubicación física del parque. A diferencia de Enoturismo, Cannabis y Bodegas boutique —donde Capital encabeza claramente el ranking—, en energía renovable Capital queda en tercer lugar, detrás de Luján de Cuyo (13) y San Rafael (11). "Helios Río Diamante" remite al río Diamante, en San Rafael: en este rubro el domicilio legal tiende a coincidir más con la zona real del proyecto que en el resto de la serie.</p>
+      <h2>Directorio completo: las 50 empresas</h2>
+      ${entidadesEnergiaHtml()}
+      <h2>Metodología y fuente de datos</h2>
+      <p>Búsqueda inicial por nombre y objeto social (solar, eólica/eolica, fotovoltaica, renovable, energía renovable, energías limpias), 95 candidatas. El filtro manual descartó 45 de las 95 (47,4 %) — incluyendo casos donde "solar" no se refería a energía (apellidos, nombres de fincas, sinónimo de terreno). Varios socios de la ola 2017 son personas jurídicas (Dax Energy Argentina Holdings S.p.A., Dax Energy Holdings S.p.A., Tassaroli S.A., Green S.A., Grupo Energías Globales S.A., entre otras) sin ficha propia en este sitio.</p>
+      ${fuenteDatosHtml()}
+    </main>
+  `.trim();
+
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      name: title,
+      description,
+      url: canonical,
+      creator: { "@type": "Organization", name: "INGcome" },
+      temporalCoverage: "2017/2026",
+      dateModified: "2026-07-18",
+    };
+
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.send(renderHtml(base, { title, description, canonical, noindex: false, jsonLd, contentHtml }));
+  }),
+);
+
 seoRouter.get("/robots.txt", (_req: Request, res: Response) => {
   res.type("text/plain").send(
     [
@@ -940,6 +1041,7 @@ seoRouter.get(
       `  <url><loc>${siteUrl()}/informes/nicho-cannabis</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/nicho-enoturismo</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/nicho-bodegas-boutique</loc><lastmod>${hoy}</lastmod></url>`,
+      `  <url><loc>${siteUrl()}/informes/nicho-energia-renovable</loc><lastmod>${hoy}</lastmod></url>`,
       ...anios.map(
         (a) =>
           `  <url><loc>${siteUrl()}/informes/anuario-${a.anio}</loc><lastmod>${new Date(a.actualizado_el).toISOString().slice(0, 10)}</lastmod></url>`,
