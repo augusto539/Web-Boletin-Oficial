@@ -10,6 +10,7 @@ const COLORES: Record<string, string> = {
   persona: "#191d20",
   escribano: "#8a2433",
 };
+const GRIS_SIN_ACTOS = "#c9c9c9";
 
 const FACTOR_ZOOM = 1.2;
 
@@ -57,9 +58,25 @@ export function GrafoSociedad({ sociedadId, nombre }: { sociedadId: Id; nombre: 
       registrarRelacion(idNodo(a.origenTipo, a.origenId), a.relacion);
     }
 
+    // Una sociedad sin actos propios capturados (típicamente, recién
+    // promovida desde un socio jurídico sin resolver — ver
+    // 036_socios_juridicos.sql) puede aparecer como origen o como destino
+    // según la arista, así que se agrega desde los dos lados.
+    const sinActosPorNodo = new Map<string, boolean>();
+    for (const a of aristas) {
+      if (a.origenSinActos) sinActosPorNodo.set(idNodo(a.origenTipo, a.origenId), true);
+      if (a.destinoSinActos) sinActosPorNodo.set(idNodo(a.destinoTipo, a.destinoId), true);
+    }
+
     const nodos = new Map<string, cytoscape.ElementDefinition>();
     nodos.set(central, {
-      data: { id: central, label: nombre, tipo: "sociedad", central: true },
+      data: {
+        id: central,
+        label: nombre,
+        tipo: "sociedad",
+        central: true,
+        sinActos: sinActosPorNodo.get(central) ?? false,
+      },
     });
 
     function agregarNodo(tipo: string | null, id: Id | null, nombreNodo: string | null) {
@@ -67,11 +84,12 @@ export function GrafoSociedad({ sociedadId, nombre }: { sociedadId: Id; nombre: 
       if (clave === central || nodos.has(clave)) return;
       const relaciones = [...(relacionesPorNodo.get(clave) ?? [])];
       const escribano = relaciones.some(esEscribano);
+      const sinActos = sinActosPorNodo.get(clave) ?? false;
       const label = relaciones.length > 0
         ? `${nombreNodo ?? "(sin nombre)"}\n(${relaciones.join(", ")})`
         : (nombreNodo ?? "(sin nombre)");
       nodos.set(clave, {
-        data: { id: clave, label, tipo: tipo ?? "x", central: false, escribano },
+        data: { id: clave, label, tipo: tipo ?? "x", central: false, escribano, sinActos },
       });
     }
     for (const a of aristas) {
@@ -114,7 +132,11 @@ export function GrafoSociedad({ sociedadId, nombre }: { sociedadId: Id; nombre: 
           selector: "node",
           style: {
             "background-color": (n: cytoscape.NodeSingular) =>
-              n.data("escribano") ? COLORES.escribano : (COLORES[n.data("tipo") as string] ?? "#999"),
+              n.data("escribano")
+                ? COLORES.escribano
+                : n.data("sinActos")
+                  ? GRIS_SIN_ACTOS
+                  : (COLORES[n.data("tipo") as string] ?? "#999"),
             // +10% de área clickeable/arrastrable respecto del tamaño visual
             // original (26px / 46px), para que cueste menos "fallarle" al
             // nodo y terminar arrastrando el fondo (todo el grafo) en vez de
@@ -342,6 +364,7 @@ export function GrafoSociedad({ sociedadId, nombre }: { sociedadId: Id; nombre: 
         <Leyenda color={COLORES.sociedad} texto="Sociedad" />
         <Leyenda color={COLORES.persona} texto="Persona física" />
         <Leyenda color={COLORES.escribano} texto="Escribano" />
+        <Leyenda color={GRIS_SIN_ACTOS} texto="Sociedad sin actos propios (mencionada como socia)" />
       </div>
       <div className="mt-2 flex flex-wrap gap-5 text-sm text-carbon/70">
         <LeyendaLinea punteada={false} texto="Es socio de" />

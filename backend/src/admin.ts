@@ -350,3 +350,126 @@ adminRouter.patch(
     return res.json({ persona: rows[0] });
   }),
 );
+
+// Socios jurídicos: sociedades citadas como socias de otras (en el mismo
+// acto de constitución/modificación) que el pipeline no pudo resolver a una
+// fila propia — quedan en vinculos.nombre_juridico_fallback/
+// cuit_juridico_fallback (ver 036_socios_juridicos.sql). Estos dos
+// endpoints "promueven" ese fallback a una sociedad real (mínima) y
+// repuntan sociedad_miembro_id, con lo que dejan de ser texto suelto y
+// pasan a ser nodos reales del grafo y fichas linkeables.
+
+interface SocioJuridicoDetalle {
+  vinculoId: number;
+  sociedadId: number;
+  sociedadNombre: string;
+}
+
+interface SocioJuridicoRow {
+  clave: string;
+  nombre_sugerido: string;
+  cuit_sugerido: string | null;
+  citas: string;
+  detalle: SocioJuridicoDetalle[];
+}
+
+adminRouter.get(
+  "/socios-juridicos",
+  asyncHandler(async (_req: Request, res: Response) => {
+    // Agrupa por CUIT (sin puntuación) cuando hay, y si no por nombre
+    // normalizado sin puntos finales — así "Dax Energy Holdings S.p.A" y
+    // "...S.p.A." (mismo CUIT, distinto texto) caen en el mismo grupo. No
+    // es perfecto para el caso de una misma empresa citada a veces con CUIT
+    // y a veces sin (quedan en dos grupos separados), pero el POST de abajo
+    // resuelve ese caso solo: al vincular el segundo grupo, el dedupe por
+    // nombre_normalizado encuentra la sociedad que ya creó el primero.
+    const { rows } = await pool().query<SocioJuridicoRow>(`
+      WITH fallback AS (
+        SELECT
+          v.id AS vinculo_id,
+          v.sociedad_id,
+          s.nombre AS sociedad_nombre,
+          v.nombre_juridico_fallback,
+          v.cuit_juridico_fallback,
+          COALESCE(
+            NULLIF(regexp_replace(v.cuit_juridico_fallback, '\\D', '', 'g'), ''),
+            upper(unaccent(regexp_replace(trim(v.nombre_juridico_fallback), '\\.+$', '')))
+          ) AS clave
+        FROM vinculos v
+        JOIN sociedades s ON s.id = v.sociedad_id
+        WHERE v.nombre_juridico_fallback IS NOT NULL
+      )
+      SELECT
+        clave,
+        (array_agg(nombre_juridico_fallback ORDER BY length(nombre_juridico_fallback) DESC))[1] AS nombre_sugerido,
+        (array_agg(cuit_juridico_fallback) FILTER (WHERE cuit_juridico_fallback IS NOT NULL))[1] AS cuit_sugerido,
+        count(*) AS citas,
+        json_agg(
+          json_build_object('vinculoId', vinculo_id, 'sociedadId', sociedad_id::text, 'sociedadNombre', sociedad_nombre)
+          ORDER BY sociedad_nombre
+        ) AS detalle
+      FROM fallback
+      GROUP BY clave
+      ORDER BY citas DESC, nombre_sugerido
+    `);
+
+    return res.json({
+      grupos: rows.map((r) => ({
+        clave: r.clave,
+        nombreSugerido: r.nombre_sugerido,
+        cuitSugerido: r.cuit_sugerido,
+        citas: Number(r.citas),
+        detalle: r.detalle,
+      })),
+    });
+  }),
+);
+
+adminRouter.post(
+  "/socios-juridicos/vincular",
+  asyncHandler(async (req: Request, res: Response) => {
+    const nombre = req.body?.nombre;
+    const cuit = req.body?.cuit;
+    const vinculoIds = req.body?.vinculoIds;
+
+    if (typeof nombre !== "string" || !nombre.trim()) {
+      return res.status(400).json({ error: "Falta el campo nombre." });
+    }
+    if (!Array.isArray(vinculoIds) || vinculoIds.length === 0 || !vinculoIds.every((id) => Number.isInteger(id))) {
+      return res.status(400).json({ error: "Falta vinculoIds (array de números)." });
+    }
+    const cuitLimpio = typeof cuit === "string" && cuit.trim() ? cuit.trim() : null;
+
+    let sociedadId: number | null = null;
+
+    if (cuitLimpio) {
+      const { rows } = await pool().query<{ id: number }>("SELECT id FROM sociedades WHERE cuit = $1 LIMIT 1", [
+        cuitLimpio,
+      ]);
+      sociedadId = rows[0]?.id ?? null;
+    }
+    if (!sociedadId) {
+      const { rows } = await pool().query<{ id: number }>(
+        "SELECT id FROM sociedades WHERE nombre_normalizado = upper(unaccent($1)) LIMIT 1",
+        [nombre],
+      );
+      sociedadId = rows[0]?.id ?? null;
+    }
+    if (!sociedadId) {
+      const { rows } = await pool().query<{ id: number }>(
+        "INSERT INTO sociedades (nombre, nombre_normalizado, cuit) VALUES ($1, upper(unaccent($1)), $2) RETURNING id",
+        [nombre, cuitLimpio],
+      );
+      sociedadId = rows[0].id;
+    }
+
+    await pool().query(
+      `UPDATE vinculos
+       SET sociedad_miembro_id = $1, nombre_juridico_fallback = NULL, cuit_juridico_fallback = NULL
+       WHERE id = ANY($2)`,
+      [sociedadId, vinculoIds],
+    );
+
+    return res.json({ sociedadId, nombre });
+  }),
+);

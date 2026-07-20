@@ -127,9 +127,11 @@ function entidadEnoturismoHtml(e: EntidadEnoturismo): string {
   const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
   const sociosLinks = e.socios
     .map((s) =>
-      s.personaId
-        ? `<a href="/persona/${s.personaId}">${escapeHtml(s.nombre)}</a>`
-        : escapeHtml(s.nombre),
+      s.sociedadId
+        ? `<a href="/sociedad/${s.sociedadId}">${escapeHtml(s.nombre)}</a>`
+        : s.personaId
+          ? `<a href="/persona/${s.personaId}">${escapeHtml(s.nombre)}</a>`
+          : escapeHtml(s.nombre),
     )
     .join(" · ");
   return `
@@ -148,9 +150,11 @@ function entidadBodegaHtml(e: EntidadBodega): string {
   const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
   const sociosLinks = e.socios
     .map((s) =>
-      s.personaId
-        ? `<a href="/persona/${s.personaId}">${escapeHtml(s.nombre)}</a>`
-        : escapeHtml(s.nombre),
+      s.sociedadId
+        ? `<a href="/sociedad/${s.sociedadId}">${escapeHtml(s.nombre)}</a>`
+        : s.personaId
+          ? `<a href="/persona/${s.personaId}">${escapeHtml(s.nombre)}</a>`
+          : escapeHtml(s.nombre),
     )
     .join(" · ");
   return `
@@ -169,9 +173,11 @@ function entidadEnergiaHtml(e: EntidadEnergia): string {
   const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
   const sociosLinks = e.socios
     .map((s) =>
-      s.personaId
-        ? `<a href="/persona/${s.personaId}">${escapeHtml(s.nombre)}</a>`
-        : escapeHtml(s.nombre),
+      s.sociedadId
+        ? `<a href="/sociedad/${s.sociedadId}">${escapeHtml(s.nombre)}</a>`
+        : s.personaId
+          ? `<a href="/persona/${s.personaId}">${escapeHtml(s.nombre)}</a>`
+          : escapeHtml(s.nombre),
     )
     .join(" · ");
   return `

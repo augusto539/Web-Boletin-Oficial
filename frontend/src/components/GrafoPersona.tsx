@@ -9,6 +9,7 @@ const COLORES: Record<string, string> = {
   sociedad: "#691824",
   persona: "#191d20",
 };
+const GRIS_SIN_ACTOS = "#c9c9c9";
 
 const FACTOR_ZOOM = 1.2;
 
@@ -57,7 +58,7 @@ export function GrafoPersona({ personaId, nombre }: { personaId: Id; nombre: str
         ? `${a.destinoNombre ?? "(sin nombre)"}\n(${roles.join(", ")})`
         : (a.destinoNombre ?? "(sin nombre)");
       nodos.set(clave, {
-        data: { id: clave, label, tipo: a.destinoTipo ?? "x", central: false },
+        data: { id: clave, label, tipo: a.destinoTipo ?? "x", central: false, sinActos: a.destinoSinActos ?? false },
       });
     }
 
@@ -82,7 +83,8 @@ export function GrafoPersona({ personaId, nombre }: { personaId: Id; nombre: str
         {
           selector: "node",
           style: {
-            "background-color": (n: cytoscape.NodeSingular) => COLORES[n.data("tipo") as string] ?? "#999",
+            "background-color": (n: cytoscape.NodeSingular) =>
+              n.data("sinActos") ? GRIS_SIN_ACTOS : (COLORES[n.data("tipo") as string] ?? "#999"),
             width: (n: cytoscape.NodeSingular) => (n.data("central") ? 46 : 26) * 1.1,
             height: (n: cytoscape.NodeSingular) => (n.data("central") ? 46 : 26) * 1.1,
             label: "data(label)",
@@ -267,6 +269,7 @@ export function GrafoPersona({ personaId, nombre }: { personaId: Id; nombre: str
       <div className="mt-4 flex flex-wrap gap-5 text-sm text-carbon/70">
         <Leyenda color={COLORES.persona} texto="Persona física" />
         <Leyenda color={COLORES.sociedad} texto="Sociedad" />
+        <Leyenda color={GRIS_SIN_ACTOS} texto="Sociedad sin actos propios (mencionada como socia)" />
       </div>
       <div className="mt-2 flex flex-wrap gap-5 text-sm text-carbon/70">
         <LeyendaLinea punteada={false} texto="Es socio de" />

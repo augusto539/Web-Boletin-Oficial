@@ -20,6 +20,7 @@
 export interface SocioEnergia {
   nombre: string;
   personaId?: number;
+  sociedadId?: number;
 }
 
 export interface EntidadEnergia {
@@ -86,8 +87,8 @@ export const ENTIDADES: EntidadEnergia[] = [
     publicacion: "26/01/2017",
     departamento: "Luján de Cuyo",
     socios: [
-      { nombre: "Dax Energy Argentina Holdings S.p.A." },
-      { nombre: "Dax Energy Holdings S.p.A." },
+      { nombre: "Dax Energy Argentina Holdings S.p.A.", sociedadId: 19497 },
+      { nombre: "Dax Energy Holdings S.p.A.", sociedadId: 19496 },
       { nombre: "Fernando Flavio Ferreyra", personaId: 4 },
       { nombre: "Flavio Arjona", personaId: 6 },
       { nombre: "Luciano Rodolfo Masnu Lardet", personaId: 3 },
@@ -104,8 +105,8 @@ export const ENTIDADES: EntidadEnergia[] = [
     publicacion: "26/01/2017",
     departamento: "Luján de Cuyo",
     socios: [
-      { nombre: "Dax Energy Argentina Holdings S.p.A" },
-      { nombre: "Dax Energy Holdings S.p.A" },
+      { nombre: "Dax Energy Argentina Holdings S.p.A", sociedadId: 19497 },
+      { nombre: "Dax Energy Holdings S.p.A", sociedadId: 19496 },
       { nombre: "Fernando Flavio Ferreyra", personaId: 4 },
       { nombre: "Flavio Arjona", personaId: 6 },
       { nombre: "Luciano Rodolfo Masnu Lardet", personaId: 3 },
@@ -122,8 +123,8 @@ export const ENTIDADES: EntidadEnergia[] = [
     publicacion: "26/01/2017",
     departamento: "Luján de Cuyo",
     socios: [
-      { nombre: "Dax Energy Argentina Holdings S.p.A" },
-      { nombre: "Dax Energy Holdings S.p.A" },
+      { nombre: "Dax Energy Argentina Holdings S.p.A", sociedadId: 19497 },
+      { nombre: "Dax Energy Holdings S.p.A", sociedadId: 19496 },
       { nombre: "Fernando Flavio Ferreyra", personaId: 4 },
       { nombre: "Flavio Arjona", personaId: 6 },
       { nombre: "Luciano Rodolfo Masnu Lardet", personaId: 3 },
@@ -140,8 +141,8 @@ export const ENTIDADES: EntidadEnergia[] = [
     publicacion: "26/01/2017",
     departamento: "Luján de Cuyo",
     socios: [
-      { nombre: "Dax Energy Argentina Holdings S.p.A." },
-      { nombre: "Dax Energy Holdings S.p.A." },
+      { nombre: "Dax Energy Argentina Holdings S.p.A.", sociedadId: 19497 },
+      { nombre: "Dax Energy Holdings S.p.A.", sociedadId: 19496 },
       { nombre: "Fernando Flavio Ferreyra", personaId: 4 },
       { nombre: "Flavio Arjona", personaId: 6 },
       { nombre: "Luciano Rodolfo Masnu Lardet", personaId: 3 },
@@ -228,7 +229,7 @@ export const ENTIDADES: EntidadEnergia[] = [
     publicacion: "05/06/2017",
     departamento: "Luján de Cuyo",
     socios: [
-      { nombre: "Dax Energy Holdings S.p.A" },
+      { nombre: "Dax Energy Holdings S.p.A", sociedadId: 19496 },
       { nombre: "Fernando Flavio Ferreyra", personaId: 4 },
       { nombre: "Flavio Arjona", personaId: 6 },
       { nombre: "Luciano Rodolfo Masnu Lardet", personaId: 3 },
@@ -247,7 +248,7 @@ export const ENTIDADES: EntidadEnergia[] = [
     socios: [
       { nombre: "Carlos Alberto Tassaroli", personaId: 451 },
       { nombre: "Rosalía Beatriz García", personaId: 500 },
-      { nombre: "Tassaroli S.A." },
+      { nombre: "Tassaroli S.A.", sociedadId: 19498 },
     ],
     objetoSocial: "Generación y comercialización de energía eléctrica a través de Parque Solar en San Rafael, Mendoza.",
   },
@@ -290,7 +291,7 @@ export const ENTIDADES: EntidadEnergia[] = [
     publicacion: "11/09/2017",
     departamento: "Luján de Cuyo",
     socios: [
-      { nombre: "Dax Energy Holdings S.p.A" },
+      { nombre: "Dax Energy Holdings S.p.A", sociedadId: 19496 },
       { nombre: "Fernando Flavio Ferreyra", personaId: 4 },
       { nombre: "Flavio Arjona", personaId: 6 },
       { nombre: "Luciano Rodolfo Masnu Lardet", personaId: 3 },
@@ -307,8 +308,8 @@ export const ENTIDADES: EntidadEnergia[] = [
     publicacion: "11/09/2017",
     departamento: "Luján de Cuyo",
     socios: [
-      { nombre: "Dax Energy Argentina Holdings S.p.A" },
-      { nombre: "Dax Energy Holdings S.p.A" },
+      { nombre: "Dax Energy Argentina Holdings S.p.A", sociedadId: 19497 },
+      { nombre: "Dax Energy Holdings S.p.A", sociedadId: 19496 },
       { nombre: "Fernando Flavio Ferreyra", personaId: 4 },
       { nombre: "Flavio Arjona", personaId: 6 },
       { nombre: "Luciano Rodolfo Masnu Lardet", personaId: 3 },
@@ -325,8 +326,8 @@ export const ENTIDADES: EntidadEnergia[] = [
     publicacion: "14/09/2017",
     departamento: "Luján de Cuyo",
     socios: [
-      { nombre: "Dax Energy Argentina Holdings S.p.A" },
-      { nombre: "Dax Energy Holdings S.p.A" },
+      { nombre: "Dax Energy Argentina Holdings S.p.A", sociedadId: 19497 },
+      { nombre: "Dax Energy Holdings S.p.A", sociedadId: 19496 },
       { nombre: "Fernando Flavio Ferreyra", personaId: 4 },
       { nombre: "Flavio Arjona", personaId: 6 },
       { nombre: "Luciano Rodolfo Masnu Lardet", personaId: 3 },
@@ -343,8 +344,8 @@ export const ENTIDADES: EntidadEnergia[] = [
     publicacion: "14/09/2017",
     departamento: "Luján de Cuyo",
     socios: [
-      { nombre: "Dax Energy Argentina Holdings S.p.A" },
-      { nombre: "Dax Energy Holdings S.p.A" },
+      { nombre: "Dax Energy Argentina Holdings S.p.A", sociedadId: 19497 },
+      { nombre: "Dax Energy Holdings S.p.A", sociedadId: 19496 },
       { nombre: "Fernando Flavio Ferreyra", personaId: 4 },
       { nombre: "Flavio Arjona", personaId: 6 },
       { nombre: "Luciano Rodolfo Masnu Lardet", personaId: 3 },
@@ -364,7 +365,7 @@ export const ENTIDADES: EntidadEnergia[] = [
       { nombre: "Carlos Daniel Amprino", personaId: 1221 },
       { nombre: "Carlos Daniel Roman", personaId: 1220 },
       { nombre: "Carlos Eduardo Arroyo", personaId: 1219 },
-      { nombre: "Green S.A." },
+      { nombre: "Green S.A.", sociedadId: 10544 },
     ],
     objetoSocial: "Actividad industrial y comercial relacionada con energía eléctrica proveniente de fuentes renovables, comprendiendo planificación, desarrollo, construcción y explotación de emprendimientos de energía eléctrica para producción y venta al mercado eléctrico mayorista.",
   },
@@ -406,8 +407,8 @@ export const ENTIDADES: EntidadEnergia[] = [
     publicacion: "15/11/2018",
     departamento: "Guaymallén",
     socios: [
-      { nombre: "Estación Terminal Mendoza S.A." },
-      { nombre: "Grupo Energías Globales S.A." },
+      { nombre: "Estación Terminal Mendoza S.A.", sociedadId: 19500 },
+      { nombre: "Grupo Energías Globales S.A.", sociedadId: 19499 },
       { nombre: "Juan Franco Badaloni", personaId: 4281 },
       { nombre: "Juan Ignacio Cucchi", personaId: 4858 },
     ],
@@ -436,8 +437,8 @@ export const ENTIDADES: EntidadEnergia[] = [
     publicacion: "10/05/2019",
     departamento: "Guaymallén",
     socios: [
-      { nombre: "Grupo Energías Globales S.A." },
-      { nombre: "Laugero Construcciones S.A." },
+      { nombre: "Grupo Energías Globales S.A.", sociedadId: 19499 },
+      { nombre: "Laugero Construcciones S.A.", sociedadId: 19501 },
       { nombre: "Santiago Laugero", personaId: 4604 },
     ],
     objetoSocial: "Ejecución de obra de provisión, construcción y puesta en marcha de 20 Parques Solares Fotovoltaicos (Potencia total: 6,6 MWp).",
@@ -467,7 +468,7 @@ export const ENTIDADES: EntidadEnergia[] = [
     socios: [
       { nombre: "Carlos Alberto Tassaroli", personaId: 451 },
       { nombre: "Rosalía Beatriz García", personaId: 500 },
-      { nombre: "Tassaroli Sociedad Anónima" },
+      { nombre: "Tassaroli Sociedad Anónima", sociedadId: 19498 },
     ],
     objetoSocial: "Generación y comercialización de energía eléctrica a través del Parque Solar a ser construido en el Departamento de Santa Rosa, Provincia de Mendoza.",
   },
@@ -482,7 +483,7 @@ export const ENTIDADES: EntidadEnergia[] = [
     socios: [
       { nombre: "Carlos Alberto Tassaroli", personaId: 451 },
       { nombre: "Rosalía Beatriz García", personaId: 500 },
-      { nombre: "Tassaroli Sociedad Anónima" },
+      { nombre: "Tassaroli Sociedad Anónima", sociedadId: 19498 },
     ],
     objetoSocial: "Generación y comercialización de energía eléctrica a través del Parque Solar a ser construido en el Departamento de Santa Rosa, Provincia de Mendoza.",
   },
@@ -541,8 +542,8 @@ export const ENTIDADES: EntidadEnergia[] = [
     departamento: "Capital",
     socios: [
       { nombre: "Héctor Horacio Marchessi", personaId: 653 },
-      { nombre: "Obras Andinas S.A." },
-      { nombre: "Syr Energia Sas" },
+      { nombre: "Obras Andinas S.A.", sociedadId: 19502 },
+      { nombre: "Syr Energia Sas", sociedadId: 19503 },
     ],
     objetoSocial: "Diseño, construcción y operación inicial de cinco plantas de generación fotovoltaica y eólica con acumulación integrada a una mini red correspondiente al Lote Nº 5 Naupa-Huen.",
   },
@@ -556,7 +557,7 @@ export const ENTIDADES: EntidadEnergia[] = [
     departamento: "Lavalle",
     socios: [
       { nombre: "Gerardo Vaquer", personaId: 546 },
-      { nombre: "Proyectos Lavalle Sociedad Anonima Con Participacion Estatal Mayoritaria" },
+      { nombre: "Proyectos Lavalle Sociedad Anonima Con Participacion Estatal Mayoritaria", sociedadId: 397 },
       { nombre: "Rolando Romera", personaId: 547 },
     ],
     objetoSocial: "Generación, producción y desarrollo de energías renovables en forma eólica, solar, geotérmica, hidráulica y mareomotriz. Compra, venta, importación, exportación, representación, cesión, distribución y comercialización de elementos necesarios. Prestación de servicios de gerenciamiento, operación y mantenimiento de complejos de generación de energía eléctrica.",

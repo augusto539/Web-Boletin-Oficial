@@ -316,7 +316,11 @@ export default function InformeNichoBodegasBoutique() {
                       {e.socios.map((s, i) => (
                         <span key={s.nombre}>
                           {i > 0 && " · "}
-                          {s.personaId ? (
+                          {s.sociedadId ? (
+                            <Link to={`/sociedad/${s.sociedadId}`} className="text-vino hover:underline">
+                              {s.nombre}
+                            </Link>
+                          ) : s.personaId ? (
                             <Link to={`/persona/${s.personaId}`} className="text-vino hover:underline">
                               {s.nombre}
                             </Link>

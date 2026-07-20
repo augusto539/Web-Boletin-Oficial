@@ -21,6 +21,7 @@
 export interface SocioEnoturismo {
   nombre: string;
   personaId?: number;
+  sociedadId?: number;
 }
 
 export interface EntidadEnoturismo {
@@ -223,7 +224,7 @@ export const ENTIDADES: EntidadEnoturismo[] = [
       { nombre: "Alejandro Martin Biondolillo", personaId: 12148 },
       { nombre: "Dorothy Zingaretti", personaId: 12151 },
       { nombre: "Enzo Américo Mugnani Aubone", personaId: 12149 },
-      { nombre: "Felito S.A." },
+      { nombre: "Felito S.A.", sociedadId: 19504 },
       { nombre: "Leonardo Biondolillo", personaId: 12152 },
       { nombre: "Mariano Gabriel Biondolillo", personaId: 12153 },
     ],

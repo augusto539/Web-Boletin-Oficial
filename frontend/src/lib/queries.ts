@@ -398,6 +398,8 @@ export const GRAFO = gql`
         destinoId
         destinoNombre
         relacion
+        origenSinActos
+        destinoSinActos
       }
     }
   }
@@ -411,6 +413,12 @@ export interface Arista {
   destinoId: Id | null;
   destinoNombre: string | null;
   relacion: string | null;
+  // true cuando ese nodo (si es una sociedad) no tiene ningún acto propio
+  // capturado — típicamente una sociedad recién promovida desde un socio
+  // jurídico sin resolver (ver 036_socios_juridicos.sql). Se usa para
+  // pintarla gris en los 3 componentes de grafo.
+  origenSinActos: boolean | null;
+  destinoSinActos: boolean | null;
 }
 
 export interface DataGrafo {
@@ -518,6 +526,8 @@ export const GRAFO_PERSONA = gql`
         destinoId
         destinoNombre
         relacion
+        origenSinActos
+        destinoSinActos
       }
     }
   }

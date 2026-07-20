@@ -11,12 +11,15 @@ import {
   obtenerLeadsAdmin,
   obtenerPersonasAdmin,
   obtenerSociedadesAdmin,
+  obtenerSociosJuridicosAdmin,
   obtenerUsuariosAdmin,
   recalcularInformesAdmin,
+  vincularSocioJuridico,
   type EstadisticasAdmin,
   type LeadAdmin,
   type PersonaAdmin,
   type SociedadAdmin,
+  type SocioJuridicoGrupo,
   type UsuarioAdmin,
 } from "../lib/adminApi";
 import { cuit as formatCuit, dato, fecha } from "../lib/format";
@@ -238,13 +241,14 @@ function TabConfiguracion() {
 
 const POR_PAGINA = 100;
 
-type SubPestana = "sociedades" | "personas" | "usuarios" | "leads";
+type SubPestana = "sociedades" | "personas" | "usuarios" | "leads" | "socios-juridicos";
 
 const SUBPESTANAS: { id: SubPestana; etiqueta: string }[] = [
   { id: "sociedades", etiqueta: "Sociedades" },
   { id: "personas", etiqueta: "Personas físicas" },
   { id: "usuarios", etiqueta: "Usuarios" },
   { id: "leads", etiqueta: "Leads" },
+  { id: "socios-juridicos", etiqueta: "Socios jurídicos" },
 ];
 
 function TabDatos() {
@@ -276,6 +280,7 @@ function TabDatos() {
       {sub === "personas" && <TablaPersonas />}
       {sub === "usuarios" && <TablaUsuarios />}
       {sub === "leads" && <TablaLeads />}
+      {sub === "socios-juridicos" && <TablaSociosJuridicos />}
     </div>
   );
 }
@@ -586,6 +591,111 @@ function TablaUsuarios() {
         </table>
       </div>
       <Paginador pagina={pagina} totalPaginas={totalPaginas} onCambiar={setPagina} />
+    </div>
+  );
+}
+
+// Grupos de socios jurídicos (personas jurídicas citadas como socias de
+// otras sociedades) que el pipeline no pudo resolver a una fila propia —
+// ver 036_socios_juridicos.sql. "Vincular" crea (o reutiliza, si el CUIT ya
+// existe) una sociedad real y repunta todos los vínculos del grupo. No hay
+// paginación acá: son ~300 grupos en total, entra cómodo en una sola tabla.
+function TablaSociosJuridicos() {
+  const [grupos, setGrupos] = useState<SocioJuridicoGrupo[] | null>(null);
+  const [ediciones, setEdiciones] = useState<Record<string, { nombre: string; cuit: string }>>({});
+  const [vinculando, setVinculando] = useState<string | null>(null);
+
+  useEffect(() => {
+    obtenerSociosJuridicosAdmin()
+      .then((d) => setGrupos(d.grupos))
+      .catch(() => setGrupos([]));
+  }, []);
+
+  function campo(g: SocioJuridicoGrupo) {
+    return ediciones[g.clave] ?? { nombre: g.nombreSugerido, cuit: g.cuitSugerido ?? "" };
+  }
+
+  function alEditar(clave: string, campoEditado: "nombre" | "cuit", valor: string, g: SocioJuridicoGrupo) {
+    setEdiciones((e) => ({ ...e, [clave]: { ...campo(g), [campoEditado]: valor } }));
+  }
+
+  async function alVincular(g: SocioJuridicoGrupo) {
+    const { nombre, cuit } = campo(g);
+    setVinculando(g.clave);
+    try {
+      await vincularSocioJuridico(
+        nombre,
+        cuit.trim() || null,
+        g.detalle.map((d) => d.vinculoId),
+      );
+      setGrupos((gs) => (gs ?? []).filter((x) => x.clave !== g.clave));
+    } catch {
+      // Se deja el grupo en la lista para reintentar; sin toast en este panel.
+    } finally {
+      setVinculando(null);
+    }
+  }
+
+  return (
+    <div className="rounded-3xl bg-white p-7">
+      <p className="mb-4 text-sm text-carbon/50">
+        {grupos === null ? "Cargando…" : `${grupos.length} socios jurídicos sin vincular`}
+      </p>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[1100px] text-left text-sm">
+          <thead>
+            <tr className="border-b border-carbon/10 text-xs uppercase tracking-widest text-carbon/50">
+              <th className="py-3 pr-4">Nombre</th>
+              <th className="py-3 pr-4">CUIT</th>
+              <th className="py-3 pr-4">Citas</th>
+              <th className="py-3 pr-4">Sociedades que lo citan</th>
+              <th className="py-3"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {(grupos ?? []).map((g) => {
+              const { nombre, cuit } = campo(g);
+              return (
+                <tr key={g.clave} className="border-b border-carbon/5 last:border-0 align-top">
+                  <td className="py-3 pr-4">
+                    <input
+                      value={nombre}
+                      onChange={(e) => alEditar(g.clave, "nombre", e.target.value, g)}
+                      className="w-56 rounded-lg border border-carbon/15 px-2.5 py-1.5 text-sm font-bold"
+                    />
+                  </td>
+                  <td className="py-3 pr-4">
+                    <input
+                      value={cuit}
+                      onChange={(e) => alEditar(g.clave, "cuit", e.target.value, g)}
+                      placeholder="Sin CUIT"
+                      className="w-32 rounded-lg border border-carbon/15 px-2.5 py-1.5 text-sm"
+                    />
+                  </td>
+                  <td className="py-3 pr-4">{g.citas}</td>
+                  <td className="py-3 pr-4 text-carbon/70">
+                    {g.detalle
+                      .slice(0, 4)
+                      .map((d) => d.sociedadNombre)
+                      .join(" · ")}
+                    {g.detalle.length > 4 && ` +${g.detalle.length - 4} más`}
+                  </td>
+                  <td className="py-3">
+                    <button
+                      type="button"
+                      onClick={() => alVincular(g)}
+                      disabled={vinculando === g.clave}
+                      className="cursor-pointer rounded-full bg-vino px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-vino-oscuro disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {vinculando === g.clave ? "Vinculando…" : "Vincular"}
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

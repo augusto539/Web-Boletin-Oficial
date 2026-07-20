@@ -65,6 +65,20 @@ export interface HistorialItem {
   creadoEl: string;
 }
 
+export interface SocioJuridicoDetalle {
+  vinculoId: number;
+  sociedadId: string;
+  sociedadNombre: string;
+}
+
+export interface SocioJuridicoGrupo {
+  clave: string;
+  nombreSugerido: string;
+  cuitSugerido: string | null;
+  citas: number;
+  detalle: SocioJuridicoDetalle[];
+}
+
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${API}${path}`, { credentials: "include" });
   if (!res.ok) throw new Error(`Error ${res.status} pidiendo ${path}`);
@@ -82,8 +96,15 @@ async function patch<T>(path: string, body: unknown): Promise<T> {
   return res.json();
 }
 
-async function post<T>(path: string): Promise<T> {
-  const res = await fetch(`${API}${path}`, { method: "POST", credentials: "include" });
+async function post<T>(path: string, body?: unknown): Promise<T> {
+  const res = await fetch(`${API}${path}`, {
+    method: "POST",
+    credentials: "include",
+    ...(body !== undefined && {
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  });
   if (!res.ok) throw new Error(`Error ${res.status} pidiendo ${path}`);
   return res.json();
 }
@@ -164,4 +185,16 @@ export function recalcularInformesAdmin(): Promise<{
   departamentosPorAnio: number;
 }> {
   return post("/api/admin/informes/recalcular");
+}
+
+export function obtenerSociosJuridicosAdmin(): Promise<{ grupos: SocioJuridicoGrupo[] }> {
+  return get("/api/admin/socios-juridicos");
+}
+
+export function vincularSocioJuridico(
+  nombre: string,
+  cuit: string | null,
+  vinculoIds: number[],
+): Promise<{ sociedadId: string; nombre: string }> {
+  return post("/api/admin/socios-juridicos/vincular", { nombre, cuit, vinculoIds });
 }

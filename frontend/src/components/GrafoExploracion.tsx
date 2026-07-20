@@ -20,6 +20,7 @@ const COLORES: Record<string, string> = {
   persona: "#191d20",
   escribano: "#8a2433",
 };
+const GRIS_SIN_ACTOS = "#c9c9c9";
 
 const FACTOR_ZOOM = 1.2;
 
@@ -59,6 +60,7 @@ interface Snapshot {
   relaciones: [string, string[]][];
   aristasVistas: string[];
   expandidos: string[];
+  sinActos: string[];
 }
 
 async function obtenerAristas(tipo: TipoNodo, id: Id): Promise<Arista[]> {
@@ -98,6 +100,11 @@ export function GrafoExploracion({
   const nombresPorNodoRef = useRef(new Map<string, string>());
   const tiposPorNodoRef = useRef(new Map<string, string>());
   const relacionesPorNodoRef = useRef(new Map<string, Set<string>>());
+  // Claves de nodos-sociedad sin actos propios capturados (recién promovidos
+  // desde un socio jurídico sin resolver — ver 036_socios_juridicos.sql),
+  // para pintarlos gris. Igual criterio que el resto de estos refs: se arma
+  // incrementalmente en fusionarAristas, no se recalcula desde cero.
+  const sinActosPorNodoRef = useRef(new Set<string>());
   const aristasVistasRef = useRef(new Set<string>());
   const expandidosRef = useRef(new Set<string>());
   const centralRef = useRef(idNodo(raizTipo, raizId));
@@ -141,6 +148,7 @@ export function GrafoExploracion({
       ),
       aristasVistas: [...aristasVistasRef.current],
       expandidos: [...expandidosRef.current],
+      sinActos: [...sinActosPorNodoRef.current],
     });
     setPuedeRetraer(true);
   }
@@ -159,6 +167,7 @@ export function GrafoExploracion({
     relacionesPorNodoRef.current = new Map(snapshot.relaciones.map(([clave, valores]) => [clave, new Set(valores)]));
     aristasVistasRef.current = new Set(snapshot.aristasVistas);
     expandidosRef.current = new Set(snapshot.expandidos);
+    sinActosPorNodoRef.current = new Set(snapshot.sinActos);
     cy.layout({ name: "cose", animate: false, fit: true, padding: 40, idealEdgeLength: 64, nodeRepulsion: 200048 }).run();
     actualizarConteo(cy);
     setPuedeRetraer(historialRef.current.length > 0);
@@ -279,6 +288,8 @@ export function GrafoExploracion({
       if (a.destinoNombre) nombresPorNodoRef.current.set(claveDestino, a.destinoNombre);
       if (a.origenTipo) tiposPorNodoRef.current.set(claveOrigen, a.origenTipo);
       if (a.destinoTipo) tiposPorNodoRef.current.set(claveDestino, a.destinoTipo);
+      if (a.origenSinActos) sinActosPorNodoRef.current.add(claveOrigen);
+      if (a.destinoSinActos) sinActosPorNodoRef.current.add(claveDestino);
 
       if (claveOrigen !== central && a.relacion) {
         if (!relacionesPorNodoRef.current.has(claveOrigen)) {
@@ -350,7 +361,14 @@ export function GrafoExploracion({
       const relaciones = [...(relacionesPorNodoRef.current.get(clave) ?? [])];
       const tipo = tiposPorNodoRef.current.get(clave) ?? "x";
       const def: cytoscape.ElementDefinition = {
-        data: { id: clave, label: etiqueta(clave), tipo, central: clave === central, escribano: relaciones.some(esEscribano) },
+        data: {
+          id: clave,
+          label: etiqueta(clave),
+          tipo,
+          central: clave === central,
+          escribano: relaciones.some(esEscribano),
+          sinActos: sinActosPorNodoRef.current.has(clave),
+        },
       };
       if (base) {
         // Versión anterior (mismo ángulo para todos los hermanos, solo jitter):
@@ -409,7 +427,11 @@ export function GrafoExploracion({
           selector: "node",
           style: {
             "background-color": (n: cytoscape.NodeSingular) =>
-              n.data("escribano") ? COLORES.escribano : (COLORES[n.data("tipo") as string] ?? "#999"),
+              n.data("escribano")
+                ? COLORES.escribano
+                : n.data("sinActos")
+                  ? GRIS_SIN_ACTOS
+                  : (COLORES[n.data("tipo") as string] ?? "#999"),
             width: (n: cytoscape.NodeSingular) => (n.data("central") ? 52 : 30) * 1.1,
             height: (n: cytoscape.NodeSingular) => (n.data("central") ? 52 : 30) * 1.1,
             label: "data(label)",
@@ -452,6 +474,12 @@ export function GrafoExploracion({
         const aristas = await obtenerAristas(raizTipo, raizId);
         if (cancelado) return;
         fusionarAristas(cy, aristas);
+        // El nodo central se crea antes de tener las aristas (línea de arriba
+        // del componente), así que fusionarAristas nunca lo toca —
+        // sinActosPorNodoRef ya está poblado acá, se aplica a mano.
+        if (sinActosPorNodoRef.current.has(centralRef.current)) {
+          cy.getElementById(centralRef.current).data("sinActos", true);
+        }
         expandidosRef.current.add(centralRef.current);
         cy.layout({
           name: "cose",
@@ -789,6 +817,7 @@ export function GrafoExploracion({
           <Leyenda color={COLORES.sociedad} texto="Sociedad" />
           <Leyenda color={COLORES.persona} texto="Persona física" />
           <Leyenda color={COLORES.escribano} texto="Escribano" />
+          <Leyenda color={GRIS_SIN_ACTOS} texto="Sociedad sin actos propios (mencionada como socia)" />
           <LeyendaLinea punteada={false} texto="Es socio de" />
           <LeyendaLinea punteada texto="Otro vínculo" />
         </div>
