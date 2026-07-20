@@ -52,107 +52,184 @@ para ejecutar cada bloque — ver razones abajo de cada grupo.
 
 ## 🟢 Bloque B — Sonnet, esfuerzo medio (mecánico, sin tocar datos de producción)
 
+> ✅ HECHO 2026-07-20. Commits:
+> repo "Info Boletin Oficial" `983f0c0` (B1) y `dc7f0da` (B2–B5);
+> repo "WEB Info Boletin Oficial" `0ad55d8` (parte de B2 — `docker-compose.prod.yml`).
+
 ### B1. Repo del pipeline — poner al día lo que hoy solo vive en el working tree
 
-- [ ] Commitear en el repo **"Info Boletin Oficial"** los cambios sin
-  commitear que ya contienen el fix de departamentos y el wiring de
-  `BOLETIN_ARCA_DIR`:
-  - `migrar_a_postgres.py`
-  - `post_procesar_excel.py` (raíz)
-  - `job diario/transformaciones.py`
-  - `job diario/dependencias_externas/post_procesar_excel.py`
-  - Sin esto, un `git clone` fresco en el servidor se lleva la versión
-    con el bug de departamentos y sin el override de padrones ARCA.
-- [ ] Des-trackear `job diario/dependencias_externas/__pycache__/*.pyc`
-  (el `.gitignore` de `job diario/` solo cubre `/__pycache__/` de primer
-  nivel, no el de la subcarpeta).
+- [x] Commiteados en el repo **"Info Boletin Oficial"** (`983f0c0`) los
+  cambios que ya contenían el fix de departamentos y el wiring de
+  `BOLETIN_ARCA_DIR`: `migrar_a_postgres.py`, `post_procesar_excel.py`
+  (raíz), `job diario/transformaciones.py`,
+  `job diario/dependencias_externas/post_procesar_excel.py`. Revisados
+  diff por diff antes de stagear — quedaron afuera del commit los cambios
+  ajenos que había en el working tree (`.DS_Store`,
+  `PLAN_ideas_informes_seo.md`, y 3 archivos untracked sin relación).
+- [x] Des-trackeados los 7 `.pyc` que habían quedado versionados en
+  `job diario/dependencias_externas/__pycache__/` y corregido el
+  `.gitignore` de `job diario/` (`/__pycache__/` → `__pycache__/`, para
+  que cubra también la subcarpeta). Verificado con `git check-ignore`.
 
 ### B2. Conectividad Postgres en producción
 
-- [ ] Publicar el puerto de Postgres a loopback en
-  [`docker-compose.prod.yml`](../docker-compose.prod.yml) del servidor:
-  agregar `ports: ["127.0.0.1:5432:5432"]` al servicio `postgres` (no
-  `0.0.0.0`, no exponer a internet).
-- [ ] Ajustar `job-diario.service`:
-  - `After=network-online.target postgresql.service` → cambiar
-    `postgresql.service` por `docker.service` (Postgres corre en
-    contenedor, no como service nativo).
-  - Revisar el caso "servidor reinicia justo antes de las 15:30 UTC": con
-    `Persistent=true`, el timer podría dispararse antes de que
-    `docker compose` haya levantado Postgres — considerar un
-    `ExecStartPre` que espere el healthcheck, o aceptar el primer fallo
-    y que el reintento del día siguiente lo resuelva.
+- [x] Publicado el puerto de Postgres a loopback en
+  [`docker-compose.prod.yml`](../docker-compose.prod.yml) (`0ad55d8`):
+  `ports: ["127.0.0.1:5432:5432"]` en el servicio `postgres` — no
+  `0.0.0.0`, no expuesto a internet. El acceso interno de `app` por el
+  hostname `postgres` sigue intacto (esto es un agregado, no un
+  reemplazo).
+- [x] `job-diario.service` (`dc7f0da`): `After=` pasa de
+  `postgresql.service` (no existe en este host) a `docker.service`. Nota
+  agregada en el propio archivo: esto garantiza que el daemon de Docker
+  esté arriba, no que el contenedor ya haya pasado su healthcheck — en el
+  caso raro de coincidir con un reinicio, la corrida puede fallar por
+  connection refused, pero como el job es idempotente
+  (`boletines.id_pdf`), la corrida del día siguiente lo resuelve solo. No
+  se agregó un `ExecStartPre` que espere el healthcheck a propósito: para
+  saber a qué contenedor esperar haría falta asumir un nombre de proyecto
+  de compose, que puede no coincidir en el servidor real — mejor no
+  hardcodear algo frágil.
 
 ### B3. Manejo de errores de extracción (pérdida silenciosa de boletines)
 
-- [ ] En `job diario/dependencias_externas/extraer_sociedades.py`, el
-  `except Exception: ... return []` genérico de `procesar_pdf` hace que
-  cualquier error no relacionado a créditos/permisos se interprete como
-  "sin sociedades" — y `_registrar_pendientes_sin_datos()` en
-  `run_diario.py` lo marca como cargado para siempre. Cambiar para que
-  propague (o escriba una lista de "PDFs fallidos" que `run_diario`
-  excluya del registro-sin-datos y haga fallar la corrida).
+- [x] `job diario/dependencias_externas/extraer_sociedades.py` (`dc7f0da`):
+  el `except Exception: ... return []` genérico de `procesar_pdf` ya NO
+  atrapa errores genéricos — se dejó únicamente el `except` específico de
+  "sin créditos" (que ya propagaba antes). Cualquier otro error ahora
+  propaga hasta el loop principal, que lo cuenta en `errores` y NO marca
+  el checkpoint. Además, `main()` ahora sale con código `1` si
+  `errores > 0` (antes siempre salía 0 pase lo que pasara) — así
+  `run_diario.py`, que ya chequeaba `returncode != 0`, detecta el fallo y
+  NO llama a `_registrar_pendientes_sin_datos()`. También: `sin_creditos`
+  y `Ctrl+C` ahora salen con código != 0 (`1` y `130`) en vez de `return`
+  silencioso, por la misma razón.
+  - Verificado con un test de sintaxis (`ast.parse`) — no hay entorno de
+    extracción real (Claude) disponible en esta sesión para un test
+    funcional end-to-end de este archivo puntual; la lógica de
+    propagación se verificó leyendo el flujo completo (loop principal en
+    `main()` ya tenía el manejo correcto para excepciones propagadas,
+    solo faltaba dejar de atraparlas antes de tiempo).
 
 ### B4. Ajustes chicos de robustez (bajo riesgo, alto valor)
 
-- [ ] `run_diario.py:_determinar_pendientes` — agregar un tope (p. ej.
-  abortar y alertar si `len(pendientes) > 5`) como fusible de costos si
-  `ids_boletines.json` se corrompe o no se sincronizó y el descubrimiento
-  arranca desde la semilla original.
-- [ ] `cargar_incremental.py:cargar()` — en el `finally`, hacer
-  `conn.rollback()` antes del `pg_advisory_unlock` para que una excepción
-  temprana (antes del try interno) no quede enmascarada por
-  `InFailedSqlTransaction`.
-- [ ] `procesar_boletin` en `cargar_incremental.py` — el CUIT candidato
-  para `resolver_sociedad` sale solo de la primera fila del grupo;
-  `_construir_sociedad_nueva` en cambio toma el CUIT de cualquier fila.
-  Si la primera fila no trae CUIT pero otra sí, y ese CUIT ya existe,
-  el `INSERT` viola el UNIQUE y hace rollback del boletín entero. Usar
-  el primer CUIT no vacío del grupo en los dos lugares.
-- [ ] `transformaciones.py:resolver_sociedad` — agregar un "upgrade" de
-  campos NULL (CUIT, tipo, domicilio, capital) cuando la sociedad ya
-  existe, igual que ya hace `resolver_persona._upgrade` — así un stub
-  promovido deja de quedar vacío cuando llega su constitución real.
-- [ ] `Lookup.get` en `transformaciones.py` — inserta en catálogo
-  (`tipos_acto`, `roles`) cualquier string nuevo devuelto por el LLM sin
-  revisión. Agregar al menos un log cuando se crea catálogo nuevo, para
-  poder auditar.
-- [ ] `TimeoutStartSec=1800` en `job-diario.service` puede quedar corto
-  (descarga de padrones ~200MB + extracción de varios PDFs tras un
-  feriado). Subir a 3600 y considerar un `OnFailure=` que alerte —
-  si systemd mata el proceso, no pasa por el `except` de Python y no
-  hay mail ni heartbeat en falso.
-- [ ] `ALERTA_EMAIL_FROM` — cambiar de `onboarding@resend.dev` (solo
-  entrega al dueño de la cuenta Resend) a
-  `Job Diario <no-responder@ingcome.com.ar>`, ya verificado por la web.
-- [ ] Crear una API key de Anthropic separada para el job diario (mismo
-  workspace o uno propio), para atribución de gasto — hoy no hay
-  colisión de uso porque la web no usa Anthropic, pero conviene separar
-  igual antes de que el volumen crezca.
-- [ ] Guard-rail en `crear_tablas.py --reset`: negarse a resetear si ya
-  existe la tabla `usuarios` (señal de que la app web ya corrió sus
-  migraciones), salvo flag explícito adicional.
+- [x] `run_diario.py` (`dc7f0da`): fusible de costos
+  `BOLETIN_MAX_PENDIENTES` (default 5, override por env var) — si
+  `_determinar_pendientes()` devuelve más que eso, aborta ANTES de correr
+  extracción (con alerta), en vez de gastar en Claude sobre una
+  desincronización de `ids_boletines.json`.
+- [x] `cargar_incremental.py:cargar()` (`dc7f0da`): `conn.rollback()`
+  agregado al inicio del `finally`, antes del `pg_advisory_unlock`.
+  **Verificado con reproducción del bug**: corrida de un test que fuerza
+  una excepción SQL real antes del loop por-boletín — sin el fix,
+  `InFailedSqlTransaction` tapaba la excepción original; con el fix, la
+  excepción original se propaga limpia y el advisory lock queda liberado
+  (confirmado con `pg_try_advisory_lock` desde una segunda conexión).
+- [x] `procesar_boletin` en `cargar_incremental.py` (`dc7f0da`): el CUIT
+  candidato para `resolver_sociedad` ahora sale del primer CUIT no vacío
+  entre TODAS las filas del grupo (antes: solo la primera fila), igual
+  criterio que `_construir_sociedad_nueva`. **Verificado end-to-end**
+  contra Postgres con el schema real: CSV de 2 filas del mismo boletín
+  donde el CUIT aparece solo en la 2ª fila, y ese CUIT ya pertenece a una
+  sociedad existente — resuelve correctamente a la sociedad existente en
+  vez de intentar crear una duplicada (que antes violaba el
+  `UNIQUE(cuit)` y tiraba abajo el boletín entero).
+- [x] Upgrade de sociedad existente (`dc7f0da`, `cargar_incremental.py`):
+  nueva `_upgrade_sociedad()` completa con `COALESCE` los campos NULL
+  (tipo, domicilio, capital, objeto, domicilio electrónico,
+  ganancias/IVA/match ARCA, actividades CLAE) de una sociedad ya
+  existente — pensada sobre todo para los stubs promovidos desde el panel
+  de admin. Nunca toca nombre/nombre_normalizado/cuit (identidad). Evita
+  crear un domicilio huérfano si la sociedad ya tenía uno (`domicilio_id`
+  no deduplica, así que se chequea antes de llamarlo). **Verificado
+  end-to-end**: seedeado un stub tipo-037 (solo nombre+cuit), cargado un
+  boletín con 2 actos para esa misma empresa → el stub terminó con
+  `domicilio_id`, `capital_inicial` y 2 `actos` colgados de su mismo id
+  (sin duplicar la sociedad), sin tocar nombre/cuit originales, y sin
+  duplicar el domicilio en una segunda corrida idéntica (test de
+  idempotencia con conexión nueva, como sería una corrida real al día
+  siguiente).
+- [x] `Lookup.get` en `transformaciones.py` (`dc7f0da`): loguea
+  (`logging.warning`) cada vez que crea una fila nueva de catálogo
+  (`tipos_acto`, `roles`), con el nombre y el id, para poder auditar.
+- [x] `TimeoutStartSec` 1800→3600 en `job-diario.service` (`dc7f0da`).
+  Agregada `job-diario-alerta-fallo.service` (nueva unit, dispara vía
+  `OnFailure=` de `job-diario.service`) — manda un mail de respaldo
+  independiente del venv (`curl` directo a Resend vía
+  `alerta_fallo_systemd.sh`) para el caso en que el proceso Python muera
+  ANTES de llegar a su propio `except` (lo mata el timeout, o crashea el
+  intérprete) y por lo tanto nunca llega a mandar su propia alerta.
+  `deploy/README.md` actualizado con el paso de instalación de la nueva
+  unit.
+- [x] `ALERTA_EMAIL_FROM` (`dc7f0da`): cambiado de
+  `onboarding@resend.dev` a `Job Diario <no-responder@ingcome.com.ar>`
+  (dominio ya verificado por la app web) tanto en `.env.example` como en
+  el default hardcodeado de `run_diario.py`.
+- [ ] **Pendiente del usuario (no es código)**: crear una API key de
+  Anthropic separada para el job diario, para atribución de gasto — no
+  hay colisión de uso hoy (la web no usa Anthropic para nada, verificado
+  por grep), pero conviene separar antes de que el volumen crezca. No
+  puedo generarla yo — es una acción en console.anthropic.com.
+- [x] Guard-rail en `crear_tablas.py --reset` (`dc7f0da`): se negó a
+  resetear si la base tiene una tabla `schema_migrations`, salvo el flag
+  `--confirmo-que-tambien-borro-la-app-web`.
+  **Corrección importante durante la verificación**: la señal original
+  que había planeado (tabla `usuarios`) resultó estar MAL — `usuarios`
+  (junto con `sesiones`/`resets_contrasena`/`leads_informe`) ya viene
+  incluida en el propio `db/schema.sql` del pipeline (adaptada del dump
+  de referencia de la app web, sección "TABLAS DE LA APP WEB" del
+  schema), así que existe después de CUALQUIER `--reset` normal, haya
+  corrido la app web o no — con esa señal, el guard-rail se hubiese
+  disparado siempre, inutilizando `--reset` por completo. La señal
+  correcta es `schema_migrations` (la crea `db/migrate.ts` de la app web
+  para trackear sus propias migraciones, no está en `schema.sql` del
+  pipeline). **Verificado con 3 escenarios reales** contra Postgres con
+  el schema real: reset normal sin `schema_migrations` (procede sin
+  pedir el flag), reset con `schema_migrations` presente sin el flag
+  (aborta, `usuarios`/`schema_migrations` quedan intactas), reset con el
+  flag de confirmación (procede y borra todo, incluida
+  `schema_migrations`, como se espera).
 
 ### B5. Sincronización de `dependencias_externas/` (proceso, no código)
 
-- [ ] Documentar/crear un chequeo (script chico) que diffee cada copia en
-  `job diario/dependencias_externas/` contra su original en la raíz del
-  repo, ignorando los bloques de divergencia ya conocidos (env vars de
-  rutas, paralelización), y falle si aparece drift nuevo no revisado.
-  Para `normalizacion.py`, que debe ser idéntico byte a byte, exigir
-  igualdad exacta. Correrlo a mano antes de cada release.
+- [x] `job diario/dependencias_externas/check_sync.py` (nuevo, `dc7f0da`):
+  guarda un "baseline" del diff de cada copia contra su original
+  (`.sync_baseline/*.diff`, versionado en git) y falla si ese diff cambia
+  sin que alguien lo acepte a mano con `--update`. `normalizacion.py` es
+  caso especial: sin baseline, exige igualdad byte a byte siempre.
+  Documentado en el README de la carpeta.
+  **Verificado**: baseline inicial generado después de revisar los 6
+  diffs uno por uno (confirmé que cada uno es exactamente el wiring de
+  rutas/paralelización ya documentado, nada inesperado); re-corrida en
+  limpio pasa; test negativo (modificar `normalizacion.py` a mano)
+  detecta el drift y falla con exit 1; restaurado sin dejar cambios.
 
 ---
 
 ## Orden sugerido
 
-1. Bloque B1 (commitear lo que ya existe) — desbloquea todo lo demás,
-   es el más urgente y el más simple.
-2. Bloque B2 (conectividad) — sin esto no hay corrida de prueba posible.
-3. Bloque A (normalización) — antes de la primera corrida real contra
-   producción, para no generar duplicados desde el día uno.
-4. Bloque B3 (manejo de errores) — antes de confiar el timer sin
-   supervisión.
-5. Bloque B4/B5 — pueden ir en paralelo o después de la primera corrida
-   supervisada, no bloquean la activación inicial si hay seguimiento
-   manual los primeros días.
+1. ~~Bloque B1~~, ~~Bloque B2~~, ~~Bloque A~~, ~~Bloque B3~~, ~~Bloque
+   B4/B5~~ — todo el código y las migraciones ya están hechos y
+   commiteados (ver arriba).
+
+## Lo único que falta para poder instalar el timer contra producción
+
+Todo lo que era código/config quedó resuelto. Lo que queda es 100%
+del lado del usuario, fuera del alcance de lo que se puede hacer desde acá:
+
+1. **Aplicar la migración 038 contra producción** (correr `db/migrate.ts` o
+   el flujo de migraciones habitual del repo web) y revisar los `RAISE
+   NOTICE` de sociedades candidatas a fusión manual que emite.
+2. **Desplegar el `docker-compose.prod.yml` actualizado** en el servidor
+   (con el puerto de Postgres publicado a loopback) — si el servidor ya
+   está corriendo, esto implica un `docker compose up -d` que recrea el
+   contenedor de Postgres.
+3. **Instalar el job diario en el servidor** siguiendo
+   `job diario/deploy/README.md` (clonar el repo actualizado, `.env`,
+   copiar las 3 units de systemd —incluida la nueva
+   `job-diario-alerta-fallo.service`—, corrida manual de prueba antes de
+   activar el timer).
+4. Crear la API key de Anthropic separada para el job diario (punto
+   pendiente de B4).
+5. Confirmar el reloj del servidor (`timedatectl`) para el horario del
+   `.timer`.
