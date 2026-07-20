@@ -1,0 +1,10 @@
+# Secretos reales (el .env.example sí se versiona, como plantilla)
+/deploy/.env
+
+# Estado de runtime, generado por run_diario.py — no versionar
+/staging/
+/logs/
+/heartbeat.json
+
+# Python
+/__pycache__/

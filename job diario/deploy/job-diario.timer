@@ -1,0 +1,17 @@
+[Unit]
+Description=Disparador diario del job de Boletin Oficial (despues de que suele publicar la edicion)
+
+[Timer]
+# Mendoza es UTC-3 todo el año (no tiene horario de verano). 12:30 hora Mendoza
+# = 15:30 UTC. Ajustar si la instancia de Oracle Cloud no está en UTC (chequear
+# con `timedatectl`).
+OnCalendar=*-*-* 15:30:00
+# Si la instancia estuvo apagada/reiniciando justo a esa hora, igual dispara
+# apenas vuelve — no se pierde el día.
+Persistent=true
+# Margen aleatorio para no pegarle siempre exactamente al mismo segundo al
+# servidor del Boletín.
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target
