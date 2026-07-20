@@ -395,7 +395,7 @@ export const ENTIDADES: EntidadBodega[] = [
       { nombre: "Alejandro Martin Biondolillo", personaId: 12148 },
       { nombre: "Dorothy Zingaretti", personaId: 12151 },
       { nombre: "Enzo Américo Mugnani Aubone", personaId: 12149 },
-      { nombre: "Felito S.A.", sociedadId: 19504 },
+      { nombre: "Felito S.A.", sociedadId: 19494 },
       { nombre: "Leonardo Biondolillo", personaId: 12152 },
       { nombre: "Mariano Gabriel Biondolillo", personaId: 12153 },
     ],
@@ -625,7 +625,7 @@ export const ENTIDADES: EntidadBodega[] = [
     departamento: "Lavalle",
     socios: [
       { nombre: "Natalia Belén de la Barrera", personaId: 20913 },
-      { nombre: "Sueños Salvadores SA", sociedadId: 19505 },
+      { nombre: "Sueños Salvadores SA", sociedadId: 19495 },
     ],
     objetoSocial: "Agropecuaria, vitivinícola, industrial, inmobiliaria, transporte, turismo y hotelería, gastronómica. Desarrollo de actividades agrícolas y ganaderas, explotación de bodega y viñedos, elaboración de vinos, servicios de transporte y logística, agencia de viajes, catering y gastronomía.",
   },
