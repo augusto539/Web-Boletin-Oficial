@@ -14,8 +14,15 @@ services:
       POSTGRES_DB: boletin_sociedades
       POSTGRES_USER: boletin_admin
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?falta POSTGRES_PASSWORD en el .env}
-    # Sin "ports": no se expone al host ni a internet, solo accesible por los
-    # demás servicios a través de la red interna de docker compose.
+    # Publicado SOLO a loopback (127.0.0.1) — no a 0.0.0.0, no expuesto a
+    # internet — para que el job diario (systemd nativo en el mismo host, ver
+    # el repo "Info Boletin Oficial" / job diario/deploy/) pueda conectarse
+    # con DATABASE_URL=postgres://...@localhost:5432/boletin_sociedades sin
+    # correr containerizado. Los demás servicios de este compose lo siguen
+    # alcanzando por la red interna (host "postgres"), este ports: es un
+    # agregado, no un reemplazo de esa ruta.
+    ports:
+      - "127.0.0.1:5432:5432"
     volumes:
       - boletin_pg_data:/var/lib/postgresql/data
     healthcheck:

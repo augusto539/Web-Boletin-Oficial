@@ -393,7 +393,7 @@ adminRouter.get(
           v.cuit_juridico_fallback,
           COALESCE(
             NULLIF(regexp_replace(v.cuit_juridico_fallback, '\\D', '', 'g'), ''),
-            upper(unaccent(regexp_replace(trim(v.nombre_juridico_fallback), '\\.+$', '')))
+            normalizar_nombre(v.nombre_juridico_fallback)
           ) AS clave
         FROM vinculos v
         JOIN sociedades s ON s.id = v.sociedad_id
@@ -450,14 +450,14 @@ adminRouter.post(
     }
     if (!sociedadId) {
       const { rows } = await pool().query<{ id: number }>(
-        "SELECT id FROM sociedades WHERE nombre_normalizado = upper(unaccent($1)) LIMIT 1",
+        "SELECT id FROM sociedades WHERE nombre_normalizado = normalizar_nombre($1) LIMIT 1",
         [nombre],
       );
       sociedadId = rows[0]?.id ?? null;
     }
     if (!sociedadId) {
       const { rows } = await pool().query<{ id: number }>(
-        "INSERT INTO sociedades (nombre, nombre_normalizado, cuit) VALUES ($1, upper(unaccent($1)), $2) RETURNING id",
+        "INSERT INTO sociedades (nombre, nombre_normalizado, cuit) VALUES ($1, normalizar_nombre($1), $2) RETURNING id",
         [nombre, cuitLimpio],
       );
       sociedadId = rows[0].id;
