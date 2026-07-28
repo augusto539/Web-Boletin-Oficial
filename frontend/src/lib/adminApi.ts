@@ -119,6 +119,19 @@ export function obtenerEstadisticasAdmin(): Promise<EstadisticasAdmin> {
   return get("/api/admin/estadisticas");
 }
 
+export interface GastoAnthropic {
+  total: number | null;
+  ultimos30Dias: number | null;
+  hoy: number | null;
+}
+
+// Consulta aparte de /estadisticas: llama a la Usage & Cost Admin API de
+// Anthropic (externa), puede tardar o fallar por su cuenta sin bloquear el
+// resto del panel.
+export function obtenerGastoAnthropicAdmin(): Promise<GastoAnthropic> {
+  return get("/api/admin/gasto-anthropic");
+}
+
 export function obtenerUsuariosAdmin(
   first: number,
   offset: number,

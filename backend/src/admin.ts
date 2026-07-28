@@ -96,6 +96,74 @@ adminRouter.get(
   }),
 );
 
+interface CostReportResult {
+  amount: string; // decimal string en centavos, ej "123.45" = $1.23
+}
+interface CostReportBucket {
+  results: CostReportResult[];
+}
+interface CostReportResponse {
+  data: CostReportBucket[];
+  has_more: boolean;
+  next_page: string | null;
+}
+
+// Suma el costo real (USD) reportado por la Usage & Cost Admin API de
+// Anthropic entre startingAt (inclusive) y ahora. Requiere una Admin API key
+// (sk-ant-admin01-...) DISTINTA de la que usa el job diario para extraer —
+// se crea en el Console de Anthropic (Settings > Organization). "amount"
+// viene en centavos como string decimal (ver docs de cost_report), por eso
+// se divide por 100. Sin agrupar por nada: cada bucket diario trae un solo
+// resultado con el total de ESE día.
+async function costoAnthropicUSD(startingAt: string): Promise<number | null> {
+  const key = process.env.ANTHROPIC_ADMIN_KEY;
+  if (!key) return null;
+
+  let total = 0;
+  let page: string | undefined;
+  do {
+    const url = new URL("https://api.anthropic.com/v1/organizations/cost_report");
+    url.searchParams.set("starting_at", startingAt);
+    if (page) url.searchParams.set("page", page);
+
+    const r = await fetch(url, {
+      headers: { "anthropic-version": "2023-06-01", "x-api-key": key },
+    });
+    if (!r.ok) throw new Error(`cost_report respondió ${r.status}`);
+    const json = (await r.json()) as CostReportResponse;
+
+    for (const bucket of json.data) {
+      for (const item of bucket.results) {
+        total += Number.parseFloat(item.amount);
+      }
+    }
+    page = json.has_more ? (json.next_page ?? undefined) : undefined;
+  } while (page);
+
+  return total / 100;
+}
+
+adminRouter.get(
+  "/gasto-anthropic",
+  asyncHandler(async (_req: Request, res: Response) => {
+    const ahora = new Date();
+    const inicioHoy = new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth(), ahora.getUTCDate()));
+    const hace30Dias = new Date(ahora.getTime() - 30 * 24 * 60 * 60 * 1000);
+    // Fecha fija anterior a cualquier uso real de la API en este proyecto —
+    // sirve como "desde siempre" sin tener que hardcodear ni mantener la
+    // fecha exacta en que arrancó el job diario.
+    const desdeSiempre = "2025-01-01T00:00:00Z";
+
+    const [total, ultimos30Dias, hoy] = await Promise.all([
+      costoAnthropicUSD(desdeSiempre),
+      costoAnthropicUSD(hace30Dias.toISOString()),
+      costoAnthropicUSD(inicioHoy.toISOString()),
+    ]);
+
+    return res.json({ total, ultimos30Dias, hoy });
+  }),
+);
+
 interface UsuarioAdminRow {
   id: string;
   nombre: string;

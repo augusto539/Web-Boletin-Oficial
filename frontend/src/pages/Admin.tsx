@@ -8,6 +8,7 @@ import {
   alternarOcultaSociedad,
   obtenerConfiguracionAdmin,
   obtenerEstadisticasAdmin,
+  obtenerGastoAnthropicAdmin,
   obtenerLeadsAdmin,
   obtenerPersonasAdmin,
   obtenerSociedadesAdmin,
@@ -16,6 +17,7 @@ import {
   recalcularInformesAdmin,
   vincularSocioJuridico,
   type EstadisticasAdmin,
+  type GastoAnthropic,
   type LeadAdmin,
   type PersonaAdmin,
   type SociedadAdmin,
@@ -23,6 +25,9 @@ import {
   type UsuarioAdmin,
 } from "../lib/adminApi";
 import { cuit as formatCuit, dato, fecha } from "../lib/format";
+
+const fmtUSD = (n: number | null | undefined) =>
+  n == null || Number.isNaN(n) ? "…" : `US$ ${n.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 type Pestana = "estadisticas" | "configuracion" | "datos";
 
@@ -98,11 +103,17 @@ function CategoriaEstadisticas({ titulo, children }: { titulo: string; children:
 
 function TabEstadisticas() {
   const [est, setEst] = useState<EstadisticasAdmin | null>(null);
+  const [gasto, setGasto] = useState<GastoAnthropic | null>(null);
 
   useEffect(() => {
     obtenerEstadisticasAdmin()
       .then(setEst)
       .catch(() => setEst(null));
+    // Consulta aparte: pega a la API de Anthropic (externa), no debe
+    // bloquear ni tumbar el resto del panel si tarda o falla.
+    obtenerGastoAnthropicAdmin()
+      .then(setGasto)
+      .catch(() => setGasto(null));
   }, []);
 
   const fmt = (n: number | undefined) => (n === undefined ? "…" : n.toLocaleString("es-AR"));
@@ -137,6 +148,12 @@ function TabEstadisticas() {
           etiqueta="Sociedades actualizadas"
           valor={fmt(est?.ultimosDatosCargados.sociedadesActualizadas)}
         />
+      </CategoriaEstadisticas>
+
+      <CategoriaEstadisticas titulo="Gasto API">
+        <TarjetaEstadistica etiqueta="Gasto total" valor={fmtUSD(gasto?.total)} />
+        <TarjetaEstadistica etiqueta="Últimos 30 días" valor={fmtUSD(gasto?.ultimos30Dias)} />
+        <TarjetaEstadistica etiqueta="Hoy" valor={fmtUSD(gasto?.hoy)} />
       </CategoriaEstadisticas>
 
       <CategoriaEstadisticas titulo="Usuarios">
