@@ -15,6 +15,12 @@ export interface EstadisticasAdmin {
     leads: number;
     busquedas: number;
   };
+  ultimosDatosCargados: {
+    fecha: string | null;
+    sociedadesNuevas: number;
+    personasNuevas: number;
+    sociedadesActualizadas: number;
+  };
 }
 
 export interface SociedadAdmin {

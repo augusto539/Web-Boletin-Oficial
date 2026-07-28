@@ -23,3 +23,7 @@ MANUAL DE MARCA.pdf
 MANUAL DE MARCA.ai
 
 Informes/
+
+# Dumps de Postgres (pueden contener datos de producción) -- nunca versionar.
+*.dump
+*.dump.sql

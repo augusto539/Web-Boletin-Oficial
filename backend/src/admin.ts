@@ -31,7 +31,27 @@ adminRouter.get(
       usuarios: string;
       leads: string;
       busquedas: string;
+      carga_fecha: string | null;
+      carga_sociedades_nuevas: string;
+      carga_personas_nuevas: string;
+      carga_sociedades_actualizadas: string;
     }>(`
+    -- procesar_boletin() (cargar_incremental.py) carga cada boletín en una
+    -- sola transacción -- Postgres fija now()/CURRENT_TIMESTAMP al inicio de
+    -- la transacción, así que TODAS las filas creadas al cargar un boletín
+    -- (sociedades, personas_fisicas, actos) comparten el MISMO created_at
+    -- exacto. Eso permite distinguir "sociedad nueva" (created_at = el de
+    -- la transacción del último boletín) de "sociedad ya existente que
+    -- recibió un acto nuevo" (tocada por el último boletín, pero con
+    -- created_at de una carga anterior) sin heurísticas de fecha.
+    WITH ultimo_boletin AS (
+      SELECT id, fecha, created_at FROM boletines ORDER BY id DESC LIMIT 1
+    ),
+    sociedades_tocadas_ultimo AS (
+      SELECT DISTINCT a.sociedad_id
+      FROM actos a
+      JOIN ultimo_boletin ub ON ub.id = a.boletin_id
+    )
     SELECT
       (SELECT count(*) FROM sociedades) AS sociedades,
       (SELECT count(*) FROM personas_fisicas) AS personas,
@@ -41,7 +61,15 @@ adminRouter.get(
       (SELECT max(fecha)::text FROM boletines) AS ultimo_boletin,
       (SELECT count(*) FROM usuarios) AS usuarios,
       (SELECT count(*) FROM leads_informe) AS leads,
-      (SELECT count(*) FROM historial_busquedas) AS busquedas
+      (SELECT count(*) FROM historial_busquedas) AS busquedas,
+      (SELECT fecha::text FROM ultimo_boletin) AS carga_fecha,
+      (SELECT count(*) FROM sociedades s JOIN ultimo_boletin ub ON s.created_at = ub.created_at) AS carga_sociedades_nuevas,
+      (SELECT count(*) FROM personas_fisicas p JOIN ultimo_boletin ub ON p.created_at = ub.created_at) AS carga_personas_nuevas,
+      (
+        SELECT count(*) FROM sociedades_tocadas_ultimo stu
+        JOIN sociedades s ON s.id = stu.sociedad_id
+        JOIN ultimo_boletin ub ON s.created_at <> ub.created_at
+      ) AS carga_sociedades_actualizadas
   `);
     const r = rows[0];
 
@@ -57,6 +85,12 @@ adminRouter.get(
         registrados: Number(r.usuarios),
         leads: Number(r.leads),
         busquedas: Number(r.busquedas),
+      },
+      ultimosDatosCargados: {
+        fecha: r.carga_fecha,
+        sociedadesNuevas: Number(r.carga_sociedades_nuevas),
+        personasNuevas: Number(r.carga_personas_nuevas),
+        sociedadesActualizadas: Number(r.carga_sociedades_actualizadas),
       },
     });
   }),

@@ -120,6 +120,25 @@ function TabEstadisticas() {
         />
       </CategoriaEstadisticas>
 
+      <CategoriaEstadisticas titulo="Últimos datos cargados">
+        <TarjetaEstadistica
+          etiqueta="Fecha del último boletín"
+          valor={est ? fecha(est.ultimosDatosCargados.fecha) : "…"}
+        />
+        <TarjetaEstadistica
+          etiqueta="Sociedades nuevas"
+          valor={fmt(est?.ultimosDatosCargados.sociedadesNuevas)}
+        />
+        <TarjetaEstadistica
+          etiqueta="Personas físicas nuevas"
+          valor={fmt(est?.ultimosDatosCargados.personasNuevas)}
+        />
+        <TarjetaEstadistica
+          etiqueta="Sociedades actualizadas"
+          valor={fmt(est?.ultimosDatosCargados.sociedadesActualizadas)}
+        />
+      </CategoriaEstadisticas>
+
       <CategoriaEstadisticas titulo="Usuarios">
         <TarjetaEstadistica etiqueta="Usuarios registrados" valor={fmt(est?.usuarios.registrados)} />
         <TarjetaEstadistica etiqueta="Leads" valor={fmt(est?.usuarios.leads)} />
