@@ -33,7 +33,6 @@ services:
       JWT_SECRET: dev_jwt_secret_cambiar_en_produccion
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       MAIL_FROM: "INGcome <onboarding@resend.dev>"
-      ANTHROPIC_ADMIN_KEY: ${ANTHROPIC_ADMIN_KEY:-}
       FRONTEND_URL: http://localhost:5173
       PORT: 5050
       CORS_ORIGIN: http://localhost:5173

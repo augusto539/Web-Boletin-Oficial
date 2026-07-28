@@ -120,9 +120,9 @@ export function obtenerEstadisticasAdmin(): Promise<EstadisticasAdmin> {
 }
 
 export interface GastoAnthropic {
-  total: number | null;
-  ultimos30Dias: number | null;
-  hoy: number | null;
+  total: number;
+  ultimos30Dias: number;
+  hoy: number;
 }
 
 // Consulta aparte de /estadisticas: llama a la Usage & Cost Admin API de
