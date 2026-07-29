@@ -44,6 +44,9 @@ services:
       FRONTEND_URL: ${SITE_URL}
       SITE_URL: ${SITE_URL}
       CORS_ORIGIN: ${SITE_URL}
+      # Mismo valor que JOB_WEBHOOK_TOKEN en /opt/job-diario/.env: autentica
+      # el POST del job diario a /api/notificaciones/procesar.
+      JOB_WEBHOOK_TOKEN: ${JOB_WEBHOOK_TOKEN:-}
       PORT: 5050
       NODE_ENV: production
       # VITE_GA_ID / VITE_API_URL / VITE_GRAPHQL_URL NO van acá: Vite las

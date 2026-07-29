@@ -34,6 +34,8 @@ services:
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       MAIL_FROM: "INGcome <onboarding@resend.dev>"
       FRONTEND_URL: http://localhost:5173
+      # Secreto compartido con el job diario (POST /api/notificaciones/procesar).
+      JOB_WEBHOOK_TOKEN: dev_job_webhook_token
       PORT: 5050
       CORS_ORIGIN: http://localhost:5173
       NODE_ENV: development

@@ -1,5 +1,6 @@
 import { useQuery } from "@apollo/client/react";
 import { Link, useParams } from "react-router-dom";
+import { BotonNotificarme } from "../components/BotonNotificarme";
 import { DescargarFicha } from "../components/DescargarFicha";
 import { FlechaIcon } from "../components/FlechaIcon";
 import { GrafoPersona } from "../components/GrafoPersona";
@@ -88,17 +89,20 @@ export default function Persona() {
               </p>
               <h1 className="text-4xl font-bold md:text-6xl">{persona.nombre}</h1>
             </div>
-            <DescargarFicha
-              tipo="persona"
-              onPDF={async () => {
-                const { exportarPersonaPDF } = await import("../lib/exportarFicha");
-                await exportarPersonaPDF(persona, sociedades);
-              }}
-              onExcel={async () => {
-                const { exportarPersonaExcel } = await import("../lib/exportarFicha");
-                await exportarPersonaExcel(persona, sociedades);
-              }}
-            />
+            <div className="flex flex-wrap items-center gap-3">
+              <BotonNotificarme tipo="persona" id={persona.id} />
+              <DescargarFicha
+                tipo="persona"
+                onPDF={async () => {
+                  const { exportarPersonaPDF } = await import("../lib/exportarFicha");
+                  await exportarPersonaPDF(persona, sociedades);
+                }}
+                onExcel={async () => {
+                  const { exportarPersonaExcel } = await import("../lib/exportarFicha");
+                  await exportarPersonaExcel(persona, sociedades);
+                }}
+              />
+            </div>
           </div>
           <div className="mt-5 flex flex-wrap items-center gap-3 text-sm">
             {persona.documento && <span className="text-white/70">DNI {persona.documento}</span>}

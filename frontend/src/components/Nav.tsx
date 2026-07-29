@@ -81,14 +81,14 @@ export function Nav() {
           >
             Informes
           </Link>
-          {/* <Link
+          <Link
             to="/notificaciones"
             className={`text-sm transition-opacity hover:opacity-70 ${
               claro ? "text-white" : "text-carbon"
             }`}
           >
             Notificaciones
-          </Link> desactivado por ahora */}
+          </Link>
           {SECCIONES.map((s) => (
             <button
               key={s.id}
@@ -173,6 +173,12 @@ export function Nav() {
             )}
             <Link to="/informes" className="rounded-xl px-3 py-3 text-sm text-carbon hover:bg-humo">
               Informes
+            </Link>
+            <Link
+              to="/notificaciones"
+              className="rounded-xl px-3 py-3 text-sm text-carbon hover:bg-humo"
+            >
+              Notificaciones
             </Link>
             {SECCIONES.map((s) => (
               <button

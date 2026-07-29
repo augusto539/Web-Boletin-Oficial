@@ -1,5 +1,6 @@
 import { useQuery } from "@apollo/client/react";
 import { Link, useParams } from "react-router-dom";
+import { BotonNotificarme } from "../components/BotonNotificarme";
 import { DescargarFicha } from "../components/DescargarFicha";
 import { FlechaIcon } from "../components/FlechaIcon";
 import { GrafoSociedad } from "../components/GrafoSociedad";
@@ -94,17 +95,20 @@ export default function Sociedad() {
               </p>
               <h1 className="text-4xl font-bold md:text-6xl">{sociedad.nombre}</h1>
             </div>
-            <DescargarFicha
-              tipo="sociedad"
-              onPDF={async () => {
-                const { exportarSociedadPDF } = await import("../lib/exportarFicha");
-                await exportarSociedadPDF(sociedad, vinculos, actos);
-              }}
-              onExcel={async () => {
-                const { exportarSociedadExcel } = await import("../lib/exportarFicha");
-                await exportarSociedadExcel(sociedad, vinculos, actos);
-              }}
-            />
+            <div className="flex flex-wrap items-center gap-3">
+              <BotonNotificarme tipo="sociedad" id={sociedad.id} />
+              <DescargarFicha
+                tipo="sociedad"
+                onPDF={async () => {
+                  const { exportarSociedadPDF } = await import("../lib/exportarFicha");
+                  await exportarSociedadPDF(sociedad, vinculos, actos);
+                }}
+                onExcel={async () => {
+                  const { exportarSociedadExcel } = await import("../lib/exportarFicha");
+                  await exportarSociedadExcel(sociedad, vinculos, actos);
+                }}
+              />
+            </div>
           </div>
           <div className="mt-5 flex flex-wrap items-center gap-3 text-sm">
             {sociedad.cuit && <span className="text-white/70">CUIT {formatCuit(sociedad.cuit)}</span>}

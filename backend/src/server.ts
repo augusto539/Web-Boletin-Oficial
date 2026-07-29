@@ -19,6 +19,7 @@ import {
 import { historialRouter } from "./historial.js";
 import { informesPublicoRouter, recalcularInformes } from "./informes.js";
 import { leadsRouter } from "./leads.js";
+import { notificacionesRouter, procesarNotificaciones } from "./notificaciones.js";
 import { seoRouter } from "./seo.js";
 
 config({ path: join(dirname(fileURLToPath(import.meta.url)), "..", "..", ".env") });
@@ -85,6 +86,7 @@ app.use("/api/configuracion", configuracionPublicaRouter);
 app.use("/api/leads", leadsRouter);
 app.use("/api/historial", historialRouter);
 app.use("/api/informes", informesPublicoRouter);
+app.use("/api/notificaciones", notificacionesRouter);
 
 // "Modo solo administradores" (tab Configuración de /admin): bloquea la
 // búsqueda avanzada para cualquiera que no sea admin. El front también
@@ -175,6 +177,18 @@ await cargarConfiguracion();
 recalcularInformes().catch((err) => console.error("[informes] error en el recálculo inicial:", err));
 cron.schedule("0 4 * * *", () => {
   recalcularInformes().catch((err) => console.error("[informes] error en el recálculo diario:", err));
+});
+
+// Red de contención de las notificaciones, NO el mecanismo principal: lo
+// normal es que el job diario dispare POST /api/notificaciones/procesar
+// apenas termina de cargar (ver notificaciones.ts). Esto cubre el caso de
+// que ese POST se pierda — típicamente, el backend reiniciándose justo en
+// ese momento. Corre una hora después del timer del job (15:30) y barre los
+// boletines de los últimos días; re-procesar no manda nada dos veces.
+cron.schedule("30 16 * * *", () => {
+  procesarNotificaciones().catch((err) =>
+    console.error("[notificaciones] error en la corrida de respaldo:", err),
+  );
 });
 
 const port = Number(process.env.PORT ?? 5000);

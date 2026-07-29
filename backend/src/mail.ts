@@ -74,6 +74,123 @@ export async function enviarBienvenida(usuario: DestinatarioMail): Promise<void>
   }
 }
 
+// Una entidad vigilada por el usuario que tuvo movimiento en un boletín
+// nuevo. Un acto por elemento: si una misma sociedad tiene dos actos en el
+// día, vienen dos elementos.
+export interface NovedadNotificacion {
+  tipoEntidad: "sociedad" | "persona";
+  entidadId: string;
+  entidadNombre: string;
+  acto: string;
+  fechaActo: string | null;
+  descripcion: string | null;
+  // Vínculos que creó este acto (rol + nombre), p.ej. los socios de una
+  // constitución o las autoridades designadas.
+  participantes: { rol: string; nombre: string }[];
+  escribano: string | null;
+  registroNotarial: string | null;
+  idPdf: string | null;
+}
+
+function sitioUrl(): string {
+  return process.env.FRONTEND_URL ?? "http://localhost:5173";
+}
+
+// Escapa para interpolar texto de la base (descripciones del LLM, nombres)
+// dentro del HTML del mail.
+function esc(v: string): string {
+  return v
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function bloqueNovedad(n: NovedadNotificacion): string {
+  const url = `${sitioUrl()}/${n.tipoEntidad}/${n.entidadId}`;
+  const filas: string[] = [];
+
+  if (n.fechaActo) {
+    filas.push(
+      `<p style="margin:0 0 6px;font-size:13px;color:#8a8f93;">Fecha del acto: ${esc(n.fechaActo)}</p>`,
+    );
+  }
+  if (n.descripcion) {
+    filas.push(
+      `<p style="margin:0 0 10px;line-height:1.5;color:#5a5f63;">${esc(n.descripcion)}</p>`,
+    );
+  }
+  if (n.participantes.length > 0) {
+    const items = n.participantes
+      .map((p) => `<li style="margin:0 0 2px;">${esc(p.nombre)} — ${esc(p.rol)}</li>`)
+      .join("");
+    filas.push(
+      `<p style="margin:0 0 4px;font-size:13px;font-weight:bold;">Personas y empresas en este acto</p>
+       <ul style="margin:0 0 10px;padding-left:18px;line-height:1.5;color:#5a5f63;font-size:14px;">${items}</ul>`,
+    );
+  }
+  if (n.escribano) {
+    const registro = n.registroNotarial ? ` (registro ${esc(n.registroNotarial)})` : "";
+    filas.push(
+      `<p style="margin:0 0 10px;font-size:13px;color:#8a8f93;">Escribano: ${esc(n.escribano)}${registro}</p>`,
+    );
+  }
+
+  const linkPdf = n.idPdf
+    ? ` &nbsp;·&nbsp; <a href="https://boe.mendoza.gov.ar/default/public/publico/verpdf/${esc(n.idPdf)}" style="color:${VINO};">Ver el boletín en PDF</a>`
+    : "";
+
+  return `
+    <div style="border:1px solid #e4e4e4;border-radius:16px;padding:20px;margin:0 0 16px;">
+      <p style="margin:0 0 2px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:${VINO};">${esc(n.acto)}</p>
+      <h2 style="margin:0 0 10px;font-size:18px;">${esc(n.entidadNombre)}</h2>
+      ${filas.join("")}
+      <a href="${url}" style="color:${VINO};font-weight:bold;text-decoration:none;">Ver la ficha completa</a>${linkPdf}
+    </div>`;
+}
+
+// Aviso de movimiento en las entidades que el usuario tiene en seguimiento.
+// Un solo mail por usuario por corrida, aunque tenga varias entidades con
+// novedades. No lanza (mismo criterio que el resto del archivo): quien la
+// llama solo registra en notificaciones_enviadas si devolvió true, así un
+// fallo de Resend se reintenta en la corrida siguiente en vez de perderse.
+export async function enviarNotificacionActualizaciones(
+  usuario: DestinatarioMail,
+  novedades: NovedadNotificacion[],
+): Promise<boolean> {
+  if (novedades.length === 0) return false;
+
+  const plural = novedades.length === 1 ? "una novedad" : `${novedades.length} novedades`;
+  const html = layout(`
+    <h1 style="margin:0 0 12px;font-size:22px;">Hay ${plural} en tu seguimiento</h1>
+    <p style="margin:0 0 20px;line-height:1.5;color:#5a5f63;">
+      ${usuario.nombre}, esto apareció en el Boletín Oficial de Mendoza sobre lo que
+      seguís:
+    </p>
+    ${novedades.map(bloqueNovedad).join("")}
+    <p style="margin:20px 0 0;font-size:13px;color:#8a8f93;">
+      Podés dar de baja cualquier seguimiento desde
+      <a href="${sitioUrl()}/notificaciones" style="color:${VINO};">tus notificaciones</a>.
+    </p>
+  `);
+
+  try {
+    await resend().emails.send({
+      from: mailFrom(),
+      to: usuario.mail,
+      subject:
+        novedades.length === 1
+          ? `Novedad en ${novedades[0].entidadNombre}`
+          : `${novedades.length} novedades en tu seguimiento`,
+      html,
+    });
+    return true;
+  } catch (err) {
+    console.error("Error enviando mail de notificación de actualizaciones:", err);
+    return false;
+  }
+}
+
 // Tampoco lanza, a propósito: el endpoint que la llama responde el mismo
 // mensaje genérico exista o no la cuenta / haya fallado o no el envío, para
 // no filtrar qué mails están registrados.

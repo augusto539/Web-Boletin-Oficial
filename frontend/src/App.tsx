@@ -20,7 +20,7 @@ import InformesHub from "./pages/InformesHub";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
-// import Notificaciones from "./pages/Notificaciones"; // desactivado por ahora
+import Notificaciones from "./pages/Notificaciones";
 import OlvideContrasena from "./pages/OlvideContrasena";
 import Persona from "./pages/Persona";
 import Privacidad from "./pages/Privacidad";
@@ -84,7 +84,7 @@ export default function App() {
         <Route path="/informes/nicho-bodegas-boutique" element={<InformeNichoBodegasBoutique />} />
         <Route path="/informes/nicho-energia-renovable" element={<InformeNichoEnergiaRenovable />} />
         <Route path="/informes/:anuarioSlug" element={<InformeAnuario />} />
-        {/* <Route path="/notificaciones" element={<Notificaciones />} /> desactivado por ahora */}
+        <Route path="/notificaciones" element={<Notificaciones />} />
         <Route path="/terminos" element={<Terminos />} />
         <Route path="/privacidad" element={<Privacidad />} />
         <Route

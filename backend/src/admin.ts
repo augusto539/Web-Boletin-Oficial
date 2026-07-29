@@ -2,6 +2,7 @@ import { type Request, type Response, Router } from "express";
 import { asyncHandler } from "./asyncHandler.js";
 import { pool } from "./auth.js";
 import { recalcularInformes } from "./informes.js";
+import { procesarNotificaciones } from "./notificaciones.js";
 
 // Todas las rutas de acá abajo ya pasaron por requireAdmin() (ver server.ts),
 // así que req.usuario existe y es admin=true.
@@ -14,6 +15,20 @@ adminRouter.post(
   "/informes/recalcular",
   asyncHandler(async (_req: Request, res: Response) => {
     const resultado = await recalcularInformes();
+    return res.json(resultado);
+  }),
+);
+
+// Disparo manual del cruce de notificaciones, para no depender del POST del
+// job diario ni del cron de respaldo. Sin body mira los boletines de los
+// últimos días; con {"boletines": ["12345"]} se acota a esos id_pdf.
+adminRouter.post(
+  "/notificaciones/procesar",
+  asyncHandler(async (req: Request, res: Response) => {
+    const boletines: string[] = Array.isArray(req.body?.boletines)
+      ? req.body.boletines.map((v: unknown) => String(v)).filter(Boolean)
+      : [];
+    const resultado = await procesarNotificaciones(boletines);
     return res.json(resultado);
   }),
 );

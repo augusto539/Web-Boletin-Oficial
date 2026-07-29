@@ -1,7 +1,14 @@
 import { useLazyQuery } from "@apollo/client/react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../lib/auth";
 import { cuit as formatCuit, fecha } from "../lib/format";
+import {
+  crearNotificacion,
+  eliminarNotificacion,
+  listarNotificaciones,
+  type Suscripcion,
+} from "../lib/notificacionesApi";
 import {
   BUSCAR_PERSONAS,
   BUSCAR_PERSONAS_POR_CUIT,
@@ -14,59 +21,30 @@ import {
   type Id,
 } from "../lib/queries";
 
-// Solo UI por ahora: no hay tabla de notificaciones en la base ni envío de
-// mails. La lista se guarda en localStorage para poder mostrar/borrar algo
-// mientras se define el backend (una tabla de notificaciones + un job que
-// las cruce contra los boletines nuevos).
-const CLAVE_STORAGE = "notificaciones_activas";
-
-// Mock: hasta que haya sesión real, mostramos un mail de ejemplo. En el
-// producto final este campo no se pide en el formulario — se usa
-// automáticamente el mail con el que la persona se registró.
-const EMAIL_CUENTA = "vos@tu-mail.com";
-
 type TipoEntidad = "sociedad" | "persona";
 type ModoBusqueda = "nombre" | "cuit";
 
 interface EntidadElegida {
   tipo: TipoEntidad;
   // null cuando la notificación se crea a mano para un CUIT/DNI que no
-  // encontramos en la base (todavía no tiene ficha propia).
+  // encontramos en la base (todavía no tiene ficha propia). El backend la
+  // guarda por documento y la re-apunta al id real cuando la entidad
+  // aparece en un boletín (ver autoVincularPorDocumento en notificaciones.ts).
   id: Id | null;
   nombre: string;
   cuit: string | null;
 }
 
-interface Notificacion extends EntidadElegida {
-  clave: string;
-  creadaEl: string;
-}
-
-function cargarNotificaciones(): Notificacion[] {
-  try {
-    const crudo = localStorage.getItem(CLAVE_STORAGE);
-    return crudo ? (JSON.parse(crudo) as Notificacion[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function guardarNotificaciones(notificaciones: Notificacion[]) {
-  localStorage.setItem(CLAVE_STORAGE, JSON.stringify(notificaciones));
-}
-
 const MIN_CARACTERES: Record<ModoBusqueda, number> = { nombre: 2, cuit: 3 };
 
-// Dos notificaciones son "la misma" si comparten id (cuando la entidad
-// tiene ficha en la base) o, para las cargadas a mano sin id, si comparten
-// tipo y CUIT/DNI (comparando solo dígitos).
-function coincide(a: EntidadElegida, b: EntidadElegida): boolean {
-  if (a.tipo !== b.tipo) return false;
-  if (a.id !== null && b.id !== null) return a.id === b.id;
-  if (a.id !== null || b.id !== null) return false;
-  const digitosA = (a.cuit ?? "").replace(/\D/g, "");
-  const digitosB = (b.cuit ?? "").replace(/\D/g, "");
-  return digitosA !== "" && digitosA === digitosB;
+// Para no ofrecer de nuevo algo que el usuario ya sigue. Compara por id
+// cuando la entidad tiene ficha, y por dígitos del CUIT/DNI cuando no.
+function yaEsta(suscripciones: Suscripcion[], entidad: EntidadElegida): boolean {
+  return suscripciones.some((s) => {
+    if (entidad.id !== null) return s.tipo === entidad.tipo && s.entidadId === entidad.id;
+    const digitos = (entidad.cuit ?? "").replace(/\D/g, "");
+    return digitos !== "" && (s.cuit ?? "").replace(/\D/g, "") === digitos;
+  });
 }
 
 // Un solo campo de búsqueda (como en Búsqueda avanzada): si el término es
@@ -77,34 +55,79 @@ function pareceCuitODni(termino: string): boolean {
 }
 
 export default function Notificaciones() {
-  const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
+  const { usuario, cargando: cargandoSesion } = useAuth();
+  const [notificaciones, setNotificaciones] = useState<Suscripcion[]>([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  async function recargar() {
+    try {
+      setNotificaciones(await listarNotificaciones());
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No pudimos cargar tus notificaciones.");
+    } finally {
+      setCargando(false);
+    }
+  }
 
   useEffect(() => {
-    setNotificaciones(cargarNotificaciones());
-  }, []);
+    if (cargandoSesion) return;
+    if (!usuario) {
+      setCargando(false);
+      return;
+    }
+    recargar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usuario, cargandoSesion]);
 
-  function agregarNotificacion(entidad: EntidadElegida) {
-    setNotificaciones((prev) => {
-      if (prev.some((n) => coincide(n, entidad))) return prev;
-      const siguiente = [
-        ...prev,
-        { ...entidad, clave: crypto.randomUUID(), creadaEl: new Date().toISOString() },
-      ];
-      guardarNotificaciones(siguiente);
-      return siguiente;
-    });
+  async function agregarNotificacion(entidad: EntidadElegida) {
+    await crearNotificacion(
+      entidad.id !== null
+        ? { tipo: entidad.tipo, id: String(entidad.id) }
+        : { tipo: "documento", documento: entidad.cuit ?? "", etiqueta: entidad.nombre },
+    );
+    await recargar();
   }
 
-  function eliminarNotificacion(clave: string) {
-    setNotificaciones((prev) => {
-      const siguiente = prev.filter((n) => n.clave !== clave);
-      guardarNotificaciones(siguiente);
-      return siguiente;
-    });
+  async function quitar(id: string) {
+    // Optimista: la fila desaparece al toque y se recarga después, así el
+    // botón no queda "pensando" en una operación que casi siempre funciona.
+    setNotificaciones((prev) => prev.filter((n) => n.id !== id));
+    try {
+      await eliminarNotificacion(id);
+    } finally {
+      recargar();
+    }
   }
 
-  const yaNotificada = (entidad: EntidadElegida) =>
-    notificaciones.some((n) => coincide(n, entidad));
+  if (!cargandoSesion && !usuario) {
+    return (
+      <main className="min-h-screen bg-humo px-6 pt-32 pb-20">
+        <div className="mx-auto max-w-5xl">
+          <h1 className="text-4xl font-bold md:text-5xl">Notificaciones</h1>
+          <p className="mt-3 text-lg text-carbon/60">
+            Necesitás una cuenta para programar avisos: el mail va a la dirección con la que te
+            registres.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link
+              to="/registro"
+              className="rounded-full bg-vino px-6 py-3 text-sm font-bold text-white transition-transform hover:scale-105"
+            >
+              Crear una cuenta gratis
+            </Link>
+            <Link
+              to="/login"
+              className="rounded-full border border-carbon/20 px-6 py-3 text-sm font-bold text-carbon transition-colors hover:bg-white"
+            >
+              Ya tengo cuenta
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-humo px-6 pt-32 pb-20">
@@ -115,11 +138,20 @@ export default function Notificaciones() {
           boletín nuevo.
         </p>
 
-        <NuevaNotificacion onElegir={agregarNotificacion} yaNotificada={yaNotificada} />
+        <NuevaNotificacion
+          onElegir={agregarNotificacion}
+          yaNotificada={(e) => yaEsta(notificaciones, e)}
+          mail={usuario?.mail ?? ""}
+        />
 
         <section className="mt-8 rounded-3xl bg-white p-7">
           <h2 className="mb-5 text-2xl font-bold">Notificaciones activas</h2>
-          {notificaciones.length === 0 ? (
+          {error && (
+            <p className="mb-4 rounded-xl bg-vino/10 p-4 text-sm text-vino">{error}</p>
+          )}
+          {cargando ? (
+            <p className="py-4 text-carbon/50">Cargando…</p>
+          ) : notificaciones.length === 0 ? (
             <p className="py-4 text-carbon/50">Todavía no programaste ninguna notificación.</p>
           ) : (
             <div className="overflow-x-auto">
@@ -136,28 +168,32 @@ export default function Notificaciones() {
                 </thead>
                 <tbody>
                   {notificaciones.map((n) => (
-                    <tr key={n.clave} className="border-b border-carbon/5 last:border-0">
+                    <tr key={n.id} className="border-b border-carbon/5 last:border-0">
                       <td className="px-6 py-4">
                         <span
                           className={`rounded-full px-3 py-1 text-xs font-bold ${
                             n.tipo === "sociedad" ? "bg-vino/10 text-vino" : "bg-humo text-carbon/70"
                           }`}
                         >
-                          {n.tipo === "sociedad" ? "Sociedad" : "Persona"}
+                          {n.tipo === "sociedad"
+                            ? "Sociedad"
+                            : n.tipo === "persona"
+                              ? "Persona"
+                              : "CUIT/DNI"}
                         </span>
                       </td>
                       <td className="px-6 py-4 font-bold">
-                        {n.tipo === "sociedad" && n.id !== null ? (
+                        {n.entidadId !== null ? (
                           <Link
-                            to={`/sociedad/${n.id}`}
+                            to={`/${n.tipo}/${n.entidadId}`}
                             className="text-vino underline-offset-4 hover:underline"
                           >
-                            {n.nombre}
+                            {n.nombre ?? "(sin nombre)"}
                           </Link>
                         ) : (
-                          n.nombre
+                          (n.nombre ?? "(sin nombre)")
                         )}
-                        {n.id === null && (
+                        {n.entidadId === null && (
                           <span className="ml-2 rounded-full bg-humo px-2.5 py-0.5 text-xs font-normal text-carbon/50">
                             sin ficha en la base
                           </span>
@@ -169,11 +205,11 @@ export default function Notificaciones() {
                       <td className="px-6 py-4 text-carbon/60">
                         {fecha(n.creadaEl.slice(0, 10))}
                       </td>
-                      <td className="px-6 py-4 text-carbon/60">{EMAIL_CUENTA}</td>
+                      <td className="px-6 py-4 text-carbon/60">{usuario?.mail}</td>
                       <td className="px-6 py-4 text-right">
                         <button
                           type="button"
-                          onClick={() => eliminarNotificacion(n.clave)}
+                          onClick={() => quitar(n.id)}
                           className="cursor-pointer text-sm font-bold text-carbon/40 transition-colors hover:text-vino"
                         >
                           Eliminar
@@ -194,9 +230,11 @@ export default function Notificaciones() {
 function NuevaNotificacion({
   onElegir,
   yaNotificada,
+  mail,
 }: {
-  onElegir: (entidad: EntidadElegida) => void;
+  onElegir: (entidad: EntidadElegida) => Promise<void>;
   yaNotificada: (entidad: EntidadElegida) => boolean;
+  mail: string;
 }) {
   const [tipo, setTipo] = useState<TipoEntidad>("sociedad");
   const [termino, setTermino] = useState("");
@@ -298,15 +336,19 @@ function NuevaNotificacion({
     setNombreManual("");
   }
 
-  function confirmarYAgregar(entidad: EntidadElegida) {
+  async function confirmarYAgregar(entidad: EntidadElegida) {
     if (yaNotificada(entidad)) {
       setConfirmacion(
         `Ya tenés una notificación activa para ${entidad.tipo === "sociedad" ? "esa sociedad" : "esa persona"}.`,
       );
       return;
     }
-    onElegir(entidad);
-    setConfirmacion(`Listo, te avisaremos por mail a ${EMAIL_CUENTA} cuando corresponda.`);
+    try {
+      await onElegir(entidad);
+      setConfirmacion(`Listo, te avisaremos por mail a ${mail} cuando corresponda.`);
+    } catch (e) {
+      setConfirmacion(e instanceof Error ? e.message : "No pudimos crear la notificación.");
+    }
   }
 
   function elegir(entidad: EntidadElegida) {
@@ -409,7 +451,7 @@ function NuevaNotificacion({
 
       <p className="mt-4 text-sm text-carbon/50">
         Elegí una {tipo === "sociedad" ? "sociedad" : "persona"} de la lista para programar la
-        notificación. Te avisaremos por mail a <strong>{EMAIL_CUENTA}</strong> (el mail con el que
+        notificación. Te avisaremos por mail a <strong>{mail}</strong> (el mail con el que
         te registraste) cuando aparezca en un boletín nuevo.
       </p>
 
