@@ -538,8 +538,13 @@ adminRouter.post(
     }
     if (!sociedadId) {
       const { rows } = await pool().query<{ id: number }>(
-        "INSERT INTO sociedades (nombre, nombre_normalizado, cuit) VALUES ($1, normalizar_nombre($1), $2) RETURNING id",
-        [nombre, cuitLimpio],
+        // $1 va dos veces con contextos de tipo distintos (columna varchar vs.
+        // argumento text de normalizar_nombre) -- Postgres no puede unificar
+        // un solo tipo para el mismo placeholder en esos dos usos ("inconsistent
+        // types deduced for parameter $1", 42P08). Se pasa como dos params
+        // separados para evitarlo.
+        "INSERT INTO sociedades (nombre, nombre_normalizado, cuit) VALUES ($1, normalizar_nombre($2), $3) RETURNING id",
+        [nombre, nombre, cuitLimpio],
       );
       sociedadId = rows[0].id;
     }
