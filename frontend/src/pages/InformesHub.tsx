@@ -29,6 +29,11 @@ const NICHOS = [
     nombre: "Energía Solar y Eólica en Mendoza",
     descripcion: "Dos olas, un mismo objetivo, 2017–2026.",
   },
+  {
+    slug: "cripto-fintech",
+    nombre: "Cripto y Fintech en Mendoza",
+    descripcion: "El termómetro del boom, 2017–2026.",
+  },
 ];
 
 export default function InformesHub() {

@@ -32,6 +32,13 @@ import {
   EVOLUCION_ANUAL as EVOLUCION_ANUAL_ENERGIA,
   TIPO_ENTIDAD as TIPO_ENTIDAD_ENERGIA,
 } from "./data/nichoEnergiaRenovable.js";
+import {
+  DEPARTAMENTOS_CRIPTO,
+  type EntidadCripto,
+  ENTIDADES as ENTIDADES_CRIPTO,
+  EVOLUCION_ANUAL as EVOLUCION_ANUAL_CRIPTO,
+  TIPO_ENTIDAD as TIPO_ENTIDAD_CRIPTO,
+} from "./data/nichoCriptoFintech.js";
 
 // Middleware de SEO: sirve el mismo index.html de la SPA pero con
 // title/description/canonical/JSON-LD únicos por entidad, más un bloque de
@@ -190,6 +197,29 @@ function entidadEnergiaHtml(e: EntidadEnergia): string {
 
 function entidadesEnergiaHtml(): string {
   return ENTIDADES_ENERGIA.map(entidadEnergiaHtml).join("");
+}
+
+function entidadCriptoHtml(e: EntidadCripto): string {
+  const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
+  const sociosLinks = e.socios
+    .map((s) =>
+      s.sociedadId
+        ? `<a href="/sociedad/${s.sociedadId}">${escapeHtml(s.nombre)}</a>`
+        : s.personaId
+          ? `<a href="/persona/${s.personaId}">${escapeHtml(s.nombre)}</a>`
+          : escapeHtml(s.nombre),
+    )
+    .join(" · ");
+  return `
+    <h3>${escapeHtml(e.tipo)} — ${nombreLink}</h3>
+    <p>CUIT: ${e.cuit ? escapeHtml(e.cuit) : "—"} · Capital: ${e.capital ? escapeHtml(e.capital) : "—"} · Publicación: ${e.publicacion ? escapeHtml(e.publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
+    ${e.socios.length > 0 ? `<p>Socios/Integrantes: ${sociosLinks}</p>` : ""}
+    <p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>
+  `;
+}
+
+function entidadesCriptoHtml(): string {
+  return ENTIDADES_CRIPTO.map(entidadCriptoHtml).join("");
 }
 
 function siteUrl(): string {
@@ -489,6 +519,7 @@ seoRouter.get(
         <li><a href="/informes/nicho-enoturismo">Enoturismo en Mendoza</a></li>
         <li><a href="/informes/nicho-bodegas-boutique">Bodegas Boutique en Mendoza</a></li>
         <li><a href="/informes/nicho-energia-renovable">Energía Solar y Eólica en Mendoza</a></li>
+        <li><a href="/informes/nicho-cripto-fintech">Cripto y Fintech en Mendoza</a></li>
       </ul>
       ${anios.length > 0 ? `<h2>Anuarios</h2><ul>${anuarioLinksHtml}</ul>` : ""}
       ${fuenteDatosHtml()}
@@ -1001,6 +1032,77 @@ seoRouter.get(
   }),
 );
 
+// Informe de nicho sectorial, quinto de la serie: mismo criterio que los
+// cuatro anteriores — contenido estático duplicado a mano desde
+// frontend/src/data/nichoCriptoFintech.ts.
+seoRouter.get(
+  "/informes/nicho-cripto-fintech",
+  asyncHandler(async (_req: Request, res: Response, next) => {
+    const base = leerIndexHtml();
+    if (!base) return next();
+
+    const title = "Cripto y fintech en Mendoza: 14 empresas 2017–2026 | INGcome";
+    const description =
+      "14 empresas de cripto/blockchain y fintech en Mendoza registradas en el Boletín Oficial (2017–2026): el ciclo de precio de Bitcoin, en miniatura, reflejado en constituciones societarias.";
+    const canonical = `${siteUrl()}/informes/nicho-cripto-fintech`;
+
+    const contentHtml = `
+    <main>
+      <h1>Cripto y fintech en Mendoza</h1>
+      <p>El termómetro del boom</p>
+      <p>Catorce empresas alcanzan para contar una historia: las constituciones societarias de cripto y fintech en Mendoza siguen, con meses de rezago, el pulso del ciclo global de precio de Bitcoin. Cuando el mercado sube, aparecen empresas en el Boletín Oficial; cuando cae, el registro se apaga.</p>
+      <h2>Resumen ejecutivo</h2>
+      <ul>
+        <li>14 empresas de cripto/blockchain y fintech identificadas entre 2017 y 2026 en el Boletín Oficial de Mendoza. Es la muestra más chica de esta serie de informes.</li>
+        <li>9 de las 14 (64,3 %) se concentran en 2020-2022, coincidiendo con el boom de precios de Bitcoin (2020-2021) y su resaca inmediata. Silencio casi total en 2023 (crypto winter) y una segunda ola en 2024-2026, en sintonía con la recuperación y la aprobación de los ETF de Bitcoin en EE.UU.</li>
+        <li>La primera ola (2020-2022) se reparte casi por igual entre S.A. (6) y S.A.S. (6), con dos S.R.L. La segunda ola (2024-2026, 4 empresas) muestra capitales bastante más altos.</li>
+        <li>Capital total declarado: $61.562.000, con una mediana de $600.000 — bien por encima de la mediana general de $100.000, desde $40.000 hasta $30.000.000 en un mismo caso (SDM S.A., 2025).</li>
+        <li>Las 14 empresas tienen departamento identificado (100 % de cobertura): 8 en Capital, 3 en Godoy Cruz, 2 en San Rafael y 1 en Luján de Cuyo.</li>
+      </ul>
+      <h2>Qué es cripto/blockchain, qué es fintech, y por qué van juntos</h2>
+      <p>Cripto/blockchain abarca la compraventa, custodia y minería de criptomonedas y el desarrollo de tecnología blockchain; fintech, las billeteras virtuales, los medios de pago digitales y los servicios financieros por plataforma. Muchas empresas combinan ambas actividades en un mismo objeto social, y el nomenclador CLAE no distingue ninguna de las dos como categoría propia. A diferencia de otros rubros de esta serie, con un disparador legal claro (la Ley 27.669 para el cannabis, el Programa RenovAr para la energía renovable), acá el disparador es puramente de mercado: el ciclo de precio de Bitcoin.</p>
+      <h2>Evolución temporal: el ciclo de Bitcoin, en miniatura</h2>
+      <table>
+        <thead><tr><th>Año</th><th>Empresas constituidas</th></tr></thead>
+        <tbody>${EVOLUCION_ANUAL_CRIPTO.map((d) => `<tr><td>${d.etiqueta}</td><td>${d.valor}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>* 2026 es un año parcial: boletines relevados hasta julio de 2026. ** No hay empresas de este rubro en la muestra antes de 2020. Nueve de las 14 empresas (64,3 %) se concentran en el trienio 2020-2022 —boom y resaca inmediata—, y las 5 restantes aparecen recién desde fines de 2024, en sintonía con la segunda gran suba del precio. En el medio, 2023: cero constituciones nuevas del rubro.</p>
+      <h2>Tipo societario y capital: la segunda ola apuesta más fuerte</h2>
+      <table>
+        <thead><tr><th>Tipo societario</th><th>Cantidad</th></tr></thead>
+        <tbody>${TIPO_ENTIDAD_CRIPTO.map((d) => `<tr><td>${d.tipo}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>A diferencia de otros informes de la serie, acá no hay un tipo societario claramente dominante: S.A. y S.A.S. empatan con 6 casos cada una, con dos S.R.L. Las 14 empresas declaran capital inicial: total $61.562.000, mediana $600.000, mínimo $40.000 (Bitmonedero S.A.S., 2020), máximo $30.000.000 (SDM S.A., 2025). La segunda ola (2024-2026) declara capitales notablemente más altos que la primera, consistente con un mercado más maduro y con más capital institucional entrando tras la aprobación de los ETF.</p>
+      <h2>Dónde están</h2>
+      <table>
+        <thead><tr><th>Departamento</th><th>Cantidad</th></tr></thead>
+        <tbody>${DEPARTAMENTOS_CRIPTO.map((d) => `<tr><td>${d.departamento}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>Las 14 empresas tienen departamento identificado (100 % de cobertura, algo inusual en esta serie). A diferencia de otros informes de esta serie, acá no hace falta la advertencia sobre la brecha entre domicilio legal y zona real de actividad: un negocio de cripto o fintech no tiene una "zona de producción" física equivalente a un viñedo o un parque solar. Capital concentra más de la mitad de los casos (8 de 14), coherente con un rubro digital, de oficina.</p>
+      <h2>Directorio completo: las 14 empresas</h2>
+      ${entidadesCriptoHtml()}
+      <h2>Metodología y fuente de datos</h2>
+      <p>Búsqueda inicial por nombre y objeto social (cripto, crypto, blockchain, bitcoin, fintech, activos digitales, billetera virtual, medios de pago, pasarela de pago, moneda digital, activos virtuales, exchange), 35 candidatas. El filtro manual descartó 21 de las 35 (60 %) — la proporción de descarte más alta de la serie hasta ahora. Las constituciones se cuentan por fecha de publicación del acto en el Boletín, no por fecha de constitución declarada.</p>
+      ${fuenteDatosHtml()}
+    </main>
+  `.trim();
+
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      name: title,
+      description,
+      url: canonical,
+      creator: { "@type": "Organization", name: "INGcome" },
+      temporalCoverage: "2017/2026",
+      dateModified: "2026-07-30",
+    };
+
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.send(renderHtml(base, { title, description, canonical, noindex: false, jsonLd, contentHtml }));
+  }),
+);
+
 seoRouter.get("/robots.txt", (_req: Request, res: Response) => {
   res.type("text/plain").send(
     [
@@ -1048,6 +1150,7 @@ seoRouter.get(
       `  <url><loc>${siteUrl()}/informes/nicho-enoturismo</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/nicho-bodegas-boutique</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/nicho-energia-renovable</loc><lastmod>${hoy}</lastmod></url>`,
+      `  <url><loc>${siteUrl()}/informes/nicho-cripto-fintech</loc><lastmod>${hoy}</lastmod></url>`,
       ...anios.map(
         (a) =>
           `  <url><loc>${siteUrl()}/informes/anuario-${a.anio}</loc><lastmod>${new Date(a.actualizado_el).toISOString().slice(0, 10)}</lastmod></url>`,

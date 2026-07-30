@@ -3,6 +3,7 @@ import { InformeAnuarioPDF } from "../components/pdf/InformeAnuarioPDF";
 import { InformeDepartamentosPDF } from "../components/pdf/InformeDepartamentosPDF";
 import { InformeNichoCannabisPDF } from "../components/pdf/InformeNichoCannabisPDF";
 import { InformeNichoBodegasBoutiquePDF } from "../components/pdf/InformeNichoBodegasBoutiquePDF";
+import { InformeNichoCriptoFintechPDF } from "../components/pdf/InformeNichoCriptoFintechPDF";
 import { InformeNichoEnergiaRenovablePDF } from "../components/pdf/InformeNichoEnergiaRenovablePDF";
 import { InformeNichoEnoturismoPDF } from "../components/pdf/InformeNichoEnoturismoPDF";
 import type { Anuario, DepartamentoActivo } from "./informesApi";
@@ -60,4 +61,9 @@ export async function exportarNichoBodegasBoutiquePDF() {
 export async function exportarNichoEnergiaRenovablePDF() {
   const blob = await pdf(<InformeNichoEnergiaRenovablePDF />).toBlob();
   descargarBlob(blob, "energia-solar-y-eolica-en-mendoza.pdf");
+}
+
+export async function exportarNichoCriptoFintechPDF() {
+  const blob = await pdf(<InformeNichoCriptoFintechPDF />).toBlob();
+  descargarBlob(blob, "cripto-y-fintech-en-mendoza.pdf");
 }
