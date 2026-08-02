@@ -6,6 +6,7 @@ import { FlechaIcon } from "../components/FlechaIcon";
 import { GrafoPersona } from "../components/GrafoPersona";
 import { Reveal } from "../components/Reveal";
 import { SearchBox } from "../components/SearchBox";
+import { registrarDescarga } from "../lib/descargasApi";
 import {
   cuit as formatCuit,
   dato,
@@ -96,10 +97,12 @@ export default function Persona() {
                 onPDF={async () => {
                   const { exportarPersonaPDF } = await import("../lib/exportarFicha");
                   await exportarPersonaPDF(persona, sociedades);
+                  registrarDescarga("persona", "pdf", persona.id, persona.nombre);
                 }}
                 onExcel={async () => {
                   const { exportarPersonaExcel } = await import("../lib/exportarFicha");
                   await exportarPersonaExcel(persona, sociedades);
+                  registrarDescarga("persona", "excel", persona.id, persona.nombre);
                 }}
               />
             </div>

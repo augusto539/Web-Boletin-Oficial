@@ -63,12 +63,16 @@ export async function enviarBienvenida(usuario: DestinatarioMail): Promise<void>
     </p>
   `);
   try {
-    await resend().emails.send({
+    const { error } = await resend().emails.send({
       from: mailFrom(),
       to: usuario.mail,
       subject: "Bienvenido/a a INGcome",
       html,
     });
+    // La SDK de Resend no tira excepción en errores de la API (403, dominio
+    // no verificado, etc.) -- devuelve { data: null, error } y resuelve
+    // normalmente. Sin este chequeo, un error de Resend quedaba silencioso.
+    if (error) throw error;
   } catch (err) {
     console.error("Error enviando mail de bienvenida:", err);
   }
@@ -175,7 +179,7 @@ export async function enviarNotificacionActualizaciones(
   `);
 
   try {
-    await resend().emails.send({
+    const { error } = await resend().emails.send({
       from: mailFrom(),
       to: usuario.mail,
       subject:
@@ -184,6 +188,7 @@ export async function enviarNotificacionActualizaciones(
           : `${novedades.length} novedades en tu seguimiento`,
       html,
     });
+    if (error) throw error;
     return true;
   } catch (err) {
     console.error("Error enviando mail de notificación de actualizaciones:", err);
@@ -207,12 +212,13 @@ export async function enviarResetContrasena(usuario: DestinatarioMail, link: str
     <p style="margin:20px 0 0;font-size:13px;color:#8a8f93;">Este link vence en 1 hora.</p>
   `);
   try {
-    await resend().emails.send({
+    const { error } = await resend().emails.send({
       from: mailFrom(),
       to: usuario.mail,
       subject: "Restablecer tu contraseña de INGcome",
       html,
     });
+    if (error) throw error;
   } catch (err) {
     console.error("Error enviando mail de reset de contraseña:", err);
   }

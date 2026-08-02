@@ -16,6 +16,7 @@ import {
   configuracionPublicaRouter,
   modoSoloAdminActivo,
 } from "./configuracion.js";
+import { descargasRouter } from "./descargas.js";
 import { historialRouter } from "./historial.js";
 import { informesPublicoRouter, recalcularInformes } from "./informes.js";
 import { leadsRouter } from "./leads.js";
@@ -85,6 +86,7 @@ app.use("/api/admin", requireAdmin(), configuracionAdminRouter);
 app.use("/api/configuracion", configuracionPublicaRouter);
 app.use("/api/leads", leadsRouter);
 app.use("/api/historial", historialRouter);
+app.use("/api/descargas", descargasRouter);
 app.use("/api/informes", informesPublicoRouter);
 app.use("/api/notificaciones", notificacionesRouter);
 

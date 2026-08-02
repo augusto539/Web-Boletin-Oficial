@@ -4,6 +4,7 @@ import { DescargarIcon } from "../components/DescargarIcon";
 import { FuenteDatos } from "../components/FuenteDatos";
 import { Reveal } from "../components/Reveal";
 import { ModalRegistro } from "../components/auth/ModalRegistro";
+import { registrarDescarga } from "../lib/descargasApi";
 import { dato, fecha } from "../lib/format";
 import { type Anuario, obtenerAnuario } from "../lib/informesApi";
 import { useAccionConSesion } from "../lib/useAccionConSesion";
@@ -44,6 +45,7 @@ export default function InformeAnuario() {
     try {
       const { exportarAnuarioPDF } = await import("../lib/exportarInforme");
       await exportarAnuarioPDF(anuario);
+      registrarDescarga("informe_anuario", "pdf", anuario.anio, `Anuario ${anuario.anio}`);
     } finally {
       setGenerando(false);
     }

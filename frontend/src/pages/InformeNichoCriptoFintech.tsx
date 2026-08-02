@@ -13,6 +13,7 @@ import {
   LEYENDA_EVOLUCION,
   TIPO_ENTIDAD,
 } from "../data/nichoCriptoFintech";
+import { registrarDescarga } from "../lib/descargasApi";
 import { useAccionConSesion } from "../lib/useAccionConSesion";
 
 export default function InformeNichoCriptoFintech() {
@@ -24,6 +25,7 @@ export default function InformeNichoCriptoFintech() {
     try {
       const { exportarNichoCriptoFintechPDF } = await import("../lib/exportarInforme");
       await exportarNichoCriptoFintechPDF();
+      registrarDescarga("informe_nicho_cripto_fintech", "pdf", null, "Cripto y Fintech en Mendoza");
     } finally {
       setGenerando(false);
     }

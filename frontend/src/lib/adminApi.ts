@@ -8,18 +8,22 @@ export interface EstadisticasAdmin {
     personas: number;
     relaciones: number;
     dadosDeBaja: number;
-    ultimoBoletin: string | null;
+    boletinesExtraidos: number;
+    emailsEnBase: number;
   };
   usuarios: {
     registrados: number;
     leads: number;
     busquedas: number;
+    descargas: number;
+    notificacionesActivas: number;
   };
   ultimosDatosCargados: {
     fecha: string | null;
     sociedadesNuevas: number;
     personasNuevas: number;
     sociedadesActualizadas: number;
+    personasActualizadas: number;
   };
 }
 
@@ -68,6 +72,14 @@ export interface HistorialItem {
   tipo: string;
   termino: string | null;
   resultados: number;
+  creadoEl: string;
+}
+
+export interface DescargaItem {
+  id: string;
+  tipo: string;
+  entidadNombre: string | null;
+  formato: string;
   creadoEl: string;
 }
 
@@ -160,6 +172,14 @@ export function obtenerHistorialUsuario(
   offset: number,
 ): Promise<{ total: number; historial: HistorialItem[] }> {
   return get(`/api/admin/usuarios/${id}/historial?limit=${first}&offset=${offset}`);
+}
+
+export function obtenerHistorialDescargasUsuario(
+  id: string,
+  first: number,
+  offset: number,
+): Promise<{ total: number; historial: DescargaItem[] }> {
+  return get(`/api/admin/usuarios/${id}/historial-descargas?limit=${first}&offset=${offset}`);
 }
 
 export function obtenerSociedadesAdmin(

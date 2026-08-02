@@ -3,8 +3,10 @@ import { Link, useParams } from "react-router-dom";
 import { FlechaIcon } from "../components/FlechaIcon";
 import {
   alternarAdminUsuario,
+  obtenerHistorialDescargasUsuario,
   obtenerHistorialUsuario,
   obtenerUsuarioAdmin,
+  type DescargaItem,
   type HistorialItem,
   type UsuarioAdmin,
 } from "../lib/adminApi";
@@ -17,6 +19,18 @@ const ETIQUETAS_TIPO: Record<string, string> = {
   sociedad_cuit: "Sociedad por CUIT",
   sociedad_avanzada: "Sociedades (avanzada)",
   persona_avanzada: "Personas (avanzada)",
+};
+
+const ETIQUETAS_TIPO_DESCARGA: Record<string, string> = {
+  sociedad: "Ficha de sociedad",
+  persona: "Ficha de persona",
+  informe_departamentos: "Informe: Departamentos más activos",
+  informe_anuario: "Informe: Anuario",
+  informe_nicho_cannabis: "Informe: Cannabis y Cáñamo",
+  informe_nicho_enoturismo: "Informe: Enoturismo",
+  informe_nicho_bodegas_boutique: "Informe: Bodegas Boutique",
+  informe_nicho_energia_renovable: "Informe: Energía Solar y Eólica",
+  informe_nicho_cripto_fintech: "Informe: Cripto y Fintech",
 };
 
 function fechaHora(iso: string): string {
@@ -117,6 +131,11 @@ export default function AdminUsuario() {
         <section className="mt-10">
           <h2 className="mb-6 text-2xl font-bold">Historial de búsquedas</h2>
           <TablaHistorial usuarioId={usuario.id} />
+        </section>
+
+        <section className="mt-10">
+          <h2 className="mb-6 text-2xl font-bold">Historial de descargas</h2>
+          <TablaDescargas usuarioId={usuario.id} />
         </section>
       </div>
     </main>
@@ -220,6 +239,65 @@ function TablaHistorial({ usuarioId }: { usuarioId: string }) {
                     </span>
                   </td>
                   <td className="py-3">{fechaHora(h.creadoEl)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <Paginador pagina={pagina} totalPaginas={totalPaginas} onCambiar={setPagina} />
+    </div>
+  );
+}
+
+function TablaDescargas({ usuarioId }: { usuarioId: string }) {
+  const [pagina, setPagina] = useState(1);
+  const [datos, setDatos] = useState<{ total: number; historial: DescargaItem[] }>({
+    total: 0,
+    historial: [],
+  });
+  const [cargando, setCargando] = useState(true);
+
+  useEffect(() => {
+    setCargando(true);
+    obtenerHistorialDescargasUsuario(usuarioId, POR_PAGINA, (pagina - 1) * POR_PAGINA)
+      .then(setDatos)
+      .finally(() => setCargando(false));
+  }, [usuarioId, pagina]);
+
+  const totalPaginas = Math.ceil(datos.total / POR_PAGINA);
+
+  return (
+    <div className="rounded-3xl bg-white p-7">
+      <p className="mb-4 text-sm text-carbon/50">
+        {cargando
+          ? "Cargando…"
+          : datos.total === 0
+            ? "Este usuario todavía no descargó nada."
+            : `Mostrando ${datos.historial.length} de ${datos.total.toLocaleString("es-AR")}`}
+      </p>
+      {datos.historial.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[600px] text-left text-sm">
+            <thead>
+              <tr className="border-b border-carbon/10 text-xs uppercase tracking-widest text-carbon/50">
+                <th className="py-3 pr-4">Tipo</th>
+                <th className="py-3 pr-4">Entidad</th>
+                <th className="py-3 pr-4">Formato</th>
+                <th className="py-3">Fecha</th>
+              </tr>
+            </thead>
+            <tbody>
+              {datos.historial.map((d) => (
+                <tr key={d.id} className="border-b border-carbon/5 last:border-0">
+                  <td className="py-3 pr-4">{ETIQUETAS_TIPO_DESCARGA[d.tipo] ?? d.tipo}</td>
+                  <td className="py-3 pr-4 font-bold">{d.entidadNombre ?? "—"}</td>
+                  <td className="py-3 pr-4">
+                    <span className="rounded-full bg-vino/10 px-3 py-1 text-xs font-bold text-vino uppercase">
+                      {d.formato}
+                    </span>
+                  </td>
+                  <td className="py-3">{fechaHora(d.creadoEl)}</td>
                 </tr>
               ))}
             </tbody>

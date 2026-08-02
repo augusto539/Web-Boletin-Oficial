@@ -42,23 +42,28 @@ adminRouter.get(
       relaciones: string;
       sociedades_baja: string;
       personas_baja: string;
-      ultimo_boletin: string | null;
+      boletines_extraidos: string;
+      emails_en_base: string;
       usuarios: string;
       leads: string;
       busquedas: string;
+      descargas: string;
+      notificaciones_activas: string;
       carga_fecha: string | null;
       carga_sociedades_nuevas: string;
       carga_personas_nuevas: string;
       carga_sociedades_actualizadas: string;
+      carga_personas_actualizadas: string;
     }>(`
     -- procesar_boletin() (cargar_incremental.py) carga cada boletín en una
     -- sola transacción -- Postgres fija now()/CURRENT_TIMESTAMP al inicio de
     -- la transacción, así que TODAS las filas creadas al cargar un boletín
     -- (sociedades, personas_fisicas, actos) comparten el MISMO created_at
-    -- exacto. Eso permite distinguir "sociedad nueva" (created_at = el de
-    -- la transacción del último boletín) de "sociedad ya existente que
-    -- recibió un acto nuevo" (tocada por el último boletín, pero con
-    -- created_at de una carga anterior) sin heurísticas de fecha.
+    -- exacto. Eso permite distinguir "sociedad/persona nueva" (created_at =
+    -- el de la transacción del último boletín) de "sociedad/persona ya
+    -- existente que recibió un acto/vínculo nuevo" (tocada por el último
+    -- boletín, pero con created_at de una carga anterior) sin heurísticas
+    -- de fecha.
     WITH ultimo_boletin AS (
       SELECT id, fecha, created_at FROM boletines ORDER BY id DESC LIMIT 1
     ),
@@ -66,6 +71,22 @@ adminRouter.get(
       SELECT DISTINCT a.sociedad_id
       FROM actos a
       JOIN ultimo_boletin ub ON ub.id = a.boletin_id
+    ),
+    -- Persona tocada por el último boletín: entra en un vínculo nuevo
+    -- (socio, autoridad, apoderado) o interviene como escribano de alguno
+    -- de sus actos -- mismo criterio que buscarCoincidencias() en
+    -- notificaciones.ts.
+    personas_tocadas_ultimo AS (
+      SELECT v.persona_id AS persona_id
+        FROM vinculos v
+        JOIN actos a ON a.id = v.acto_alta_id
+        JOIN ultimo_boletin ub ON ub.id = a.boletin_id
+       WHERE v.persona_id IS NOT NULL
+       UNION
+      SELECT a.escribano_id
+        FROM actos a
+        JOIN ultimo_boletin ub ON ub.id = a.boletin_id
+       WHERE a.escribano_id IS NOT NULL
     )
     SELECT
       (SELECT count(*) FROM sociedades) AS sociedades,
@@ -73,10 +94,15 @@ adminRouter.get(
       (SELECT count(*) FROM vinculos) AS relaciones,
       (SELECT count(*) FROM sociedades WHERE oculta) AS sociedades_baja,
       (SELECT count(*) FROM personas_fisicas WHERE oculta) AS personas_baja,
-      (SELECT max(fecha)::text FROM boletines) AS ultimo_boletin,
+      (SELECT count(*) FROM boletines) AS boletines_extraidos,
+      (SELECT count(*) FROM sociedades WHERE domicilio_electronico IS NOT NULL AND domicilio_electronico <> '')
+        + (SELECT count(*) FROM personas_fisicas WHERE domicilio_electronico IS NOT NULL AND domicilio_electronico <> '')
+        AS emails_en_base,
       (SELECT count(*) FROM usuarios) AS usuarios,
       (SELECT count(*) FROM leads_informe) AS leads,
       (SELECT count(*) FROM historial_busquedas) AS busquedas,
+      (SELECT count(*) FROM historial_descargas) AS descargas,
+      (SELECT count(*) FROM suscripciones_notificacion WHERE activa) AS notificaciones_activas,
       (SELECT fecha::text FROM ultimo_boletin) AS carga_fecha,
       (SELECT count(*) FROM sociedades s JOIN ultimo_boletin ub ON s.created_at = ub.created_at) AS carga_sociedades_nuevas,
       (SELECT count(*) FROM personas_fisicas p JOIN ultimo_boletin ub ON p.created_at = ub.created_at) AS carga_personas_nuevas,
@@ -84,7 +110,12 @@ adminRouter.get(
         SELECT count(*) FROM sociedades_tocadas_ultimo stu
         JOIN sociedades s ON s.id = stu.sociedad_id
         JOIN ultimo_boletin ub ON s.created_at <> ub.created_at
-      ) AS carga_sociedades_actualizadas
+      ) AS carga_sociedades_actualizadas,
+      (
+        SELECT count(*) FROM personas_tocadas_ultimo ptu
+        JOIN personas_fisicas p ON p.id = ptu.persona_id
+        JOIN ultimo_boletin ub ON p.created_at <> ub.created_at
+      ) AS carga_personas_actualizadas
   `);
     const r = rows[0];
 
@@ -94,18 +125,22 @@ adminRouter.get(
         personas: Number(r.personas),
         relaciones: Number(r.relaciones),
         dadosDeBaja: Number(r.sociedades_baja) + Number(r.personas_baja),
-        ultimoBoletin: r.ultimo_boletin,
+        boletinesExtraidos: Number(r.boletines_extraidos),
+        emailsEnBase: Number(r.emails_en_base),
       },
       usuarios: {
         registrados: Number(r.usuarios),
         leads: Number(r.leads),
         busquedas: Number(r.busquedas),
+        descargas: Number(r.descargas),
+        notificacionesActivas: Number(r.notificaciones_activas),
       },
       ultimosDatosCargados: {
         fecha: r.carga_fecha,
         sociedadesNuevas: Number(r.carga_sociedades_nuevas),
         personasNuevas: Number(r.carga_personas_nuevas),
         sociedadesActualizadas: Number(r.carga_sociedades_actualizadas),
+        personasActualizadas: Number(r.carga_personas_actualizadas),
       },
     });
   }),
@@ -238,6 +273,43 @@ adminRouter.get(
         tipo: h.tipo,
         termino: h.termino,
         resultados: h.resultados,
+        creadoEl: h.creado_el,
+      })),
+    });
+  }),
+);
+
+adminRouter.get(
+  "/usuarios/:id/historial-descargas",
+  asyncHandler(async (req: Request, res: Response) => {
+    const limite = Math.min(Number(req.query.limit) || 100, 500);
+    const offset = Number(req.query.offset) || 0;
+    const usuarioId = req.params.id;
+
+    const [{ rows: totalRows }, { rows }] = await Promise.all([
+      pool().query<{ count: string }>("SELECT count(*) FROM historial_descargas WHERE usuario_id = $1", [
+        usuarioId,
+      ]),
+      pool().query<{
+        id: string;
+        tipo: string;
+        entidad_nombre: string | null;
+        formato: string;
+        creado_el: string;
+      }>(
+        `SELECT id, tipo, entidad_nombre, formato, creado_el FROM historial_descargas
+       WHERE usuario_id = $1 ORDER BY creado_el DESC LIMIT $2 OFFSET $3`,
+        [usuarioId, limite, offset],
+      ),
+    ]);
+
+    return res.json({
+      total: Number(totalRows[0].count),
+      historial: rows.map((h) => ({
+        id: h.id,
+        tipo: h.tipo,
+        entidadNombre: h.entidad_nombre,
+        formato: h.formato,
         creadoEl: h.creado_el,
       })),
     });

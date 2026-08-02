@@ -13,6 +13,7 @@ import {
   LEYENDA_EVOLUCION,
   TIPO_ENTIDAD,
 } from "../data/nichoEnoturismo";
+import { registrarDescarga } from "../lib/descargasApi";
 import { useAccionConSesion } from "../lib/useAccionConSesion";
 
 export default function InformeNichoEnoturismo() {
@@ -24,6 +25,7 @@ export default function InformeNichoEnoturismo() {
     try {
       const { exportarNichoEnoturismoPDF } = await import("../lib/exportarInforme");
       await exportarNichoEnoturismoPDF();
+      registrarDescarga("informe_nicho_enoturismo", "pdf", null, "Enoturismo en Mendoza");
     } finally {
       setGenerando(false);
     }

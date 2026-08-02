@@ -17,18 +17,25 @@ export function iniciarAnalytics() {
   iniciado = true;
 
   window.dataLayer = window.dataLayer ?? [];
-  window.gtag = function gtag(...args: unknown[]) {
-    window.dataLayer!.push(args);
+  // OJO: tiene que pushear el objeto `arguments`, NO un array. gtag.js solo
+  // interpreta como comando las entradas del dataLayer que son
+  // `[object Arguments]`; si se pushea un Array (que es lo que produce
+  // `(...args)` con rest params) las ignora en silencio — gtag.js carga y
+  // corre, se ve todo "bien" en el dataLayer, pero el config y los eventos
+  // nunca se procesan y no sale ni un hit a /g/collect. Por eso el snippet
+  // oficial de Google es literalmente `function gtag(){dataLayer.push(arguments);}`
+  // y hay que respetarlo tal cual.
+  window.gtag = function gtag() {
+    window.dataLayer!.push(arguments);
   };
   window.gtag("js", new Date());
-  // Sin este "consent default" el tag queda en Consent Mode (lo confirma
-  // gtm.init_consent en el dataLayer) sin ninguna señal de consentimiento,
-  // y gtag.js directamente nunca manda el hit — se ve procesar todo
-  // localmente (incluso "Tag fired" en el debugger) pero nada llega a
-  // Google (0 en DebugView/Realtime). El sitio no usa ads/remarketing, así
-  // que no hace falta pedirle consentimiento al visitante para eso: se
-  // deniega ad_* de entrada y se concede analytics_storage, que es lo único
-  // que este sitio necesita.
+  // El sitio no usa ads/remarketing: se deniega ad_* de entrada y se concede
+  // analytics_storage, que es lo único que necesita.
+  //
+  // (Nota histórica: este bloque se agregó culpando al Consent Mode de que
+  // no llegaran hits. Esa lectura era incorrecta — la causa real era el
+  // push de Array de arriba. Se mantiene igual porque denegar ad_* es lo
+  // correcto para este sitio, no porque haga falta para que funcione.)
   window.gtag("consent", "default", {
     ad_storage: "denied",
     ad_user_data: "denied",

@@ -5,6 +5,7 @@ import { GraficoLineaDepartamentos } from "../components/GraficoLineaDepartament
 import { MapaDepartamentos } from "../components/MapaDepartamentos";
 import { Reveal } from "../components/Reveal";
 import { ModalRegistro } from "../components/auth/ModalRegistro";
+import { registrarDescarga } from "../lib/descargasApi";
 import { fecha } from "../lib/format";
 import {
   type DepartamentosActivos,
@@ -44,6 +45,7 @@ export default function InformeDepartamentosActivos() {
     try {
       const { exportarDepartamentosPDF } = await import("../lib/exportarInforme");
       await exportarDepartamentosPDF(datos.departamentos, datos.actualizadoEl, datos.sinDepartamento);
+      registrarDescarga("informe_departamentos", "pdf", null, "Departamentos más activos");
     } finally {
       setGenerando(false);
     }

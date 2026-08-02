@@ -12,6 +12,7 @@ import {
   EVOLUCION_ANUAL,
   TIPO_ENTIDAD,
 } from "../data/nichoBodegasBoutique";
+import { registrarDescarga } from "../lib/descargasApi";
 import { useAccionConSesion } from "../lib/useAccionConSesion";
 
 export default function InformeNichoBodegasBoutique() {
@@ -23,6 +24,7 @@ export default function InformeNichoBodegasBoutique() {
     try {
       const { exportarNichoBodegasBoutiquePDF } = await import("../lib/exportarInforme");
       await exportarNichoBodegasBoutiquePDF();
+      registrarDescarga("informe_nicho_bodegas_boutique", "pdf", null, "Bodegas Boutique en Mendoza");
     } finally {
       setGenerando(false);
     }

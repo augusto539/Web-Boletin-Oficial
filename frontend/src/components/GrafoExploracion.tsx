@@ -622,7 +622,12 @@ export function GrafoExploracion({
   }
 
   function textoConteo(): string {
-    return `${conteo.sociedades} sociedad${conteo.sociedades === 1 ? "" : "es"} · ${conteo.personas} persona${conteo.personas === 1 ? "" : "s"} en pantalla`;
+    // historialRef.current.length: un snapshot por cada expandirTodos() sin
+    // retraer todavía (ver guardarSnapshot/retraerUnPaso) -- ya dispara
+    // re-render en esos dos puntos vía setPuedeRetraer, así que leerlo acá
+    // en cada render no necesita estado propio.
+    const expansiones = historialRef.current.length;
+    return `${conteo.sociedades} sociedad${conteo.sociedades === 1 ? "" : "es"} · ${conteo.personas} persona${conteo.personas === 1 ? "" : "s"} en pantalla · ${expansiones} expansi${expansiones === 1 ? "ón" : "ones"}`;
   }
 
   function dibujarRectRedondeado(
@@ -651,17 +656,51 @@ export function GrafoExploracion({
     return `${recortado}…`;
   }
 
-  // Exporta exactamente lo que se está viendo (no todo el grafo aunque haya
-  // nodos fuera de cámara): es una "foto de esta vista", coherente con lo que
-  // el usuario tiene en pantalla en ese momento. cy.png() solo captura el
-  // canvas del grafo, así que el panel "Explorando X" (HTML superpuesto) se
+  // Exporta el grafo COMPLETO (full: true), no la foto del viewport actual:
+  // con "foto de lo que ves" el tamaño de letra en la imagen dependía de
+  // cuánto zoom-out tenías al momento de descargar -- con el grafo muy
+  // expandido, cada nodo quedaba tan chico en pantalla que la exportación
+  // salía ilegible (issue detectado en sesión: la imagen más expandida
+  // pesaba MENOS que una más chica, porque a igual resolución de lienzo
+  // había menos detalle nítido por nodo, no más).
+  //
+  // La escala efectiva se calcula A MANO (no se le pasan maxWidth/maxHeight
+  // a cy.png junto con scale): probado en sesión que cuando le das los tres
+  // juntos, Cytoscape usa el "scale" fijo tal cual e IGNORA
+  // maxWidth/maxHeight -- esos dos solo sirven para autocalcular la escala
+  // cuando "scale" no viene seteado. Con un grafo de 1841 nodos (10
+  // expansiones) eso generó una imagen de 12098x13330px (46 Mb en base64)
+  // en vez de respetar el tope de 4096, y esa imagen a veces ni siquiera
+  // llegaba a cargar como <img> (el error "No se pudo generar la imagen
+  // del grafo" que se ve en consola es exactamente ese fallo de decodificar
+  // una imagen demasiado grande). calidadGrafo es la densidad de píxeles
+  // por unidad de modelo que se busca idealmente (independiente del zoom
+  // actual en pantalla); MAX_* son el tope real de tamaño -- si el grafo es
+  // muy grande, se resigna densidad para entrar en el tope, nunca se sube
+  // la escala por encima de calidadGrafo. cy.png() solo captura el canvas
+  // del grafo, así que el panel "Explorando X" (HTML superpuesto) se
   // redibuja a mano sobre un canvas compuesto nuevo.
   async function descargarImagen() {
     const cy = cyRef.current;
     if (!cy) return;
 
-    const escala = 2;
-    const dataUrlGrafo = cy.png({ scale: escala, bg: "#efefef" });
+    const calidadGrafo = 2;
+    const MAX_ANCHO = 4096;
+    const MAX_ALTO = 4096;
+    // cy.png() multiplica el "scale" que le pasamos por el pixelRatio del
+    // renderer (por defecto, el devicePixelRatio del navegador -- no
+    // documentado en los tipos de Cytoscape, lo confirmamos empíricamente
+    // en sesión: con dpr=2 el resultado salía EXACTO al doble de lo
+    // calculado). Sin este factor, cualquiera con pantalla retina/HiDPI
+    // (2x, 3x) se vuelve a pasar del tope sin que se note en una pantalla
+    // normal -- hay que dividirlo acá para que el tope valga sobre el
+    // tamaño FINAL, no sobre un intermedio que Cytoscape todavía va a
+    // multiplicar de nuevo puertas adentro.
+    const dpr = window.devicePixelRatio || 1;
+    const bb = cy.elements().boundingBox();
+    const escalaGrafo = Math.min(calidadGrafo, MAX_ANCHO / (bb.w * dpr), MAX_ALTO / (bb.h * dpr));
+
+    const dataUrlGrafo = cy.png({ full: true, scale: escalaGrafo, bg: "#efefef" });
 
     const imgGrafo = new Image();
     await new Promise<void>((resolve, reject) => {
@@ -678,16 +717,23 @@ export function GrafoExploracion({
 
     ctx.drawImage(imgGrafo, 0, 0);
 
-    // Mismos márgenes/padding que el overlay HTML (top-5 left-5, p-4),
-    // escalados x2 para que coincidan en proporción con la resolución 2x.
-    const margen = 20 * escala;
-    const padding = 16 * escala;
-    const anchoPanel = 340 * escala;
+    // El panel ya NO se escala con el tamaño del grafo exportado -- antes
+    // "escala" servía doble propósito (grafo y panel) porque los dos salían
+    // de fotografiar el mismo viewport a 2x. Ahora el grafo se exporta
+    // completo, a un tamaño que varía con su extensión real (puede ser
+    // chico o gigante), así que el panel usa su propio factor de nitidez
+    // fijo (calidadPanel, "retina" del panel en sí) y se lo acota a un
+    // ancho máximo relativo al lienzo final, para que no lo tape por
+    // completo en exportaciones chicas (grafos con pocos nodos).
+    const calidadPanel = 2;
+    const margen = 20 * calidadPanel;
+    const padding = 16 * calidadPanel;
+    const anchoPanel = Math.min(340 * calidadPanel, canvas.width * 0.55);
 
     ctx.shadowColor = "rgba(0, 0, 0, 0.15)";
-    ctx.shadowBlur = 12 * escala;
+    ctx.shadowBlur = 12 * calidadPanel;
     ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
-    dibujarRectRedondeado(ctx, margen, margen, anchoPanel, 96 * escala, 16 * escala);
+    dibujarRectRedondeado(ctx, margen, margen, anchoPanel, 96 * calidadPanel, 16 * calidadPanel);
     ctx.fill();
     ctx.shadowColor = "transparent";
     ctx.shadowBlur = 0;
@@ -698,17 +744,17 @@ export function GrafoExploracion({
 
     ctx.textBaseline = "top";
     ctx.fillStyle = "rgba(25, 29, 32, 0.5)";
-    ctx.font = `bold ${11 * escala}px sans-serif`;
+    ctx.font = `bold ${11 * calidadPanel}px sans-serif`;
     ctx.fillText("EXPLORANDO", textoX, cursorY);
-    cursorY += 22 * escala;
+    cursorY += 22 * calidadPanel;
 
     ctx.fillStyle = "#191d20";
-    ctx.font = `bold ${18 * escala}px sans-serif`;
+    ctx.font = `bold ${18 * calidadPanel}px sans-serif`;
     ctx.fillText(truncarTexto(ctx, raizNombre, anchoTexto), textoX, cursorY);
-    cursorY += 30 * escala;
+    cursorY += 30 * calidadPanel;
 
     ctx.fillStyle = "#691824";
-    ctx.font = `bold ${12 * escala}px sans-serif`;
+    ctx.font = `bold ${12 * calidadPanel}px sans-serif`;
     ctx.fillText(truncarTexto(ctx, textoConteo(), anchoTexto), textoX, cursorY);
 
     const nombreArchivo = raizNombre

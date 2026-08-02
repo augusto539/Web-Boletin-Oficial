@@ -83,11 +83,24 @@ export default function Admin() {
   );
 }
 
-function TarjetaEstadistica({ etiqueta, valor }: { etiqueta: string; valor: string }) {
+function TarjetaEstadistica({
+  etiqueta,
+  valor,
+  tamanioValor = "text-4xl",
+}: {
+  etiqueta: string;
+  valor: string;
+  /** Clase de tamaño de fuente para el valor -- achicar cuando el texto es
+   * largo (montos, fechas) y no entra en una sola línea con el tamaño
+   * default. */
+  tamanioValor?: string;
+}) {
   return (
-    <div className="rounded-3xl bg-white p-7">
+    <div className="flex h-full min-h-[7.5rem] flex-col rounded-3xl bg-white p-7">
       <p className="text-xs font-bold uppercase tracking-widest text-carbon/50">{etiqueta}</p>
-      <p className="mt-2 text-4xl font-bold text-vino">{valor}</p>
+      {/* mt-auto ancla el valor al borde de abajo de la tarjeta, sin
+          importar si la etiqueta de arriba ocupa una línea o dos. */}
+      <p className={`mt-auto pt-2 font-bold whitespace-nowrap text-vino ${tamanioValor}`}>{valor}</p>
     </div>
   );
 }
@@ -125,16 +138,15 @@ function TabEstadisticas() {
         <TarjetaEstadistica etiqueta="Personas físicas" valor={fmt(est?.baseDeDatos.personas)} />
         <TarjetaEstadistica etiqueta="Relaciones" valor={fmt(est?.baseDeDatos.relaciones)} />
         <TarjetaEstadistica etiqueta="Dados de baja" valor={fmt(est?.baseDeDatos.dadosDeBaja)} />
-        <TarjetaEstadistica
-          etiqueta="Último boletín extraído"
-          valor={est ? fecha(est.baseDeDatos.ultimoBoletin) : "…"}
-        />
+        <TarjetaEstadistica etiqueta="Boletines extraídos" valor={fmt(est?.baseDeDatos.boletinesExtraidos)} />
+        <TarjetaEstadistica etiqueta="Emails en la base" valor={fmt(est?.baseDeDatos.emailsEnBase)} />
       </CategoriaEstadisticas>
 
       <CategoriaEstadisticas titulo="Últimos datos cargados">
         <TarjetaEstadistica
           etiqueta="Fecha del último boletín"
           valor={est ? fecha(est.ultimosDatosCargados.fecha) : "…"}
+          tamanioValor="text-2xl"
         />
         <TarjetaEstadistica
           etiqueta="Sociedades nuevas"
@@ -148,18 +160,24 @@ function TabEstadisticas() {
           etiqueta="Sociedades actualizadas"
           valor={fmt(est?.ultimosDatosCargados.sociedadesActualizadas)}
         />
+        <TarjetaEstadistica
+          etiqueta="Personas actualizadas"
+          valor={fmt(est?.ultimosDatosCargados.personasActualizadas)}
+        />
       </CategoriaEstadisticas>
 
       <CategoriaEstadisticas titulo="Gasto API">
-        <TarjetaEstadistica etiqueta="Gasto total" valor={fmtUSD(gasto?.total)} />
-        <TarjetaEstadistica etiqueta="Últimos 30 días" valor={fmtUSD(gasto?.ultimos30Dias)} />
-        <TarjetaEstadistica etiqueta="Hoy" valor={fmtUSD(gasto?.hoy)} />
+        <TarjetaEstadistica etiqueta="Gasto total" valor={fmtUSD(gasto?.total)} tamanioValor="text-2xl" />
+        <TarjetaEstadistica etiqueta="Últimos 30 días" valor={fmtUSD(gasto?.ultimos30Dias)} tamanioValor="text-2xl" />
+        <TarjetaEstadistica etiqueta="Hoy" valor={fmtUSD(gasto?.hoy)} tamanioValor="text-2xl" />
       </CategoriaEstadisticas>
 
       <CategoriaEstadisticas titulo="Usuarios">
         <TarjetaEstadistica etiqueta="Usuarios registrados" valor={fmt(est?.usuarios.registrados)} />
         <TarjetaEstadistica etiqueta="Leads" valor={fmt(est?.usuarios.leads)} />
         <TarjetaEstadistica etiqueta="Búsquedas" valor={fmt(est?.usuarios.busquedas)} />
+        <TarjetaEstadistica etiqueta="Descargas" valor={fmt(est?.usuarios.descargas)} />
+        <TarjetaEstadistica etiqueta="Notificaciones activas" valor={fmt(est?.usuarios.notificacionesActivas)} />
       </CategoriaEstadisticas>
     </div>
   );

@@ -6,6 +6,7 @@ import { FlechaIcon } from "../components/FlechaIcon";
 import { GrafoSociedad } from "../components/GrafoSociedad";
 import { Reveal } from "../components/Reveal";
 import { SearchBox } from "../components/SearchBox";
+import { registrarDescarga } from "../lib/descargasApi";
 import {
   cuit as formatCuit,
   dato,
@@ -102,10 +103,12 @@ export default function Sociedad() {
                 onPDF={async () => {
                   const { exportarSociedadPDF } = await import("../lib/exportarFicha");
                   await exportarSociedadPDF(sociedad, vinculos, actos);
+                  registrarDescarga("sociedad", "pdf", sociedad.id, sociedad.nombre);
                 }}
                 onExcel={async () => {
                   const { exportarSociedadExcel } = await import("../lib/exportarFicha");
                   await exportarSociedadExcel(sociedad, vinculos, actos);
+                  registrarDescarga("sociedad", "excel", sociedad.id, sociedad.nombre);
                 }}
               />
             </div>

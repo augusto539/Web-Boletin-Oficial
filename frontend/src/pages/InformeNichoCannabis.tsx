@@ -13,6 +13,7 @@ import {
   SOCIOS_REPETIDOS,
   TIPO_ENTIDAD,
 } from "../data/nichoCannabis";
+import { registrarDescarga } from "../lib/descargasApi";
 import { useAccionConSesion } from "../lib/useAccionConSesion";
 
 export default function InformeNichoCannabis() {
@@ -24,6 +25,7 @@ export default function InformeNichoCannabis() {
     try {
       const { exportarNichoCannabisPDF } = await import("../lib/exportarInforme");
       await exportarNichoCannabisPDF();
+      registrarDescarga("informe_nicho_cannabis", "pdf", null, "Cannabis y Cáñamo en Mendoza");
     } finally {
       setGenerando(false);
     }

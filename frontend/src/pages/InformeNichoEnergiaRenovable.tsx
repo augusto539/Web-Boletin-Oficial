@@ -13,6 +13,7 @@ import {
   LEYENDA_EVOLUCION,
   TIPO_ENTIDAD,
 } from "../data/nichoEnergiaRenovable";
+import { registrarDescarga } from "../lib/descargasApi";
 import { useAccionConSesion } from "../lib/useAccionConSesion";
 
 export default function InformeNichoEnergiaRenovable() {
@@ -24,6 +25,7 @@ export default function InformeNichoEnergiaRenovable() {
     try {
       const { exportarNichoEnergiaRenovablePDF } = await import("../lib/exportarInforme");
       await exportarNichoEnergiaRenovablePDF();
+      registrarDescarga("informe_nicho_energia_renovable", "pdf", null, "Energía Solar y Eólica en Mendoza");
     } finally {
       setGenerando(false);
     }
