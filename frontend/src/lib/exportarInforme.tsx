@@ -6,6 +6,8 @@ import { InformeNichoBodegasBoutiquePDF } from "../components/pdf/InformeNichoBo
 import { InformeNichoCriptoFintechPDF } from "../components/pdf/InformeNichoCriptoFintechPDF";
 import { InformeNichoEnergiaRenovablePDF } from "../components/pdf/InformeNichoEnergiaRenovablePDF";
 import { InformeNichoEnoturismoPDF } from "../components/pdf/InformeNichoEnoturismoPDF";
+import { InformeMujeresFundadorasPDF } from "../components/pdf/InformeMujeresFundadorasPDF";
+import { InformeNichoSoftwarePDF } from "../components/pdf/InformeNichoSoftwarePDF";
 import type { Anuario, DepartamentoActivo } from "./informesApi";
 
 // Duplicado a propósito (no importado de exportarFicha.tsx): ese módulo se
@@ -66,4 +68,14 @@ export async function exportarNichoEnergiaRenovablePDF() {
 export async function exportarNichoCriptoFintechPDF() {
   const blob = await pdf(<InformeNichoCriptoFintechPDF />).toBlob();
   descargarBlob(blob, "cripto-y-fintech-en-mendoza.pdf");
+}
+
+export async function exportarNichoSoftwarePDF() {
+  const blob = await pdf(<InformeNichoSoftwarePDF />).toBlob();
+  descargarBlob(blob, "desarrollo-de-software-en-mendoza.pdf");
+}
+
+export async function exportarMujeresFundadorasPDF() {
+  const blob = await pdf(<InformeMujeresFundadorasPDF />).toBlob();
+  descargarBlob(blob, "mujeres-que-fundan-empresas-en-mendoza.pdf");
 }

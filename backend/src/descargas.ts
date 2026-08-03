@@ -19,6 +19,8 @@ const TIPOS_VALIDOS = new Set([
   "informe_nicho_bodegas_boutique",
   "informe_nicho_energia_renovable",
   "informe_nicho_cripto_fintech",
+  "informe_nicho_software",
+  "informe_mujeres_fundadoras",
 ]);
 const FORMATOS_VALIDOS = new Set(["pdf", "excel"]);
 

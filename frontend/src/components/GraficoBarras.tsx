@@ -9,6 +9,10 @@ const VINO = "#691824";
 
 interface BarraDato {
   etiqueta: string;
+  // Texto bajo la barra en el eje X, si difiere de `etiqueta` (ej. gráficos
+  // agrupados de a pares donde solo la primera barra del par lleva texto,
+  // pero el tooltip de ambas debe seguir siendo descriptivo).
+  etiquetaEje?: string;
   valor: number;
   color?: string;
 }
@@ -40,6 +44,9 @@ export function GraficoBarras({
 
   const anchoBarra = (PLOT_ANCHO / datos.length) * 0.6;
   const paso = PLOT_ANCHO / datos.length;
+  // Con muchas barras (ej. gráficos agrupados año x género) el número no
+  // entra sin pisar al de al lado -- se omite y queda el tooltip al hover.
+  const mostrarValores = anchoBarra >= 28;
 
   function x(i: number): number {
     return MARGEN.izquierda + i * paso + paso / 2;
@@ -98,7 +105,7 @@ export function GraficoBarras({
           const xBarra = x(i) - anchoBarra / 2;
           const yBarra = y(d.valor);
           return (
-            <g key={d.etiqueta}>
+            <g key={`${d.etiqueta}-${i}`}>
               <rect
                 x={xBarra}
                 y={yBarra}
@@ -110,16 +117,18 @@ export function GraficoBarras({
                 onMouseMove={(e) => setHover({ dato: d, x: e.clientX, y: e.clientY })}
                 onMouseLeave={() => setHover(null)}
               />
-              <text x={x(i)} y={yBarra - 8} textAnchor="middle" style={{ fontSize: 11, fill: "#191d20", fontWeight: 700 }}>
-                {d.valor.toLocaleString("es-AR")}
-              </text>
+              {mostrarValores && (
+                <text x={x(i)} y={yBarra - 8} textAnchor="middle" style={{ fontSize: 11, fill: "#191d20", fontWeight: 700 }}>
+                  {d.valor.toLocaleString("es-AR")}
+                </text>
+              )}
               <text
                 x={x(i)}
                 y={ALTO - MARGEN.abajo + 16}
                 textAnchor="middle"
                 style={{ fontSize: 10, fill: "#666" }}
               >
-                {d.etiqueta}
+                {d.etiquetaEje ?? d.etiqueta}
               </text>
             </g>
           );

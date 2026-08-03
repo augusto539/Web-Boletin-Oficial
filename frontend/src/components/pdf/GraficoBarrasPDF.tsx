@@ -13,12 +13,15 @@ export function GraficoBarrasPDF({
   leyenda,
 }: {
   titulo: string;
-  datos: { etiqueta: string; valor: number; color?: string }[];
+  datos: { etiqueta: string; etiquetaEje?: string; valor: number; color?: string }[];
   leyenda?: { color: string; etiqueta: string }[];
 }) {
   const max = Math.max(1, ...datos.map((d) => d.valor));
   const paso = PLOT_ANCHO / datos.length;
   const anchoBarra = paso * 0.6;
+  // Mismo criterio que la versión web: sin hover en el PDF, así que directamente
+  // se omite el número si no entra -- la tabla de arriba ya tiene el dato exacto.
+  const mostrarValores = anchoBarra >= 18;
 
   function x(i: number): number {
     return MARGEN.izquierda + i * paso + paso / 2;
@@ -54,7 +57,7 @@ export function GraficoBarrasPDF({
         {datos.map((d, i) => {
           const yBarra = y(d.valor);
           return (
-            <G key={d.etiqueta}>
+            <G key={`${d.etiqueta}-${i}`}>
               <Rect
                 x={x(i) - anchoBarra / 2}
                 y={yBarra}
@@ -62,11 +65,13 @@ export function GraficoBarrasPDF({
                 height={MARGEN.arriba + PLOT_ALTO - yBarra}
                 fill={d.color ?? VINO}
               />
-              <SvgText x={x(i)} y={yBarra - 6} textAnchor="middle" style={{ fontSize: 9, fill: CARBON, fontWeight: 700 }}>
-                {d.valor.toLocaleString("es-AR")}
-              </SvgText>
+              {mostrarValores && (
+                <SvgText x={x(i)} y={yBarra - 6} textAnchor="middle" style={{ fontSize: 9, fill: CARBON, fontWeight: 700 }}>
+                  {d.valor.toLocaleString("es-AR")}
+                </SvgText>
+              )}
               <SvgText x={x(i)} y={ALTO - MARGEN.abajo + 12} textAnchor="middle" style={{ fontSize: 8, fill: "#666666" }}>
-                {d.etiqueta}
+                {d.etiquetaEje ?? d.etiqueta}
               </SvgText>
             </G>
           );

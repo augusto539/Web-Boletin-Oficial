@@ -39,6 +39,18 @@ import {
   EVOLUCION_ANUAL as EVOLUCION_ANUAL_CRIPTO,
   TIPO_ENTIDAD as TIPO_ENTIDAD_CRIPTO,
 } from "./data/nichoCriptoFintech.js";
+import {
+  DEPARTAMENTOS_SOFTWARE,
+  type EntidadSoftware,
+  ENTIDADES as ENTIDADES_SOFTWARE,
+  EVOLUCION_ANUAL as EVOLUCION_ANUAL_SOFTWARE,
+  TIPO_ENTIDAD as TIPO_ENTIDAD_SOFTWARE,
+} from "./data/nichoSoftware.js";
+import {
+  EVOLUCION_ANUAL as EVOLUCION_ANUAL_MUJERES,
+  PANORAMA,
+  TOP_MUJERES,
+} from "./data/mujeresFundadoras.js";
 
 // Middleware de SEO: sirve el mismo index.html de la SPA pero con
 // title/description/canonical/JSON-LD únicos por entidad, más un bloque de
@@ -220,6 +232,29 @@ function entidadCriptoHtml(e: EntidadCripto): string {
 
 function entidadesCriptoHtml(): string {
   return ENTIDADES_CRIPTO.map(entidadCriptoHtml).join("");
+}
+
+function entidadSoftwareHtml(e: EntidadSoftware): string {
+  const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
+  const sociosLinks = e.socios
+    .map((s) =>
+      s.sociedadId
+        ? `<a href="/sociedad/${s.sociedadId}">${escapeHtml(s.nombre)}</a>`
+        : s.personaId
+          ? `<a href="/persona/${s.personaId}">${escapeHtml(s.nombre)}</a>`
+          : escapeHtml(s.nombre),
+    )
+    .join(" · ");
+  return `
+    <h3>${escapeHtml(e.tipo)} — ${nombreLink}</h3>
+    <p>CUIT: ${e.cuit ? escapeHtml(e.cuit) : "—"} · Capital: ${e.capital ? escapeHtml(e.capital) : "—"} · Publicación: ${e.publicacion ? escapeHtml(e.publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
+    ${e.socios.length > 0 ? `<p>Socios/Integrantes: ${sociosLinks}</p>` : ""}
+    <p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>
+  `;
+}
+
+function entidadesSoftwareHtml(): string {
+  return ENTIDADES_SOFTWARE.map(entidadSoftwareHtml).join("");
 }
 
 function siteUrl(): string {
@@ -512,6 +547,7 @@ seoRouter.get(
       <h2>Estudios</h2>
       <ul>
         <li><a href="/informes/departamentos-mas-activos">Departamentos más activos</a></li>
+        <li><a href="/informes/mujeres-fundadoras">Las Mujeres que Fundan Empresas en Mendoza</a></li>
       </ul>
       <h2>Nichos sectoriales</h2>
       <ul>
@@ -520,6 +556,7 @@ seoRouter.get(
         <li><a href="/informes/nicho-bodegas-boutique">Bodegas Boutique en Mendoza</a></li>
         <li><a href="/informes/nicho-energia-renovable">Energía Solar y Eólica en Mendoza</a></li>
         <li><a href="/informes/nicho-cripto-fintech">Cripto y Fintech en Mendoza</a></li>
+        <li><a href="/informes/nicho-software">Desarrollo de Software en Mendoza</a></li>
       </ul>
       ${anios.length > 0 ? `<h2>Anuarios</h2><ul>${anuarioLinksHtml}</ul>` : ""}
       ${fuenteDatosHtml()}
@@ -1103,6 +1140,195 @@ seoRouter.get(
   }),
 );
 
+// Informe de nicho sectorial, sexto de la serie: mismo criterio que los
+// cinco anteriores — contenido estático duplicado a mano desde
+// frontend/src/data/nichoSoftware.ts. A diferencia de los anteriores, el
+// documento fuente no trae un listado entidad por entidad (solo las tablas
+// agregadas) -- ENTIDADES_SOFTWARE queda vacío hasta que esos datos estén
+// disponibles, así que entidadesSoftwareHtml() no imprime nada por ahora.
+seoRouter.get(
+  "/informes/nicho-software",
+  asyncHandler(async (_req: Request, res: Response, next) => {
+    const base = leerIndexHtml();
+    if (!base) return next();
+
+    const title = "Desarrollo de software en Mendoza: 103 sociedades 2017–2026 | INGcome";
+    const description =
+      "103 sociedades de desarrollo de software en Mendoza registradas en el Boletín Oficial (2017–2026): evolución anual, red de cofundadores, tipo societario, capital y ubicación.";
+    const canonical = `${siteUrl()}/informes/nicho-software`;
+
+    const contentHtml = `
+    <main>
+      <h1>Desarrollo de software en Mendoza</h1>
+      <p>El sector que estuvo ahí desde el primer día</p>
+      <p>103 sociedades de desarrollo de software se constituyeron en Mendoza entre 2017 y 2026 — el nicho más grande de toda esta serie de informes. A diferencia de los rubros ligados a una moda o un ciclo de precios, el software estuvo presente desde el primer año del relevamiento, sin boom ni colapso.</p>
+      <h2>Resumen ejecutivo</h2>
+      <ul>
+        <li>103 sociedades de desarrollo de software identificadas entre 2017 y 2026 — el nicho más grande de los evaluados en esta tanda.</li>
+        <li>Único nicho de toda la serie presente desde el primer año con volumen real: 7 sociedades en 2017, subiendo a 21 en 2018.</li>
+        <li>No hay boom ni colapso: la curva sube y baja entre 3 y 21 sociedades por año sin un patrón de ciclo económico claro, a diferencia de cripto/fintech, atado al precio de Bitcoin.</li>
+        <li>15 pares de sociedades comparten al menos un socio — la red de fundadores seriales más densa de esta serie (14,6 % de las 103 sociedades conectadas por una persona en común).</li>
+        <li>Capital y Godoy Cruz concentran el 61 % (43 y 20 de 103).</li>
+      </ul>
+      <h2>Una curva sin ciclo aparente</h2>
+      <table>
+        <thead><tr><th>Año</th><th>Sociedades de software</th></tr></thead>
+        <tbody>${EVOLUCION_ANUAL_SOFTWARE.map((d) => `<tr><td>${d.etiqueta}</td><td>${d.valor}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>* 2026 es un año parcial: boletines relevados hasta julio de 2026. El pico de 2018 (21 sociedades) no coincide con ningún evento identificable — entre esas 21 aparecen desde software factories dedicadas hasta la constitución local de Uber Eats S.A.S. La lectura más razonable es que el desarrollo de software es una categoría de demanda de fondo, presente en todos los años del relevamiento sin depender de una moda o un ciclo de precios externo.</p>
+      <h2>Una red de fundadores densa, con un puente al análisis de grafos</h2>
+      <p>Cruzando los socios de las 103 sociedades aparecen 15 pares con al menos una persona en común — la proporción más alta de repetición de fundadores de esta serie. El caso más notable: Linka Space S.A.S. y Litt Ar S.A.S., vinculadas por Matías Demián Benegas, son dos de las 61 sociedades del clúster de cofundadores tecnológicos identificado en el análisis de grafos de esta misma base (ligado a la aceleradora Embarca) — una validación cruzada entre dos métodos distintos sobre la misma base.</p>
+      <h2>Perfil societario</h2>
+      <table>
+        <thead><tr><th>Tipo</th><th>Cantidad</th></tr></thead>
+        <tbody>${TIPO_ENTIDAD_SOFTWARE.map((d) => `<tr><td>${d.tipo}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>80 de las 103 (78 %) son S.A.S. Capital declarado: mediana de $100.000, rango de $17.720 a $10.000.000 — la mediana más baja de toda esta tanda de informes, coherente con un rubro donde el activo principal es el conocimiento y el código, no equipamiento ni infraestructura física.</p>
+      <h2>Dónde están</h2>
+      <table>
+        <thead><tr><th>Departamento</th><th>Cantidad</th></tr></thead>
+        <tbody>${DEPARTAMENTOS_SOFTWARE.map((d) => `<tr><td>${d.departamento}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>99 de las 103 sociedades tienen departamento identificado; 4 no. Capital y Godoy Cruz concentran el 61 % — la mayor concentración geográfica de toda esta tanda de informes, consistente con un sector de trabajo remoto/de oficina que gravita hacia donde ya está el ecosistema profesional y universitario.</p>
+      ${ENTIDADES_SOFTWARE.length > 0 ? `<h2>Directorio completo: las 103 sociedades</h2>${entidadesSoftwareHtml()}` : ""}
+      <h2>Metodología y límites</h2>
+      <p>Búsqueda: objeto social con "desarrollo de software/sistemas/aplicaciones", "programación" (en sentido informático), "servicios informáticos", "consultoría informática", "desarrollo web/de plataformas", más nombre con "software" — 214 sociedades candidatas. Clasificación asistida por script de tres niveles, con revisión manual de las 41 candidatas ambiguas y una segunda pasada sobre la palabra "programación" (ambigua en español). 111 de las 214 (52 %) se descartaron. Cobertura ARCA: 37 de 103 (35,9 %), la más baja de esta tanda. Las constituciones se cuentan por fecha de publicación del acto en el Boletín, no por fecha de constitución declarada.</p>
+      ${fuenteDatosHtml()}
+    </main>
+  `.trim();
+
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      name: title,
+      description,
+      url: canonical,
+      creator: { "@type": "Organization", name: "INGcome" },
+      temporalCoverage: "2017/2026",
+      dateModified: "2026-08-02",
+    };
+
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.send(renderHtml(base, { title, description, canonical, noindex: false, jsonLd, contentHtml }));
+  }),
+);
+
+// Informe de corte transversal (no es un nicho sectorial, ver nota en
+// frontend/src/data/mujeresFundadoras.ts): mismo criterio de duplicado a
+// mano que el resto de /informes. Sin ENTIDADES: no hay sociedades/personas
+// puntuales referenciadas -- el ranking de fundadoras se muestra sin
+// nombre, solo profesión y cantidad.
+seoRouter.get(
+  "/informes/mujeres-fundadoras",
+  asyncHandler(async (_req: Request, res: Response, next) => {
+    const base = leerIndexHtml();
+    if (!base) return next();
+
+    const title = "Las mujeres que fundan empresas en Mendoza | INGcome";
+    const description =
+      "El 31,5% de quienes participan en sociedades mendocinas son mujeres, y la proporción cae cuanto más alto el rol: 27,9% entre socios, 21,2% en roles de decisión. Análisis 2017-2026.";
+    const canonical = `${siteUrl()}/informes/mujeres-fundadoras`;
+
+    const totalPanorama = PANORAMA.reduce((a, p) => a + p.valor, 0);
+
+    const contentHtml = `
+    <main>
+      <h1>Las mujeres que fundan empresas en Mendoza</h1>
+      <p>Una brecha que no se cierra, y que se agranda cuanto más arriba se mira</p>
+      <p>No es un nicho sectorial: es un corte transversal de toda la base (33.694 personas físicas, 62.201 vínculos) mirado a través de una única variable — el género inferido de cada persona.</p>
+      <h2>Resumen ejecutivo</h2>
+      <ul>
+        <li>El 31,5% de las personas que participan en sociedades mendocinas son mujeres (10.264 de 32.592 clasificables). Estancado en la década: 28,3% en 2017, 29,7% en 2026.</li>
+        <li>La brecha se agranda con la jerarquía: 27,9% de mujeres entre socios, 21,2% en roles de decisión, 19,4% entre síndicos.</li>
+        <li>Hallazgo más nítido: mujeres sobrerrepresentadas en roles Suplente, subrepresentadas en Titular, en los tres cargos medibles (brecha de 14 a 16 pp).</li>
+        <li>Los hombres que fundan una empresa tienen 45% más probabilidad de fundar una segunda que las mujeres (20,9% vs. 14,4%).</li>
+        <li>Solo 3 mujeres superan las 10 sociedades en toda la base, contra 36 varones.</li>
+      </ul>
+      <h2>Cómo se mide esto sin que el dato exista</h2>
+      <p>El catálogo de roles del Boletín casi nunca marca género explícitamente. Se infiere el género desde el nombre de pila de cada persona física, validado contra los pocos casos donde el Boletín sí lo marca de forma explícita: entre "Directora Suplente" el 93,3% coincide con la clasificación por nombre; entre "Administradora Titular", el 77,8%.</p>
+      <h2>El panorama general</h2>
+      <table>
+        <thead><tr><th></th><th>Personas</th><th>%</th></tr></thead>
+        <tbody>${PANORAMA.map((p) => `<tr><td>${p.etiqueta}</td><td>${p.valor.toLocaleString("es-AR")}</td><td>${((p.valor / totalPanorama) * 100).toFixed(1)}%</td></tr>`).join("")}</tbody>
+      </table>
+      <p>Sobre las personas clasificables, 31,5% son mujeres.</p>
+      <h2>La brecha se agranda en los roles de decisión</h2>
+      <table>
+        <thead><tr><th>Categoría</th><th>Vínculos</th><th>% mujeres</th></tr></thead>
+        <tbody>
+          <tr><td>Socio/a</td><td>37.653</td><td>27,9%</td></tr>
+          <tr><td>Roles de decisión (presidente, administrador/gerente/director titular)</td><td>11.262</td><td>21,2%</td></tr>
+          <tr><td>Apoderado/a</td><td>364</td><td>20,9%</td></tr>
+          <tr><td>Fiscalización (síndico)</td><td>165</td><td>19,4%</td></tr>
+        </tbody>
+      </table>
+      <p>Cuanto más alto el rol en la estructura formal de poder de la sociedad, menor la proporción de mujeres.</p>
+      <h2>El hallazgo más nítido: Titular vs. Suplente</h2>
+      <table>
+        <thead><tr><th>Cargo</th><th>% mujeres — Titular</th><th>% mujeres — Suplente</th><th>Diferencia</th></tr></thead>
+        <tbody>
+          <tr><td>Administrador</td><td>22,2% (n=5.600)</td><td>36,6% (n=5.327)</td><td>+14,4 pp</td></tr>
+          <tr><td>Gerente</td><td>21,9% (n=2.172)</td><td>36,8% (n=1.315)</td><td>+14,9 pp</td></tr>
+          <tr><td>Director</td><td>15,5% (n=1.075)</td><td>31,9% (n=2.676)</td><td>+16,4 pp</td></tr>
+        </tbody>
+      </table>
+      <p>En los tres cargos, sin excepción, las mujeres están sobrerrepresentadas en el rol suplente y subrepresentadas en el rol titular, con una brecha estable de 14 a 16 puntos porcentuales.</p>
+      <h2>Una brecha que no se cerró en diez años</h2>
+      <table>
+        <thead><tr><th>Año</th><th>Socios/as</th><th>% mujeres</th></tr></thead>
+        <tbody>${[
+          ["2017", "1.767"],
+          ["2018", "3.364"],
+          ["2019", "4.263"],
+          ["2020", "3.903"],
+          ["2021", "4.781"],
+          ["2022", "4.882"],
+          ["2023", "5.049"],
+          ["2024", "5.445"],
+          ["2025", "5.244"],
+          ["2026*", "2.794"],
+        ]
+          .map(([anio, socios], i) => `<tr><td>${anio}</td><td>${socios}</td><td>${EVOLUCION_ANUAL_MUJERES[i]!.valor}%</td></tr>`)
+          .join("")}</tbody>
+      </table>
+      <p>* 2026 es parcial. La serie oscila entre 26% y 30% sin tendencia clara — ni deterioro ni mejora sostenida.</p>
+      <h2>Ellas fundan una vez; ellos, más de una</h2>
+      <table>
+        <thead><tr><th></th><th>Con 2+ sociedades</th><th>Total</th><th>%</th></tr></thead>
+        <tbody>
+          <tr><td>Mujeres</td><td>1.429</td><td>9.902</td><td>14,4%</td></tr>
+          <tr><td>Varones</td><td>4.637</td><td>22.182</td><td>20,9%</td></tr>
+        </tbody>
+      </table>
+      <p>Los varones tienen 45% más probabilidades de convertirse en fundadores seriales (2 o más sociedades) que las mujeres.</p>
+      <h2>Las mujeres con más sociedades</h2>
+      <p>Solo tres mujeres superan las 10 sociedades en toda la base. Se mantiene la profesión declarada y la cantidad de sociedades; se omite la identidad.</p>
+      <table>
+        <thead><tr><th>Profesión declarada</th><th>Sociedades</th></tr></thead>
+        <tbody>${TOP_MUJERES.map((m) => `<tr><td>${escapeHtml(m.profesion)}</td><td>${m.sociedades}</td></tr>`).join("")}</tbody>
+      </table>
+      <h2>Metodología y límites</h2>
+      <p>Inferencia de género por diccionario curado de los 600 nombres más frecuentes (87,3% de cobertura) más una regla heurística para el resto. No clasificable (3,3%): tokens que resultaron ser apellidos, no nombres de pila. Los porcentajes por rol y por año se calculan sobre vínculos, no sobre personas únicas. Este informe no mide intención, mérito ni causas — solo la distribución observable en el registro societario público.</p>
+      ${fuenteDatosHtml()}
+    </main>
+  `.trim();
+
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      name: title,
+      description,
+      url: canonical,
+      creator: { "@type": "Organization", name: "INGcome" },
+      temporalCoverage: "2017/2026",
+      dateModified: "2026-08-03",
+    };
+
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.send(renderHtml(base, { title, description, canonical, noindex: false, jsonLd, contentHtml }));
+  }),
+);
+
 seoRouter.get("/robots.txt", (_req: Request, res: Response) => {
   res.type("text/plain").send(
     [
@@ -1151,6 +1377,8 @@ seoRouter.get(
       `  <url><loc>${siteUrl()}/informes/nicho-bodegas-boutique</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/nicho-energia-renovable</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/nicho-cripto-fintech</loc><lastmod>${hoy}</lastmod></url>`,
+      `  <url><loc>${siteUrl()}/informes/nicho-software</loc><lastmod>${hoy}</lastmod></url>`,
+      `  <url><loc>${siteUrl()}/informes/mujeres-fundadoras</loc><lastmod>${hoy}</lastmod></url>`,
       ...anios.map(
         (a) =>
           `  <url><loc>${siteUrl()}/informes/anuario-${a.anio}</loc><lastmod>${new Date(a.actualizado_el).toISOString().slice(0, 10)}</lastmod></url>`,

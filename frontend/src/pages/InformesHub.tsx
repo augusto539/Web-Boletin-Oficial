@@ -34,6 +34,11 @@ const NICHOS = [
     nombre: "Cripto y Fintech en Mendoza",
     descripcion: "El termómetro del boom, 2017–2026.",
   },
+  {
+    slug: "software",
+    nombre: "Desarrollo de Software en Mendoza",
+    descripcion: "El sector que estuvo ahí desde el primer día, 2017–2026.",
+  },
 ];
 
 export default function InformesHub() {
@@ -76,6 +81,15 @@ export default function InformesHub() {
               <h3 className="text-lg font-bold text-vino">Departamentos más activos</h3>
               <p className="mt-2 text-sm text-carbon/60">
                 Ranking de departamentos por cantidad de sociedades constituidas.
+              </p>
+            </Link>
+            <Link
+              to="/informes/mujeres-fundadoras"
+              className="block rounded-3xl bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+            >
+              <h3 className="text-lg font-bold text-vino">Las Mujeres que Fundan Empresas en Mendoza</h3>
+              <p className="mt-2 text-sm text-carbon/60">
+                Una brecha que no se cierra, y que se agranda cuanto más arriba se mira.
               </p>
             </Link>
           </div>

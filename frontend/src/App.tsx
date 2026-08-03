@@ -12,11 +12,13 @@ import BusquedaAvanzada from "./pages/BusquedaAvanzada";
 import Exploracion from "./pages/Exploracion";
 import InformeAnuario from "./pages/InformeAnuario";
 import InformeDepartamentosActivos from "./pages/InformeDepartamentosActivos";
+import InformeMujeresFundadoras from "./pages/InformeMujeresFundadoras";
 import InformeNichoBodegasBoutique from "./pages/InformeNichoBodegasBoutique";
 import InformeNichoCannabis from "./pages/InformeNichoCannabis";
 import InformeNichoCriptoFintech from "./pages/InformeNichoCriptoFintech";
 import InformeNichoEnergiaRenovable from "./pages/InformeNichoEnergiaRenovable";
 import InformeNichoEnoturismo from "./pages/InformeNichoEnoturismo";
+import InformeNichoSoftware from "./pages/InformeNichoSoftware";
 import InformesHub from "./pages/InformesHub";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
@@ -85,6 +87,8 @@ export default function App() {
         <Route path="/informes/nicho-bodegas-boutique" element={<InformeNichoBodegasBoutique />} />
         <Route path="/informes/nicho-energia-renovable" element={<InformeNichoEnergiaRenovable />} />
         <Route path="/informes/nicho-cripto-fintech" element={<InformeNichoCriptoFintech />} />
+        <Route path="/informes/nicho-software" element={<InformeNichoSoftware />} />
+        <Route path="/informes/mujeres-fundadoras" element={<InformeMujeresFundadoras />} />
         <Route path="/informes/:anuarioSlug" element={<InformeAnuario />} />
         <Route path="/notificaciones" element={<Notificaciones />} />
         <Route path="/terminos" element={<Terminos />} />
