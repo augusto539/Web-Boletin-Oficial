@@ -33,6 +33,8 @@ const ETIQUETAS_TIPO_DESCARGA: Record<string, string> = {
   informe_nicho_cripto_fintech: "Informe: Cripto y Fintech",
   informe_nicho_software: "Informe: Desarrollo de Software",
   informe_mujeres_fundadoras: "Informe: Mujeres que Fundan Empresas",
+  informe_actividades_clae: "Informe: Actividades CLAE",
+  informe_analisis_redes: "Informe: Análisis de Redes",
 };
 
 function fechaHora(iso: string): string {

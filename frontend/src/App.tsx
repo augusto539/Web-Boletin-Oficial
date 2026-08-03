@@ -10,6 +10,8 @@ import Admin from "./pages/Admin";
 import AdminUsuario from "./pages/AdminUsuario";
 import BusquedaAvanzada from "./pages/BusquedaAvanzada";
 import Exploracion from "./pages/Exploracion";
+import InformeActividadesClae from "./pages/InformeActividadesClae";
+import InformeAnalisisRedes from "./pages/InformeAnalisisRedes";
 import InformeAnuario from "./pages/InformeAnuario";
 import InformeDepartamentosActivos from "./pages/InformeDepartamentosActivos";
 import InformeMujeresFundadoras from "./pages/InformeMujeresFundadoras";
@@ -89,6 +91,8 @@ export default function App() {
         <Route path="/informes/nicho-cripto-fintech" element={<InformeNichoCriptoFintech />} />
         <Route path="/informes/nicho-software" element={<InformeNichoSoftware />} />
         <Route path="/informes/mujeres-fundadoras" element={<InformeMujeresFundadoras />} />
+        <Route path="/informes/actividades-clae" element={<InformeActividadesClae />} />
+        <Route path="/informes/analisis-redes" element={<InformeAnalisisRedes />} />
         <Route path="/informes/:anuarioSlug" element={<InformeAnuario />} />
         <Route path="/notificaciones" element={<Notificaciones />} />
         <Route path="/terminos" element={<Terminos />} />

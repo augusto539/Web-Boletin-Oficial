@@ -1,13 +1,23 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { DescargarIcon } from "../components/DescargarIcon";
 import { FuenteDatos } from "../components/FuenteDatos";
+import { GraficoBarras } from "../components/GraficoBarras";
+import { GraficoDona } from "../components/GraficoDona";
+import { MapaMendoza } from "../components/MapaMendoza";
 import { Reveal } from "../components/Reveal";
 import { ModalRegistro } from "../components/auth/ModalRegistro";
 import { registrarDescarga } from "../lib/descargasApi";
 import { dato, fecha } from "../lib/format";
 import { type Anuario, obtenerAnuario } from "../lib/informesApi";
 import { useAccionConSesion } from "../lib/useAccionConSesion";
+
+const VINO = "#691824";
+const MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+// Paleta para el donut de tipo societario -- "Otros" (agrupado en el
+// backend, ver informes.ts) siempre en gris, el resto rota sobre esta lista.
+const PALETA_TIPO_SOCIEDAD = ["#691824", "#4b5259", "#b0473f", "#8a8f93", "#5f7a61"];
+const GRIS_OTROS = "#c9c9c9";
 
 function Dato({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   return (
@@ -38,6 +48,31 @@ export default function InformeAnuario() {
       .then(setAnuario)
       .catch(() => setAnuario(null));
   }, [anio]);
+
+  const datosMeses = useMemo(
+    () =>
+      anuario?.meses.map((m) => ({
+        etiqueta: MESES[m.mes - 1]!,
+        valor: m.cantidad,
+        color: VINO,
+      })) ?? [],
+    [anuario],
+  );
+
+  const datosTipoSociedad = useMemo(
+    () =>
+      anuario?.tipoSociedad.map((t, i) => ({
+        etiqueta: t.tipo,
+        valor: t.cantidad,
+        color: t.tipo === "Otros" ? GRIS_OTROS : PALETA_TIPO_SOCIEDAD[i % PALETA_TIPO_SOCIEDAD.length]!,
+      })) ?? [],
+    [anuario],
+  );
+
+  const mapaDepartamentos = useMemo(
+    () => new Map(anuario?.departamentos.map((d) => [d.nombre, d.cantidad]) ?? []),
+    [anuario],
+  );
 
   async function descargar() {
     if (!anuario) return;
@@ -116,7 +151,61 @@ export default function InformeAnuario() {
           )}
         </Reveal>
 
-        <Reveal delay={0.15}>
+        {anuario && (
+          <>
+            <Reveal delay={0.2}>
+              <div className="mt-10">
+                <GraficoBarras
+                  titulo="Distribución mensual"
+                  subtitulo="Sociedades constituidas por mes"
+                  datos={datosMeses}
+                  etiquetaUnidad="sociedades"
+                />
+              </div>
+            </Reveal>
+
+            <Reveal delay={0.25}>
+              <div className="mt-10">
+                <MapaMendoza
+                  titulo="Distribución territorial"
+                  subtitulo="Sociedades constituidas por departamento"
+                  valorPorNombre={mapaDepartamentos}
+                />
+              </div>
+            </Reveal>
+
+            <Reveal delay={0.3}>
+              <div className="mt-10">
+                <GraficoDona
+                  titulo="Tipo de sociedad"
+                  subtitulo="Distribución por forma societaria"
+                  datos={datosTipoSociedad}
+                  etiquetaUnidad="sociedades"
+                />
+              </div>
+            </Reveal>
+
+            <Reveal delay={0.35}>
+              <div className="mt-10 rounded-3xl bg-white p-6 shadow-sm sm:p-8">
+                <h2 className="text-lg font-bold">Actividades más frecuentes</h2>
+                <p className="mt-1 text-sm text-carbon/60">
+                  Top 10 grupos CLAE por cantidad de sociedades constituidas
+                </p>
+                <ol className="mt-5 space-y-3">
+                  {anuario.actividadesTop10.map((a, i) => (
+                    <li key={a.grupoClae} className="flex items-baseline gap-3 text-sm">
+                      <span className="w-5 shrink-0 font-bold text-vino">{i + 1}</span>
+                      <span className="flex-1 text-carbon">{a.grupoClae}</span>
+                      <span className="shrink-0 font-bold text-carbon/60">{a.cantidad}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </Reveal>
+          </>
+        )}
+
+        <Reveal delay={0.4}>
           <div className="mt-10">
             <FuenteDatos />
           </div>

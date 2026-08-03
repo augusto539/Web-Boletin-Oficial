@@ -125,6 +125,113 @@ const SQL_MODA_POR_ANIO = (joinExtra: string, columnaValor: string) => `
   ORDER BY anio, cnt DESC, valor
 `;
 
+interface AnuarioMesRow {
+  anio: number;
+  mes: number;
+  cantidad_sociedades: number;
+}
+
+// Distribución mensual, para el gráfico de barras de /informes/anuario-:anio.
+async function recalcularAnuarioMes(): Promise<number> {
+  const { rows } = await pool().query<AnuarioMesRow>(`
+    SELECT
+      extract(year FROM a.fecha_publicacion)::int AS anio,
+      extract(month FROM a.fecha_publicacion)::int AS mes,
+      count(*)::int AS cantidad_sociedades
+    FROM actos a
+    JOIN tipos_acto ta ON ta.id = a.tipo_acto_id AND ta.nombre = 'Constitucion'
+    JOIN sociedades s ON s.id = a.sociedad_id AND s.oculta = FALSE
+    GROUP BY anio, mes
+  `);
+
+  for (const r of rows) {
+    await pool().query(
+      `INSERT INTO informe_anuario_mes (anio, mes, cantidad_sociedades, actualizado_el)
+       VALUES ($1, $2, $3, now())
+       ON CONFLICT (anio, mes) DO UPDATE SET
+         cantidad_sociedades = EXCLUDED.cantidad_sociedades,
+         actualizado_el = now()`,
+      [r.anio, r.mes, r.cantidad_sociedades],
+    );
+  }
+  return rows.length;
+}
+
+interface AnuarioTipoSociedadRow {
+  anio: number;
+  tipo_sociedad: string;
+  cantidad_sociedades: number;
+}
+
+// Distribución por tipo societario, para el donut de /informes/anuario-:anio.
+// Se guarda con abreviatura (S.A.S., S.A., ...) cuando existe -- son las
+// etiquetas que después se muestran en el gráfico, y no todos los tipos
+// tienen una definida (ver tipos_sociedad.abreviatura), de ahí el COALESCE.
+async function recalcularAnuarioTipoSociedad(): Promise<number> {
+  const { rows } = await pool().query<AnuarioTipoSociedadRow>(`
+    SELECT
+      extract(year FROM a.fecha_publicacion)::int AS anio,
+      coalesce(ts.abreviatura, ts.nombre) AS tipo_sociedad,
+      count(*)::int AS cantidad_sociedades
+    FROM actos a
+    JOIN tipos_acto ta ON ta.id = a.tipo_acto_id AND ta.nombre = 'Constitucion'
+    JOIN sociedades s ON s.id = a.sociedad_id AND s.oculta = FALSE
+    JOIN tipos_sociedad ts ON ts.id = s.tipo_sociedad_id
+    GROUP BY anio, tipo_sociedad
+  `);
+
+  for (const r of rows) {
+    await pool().query(
+      `INSERT INTO informe_anuario_tipo_sociedad (anio, tipo_sociedad, cantidad_sociedades, actualizado_el)
+       VALUES ($1, $2, $3, now())
+       ON CONFLICT (anio, tipo_sociedad) DO UPDATE SET
+         cantidad_sociedades = EXCLUDED.cantidad_sociedades,
+         actualizado_el = now()`,
+      [r.anio, r.tipo_sociedad, r.cantidad_sociedades],
+    );
+  }
+  return rows.length;
+}
+
+interface AnuarioActividadRow {
+  anio: number;
+  grupo_clae: string;
+  cantidad_sociedades: number;
+}
+
+// Ranking completo de grupos CLAE por año -- el endpoint recorta al top 10
+// (ver informesPublicoRouter.get("/anuario/:anio")), acá se guarda entero
+// para no tener que decidir "cuántos guardar" en el momento del cálculo.
+// Solo el primer grupo CLAE de cada sociedad (mismo criterio que
+// grupoClaeMasActivo en recalcularAnuario): una sociedad puede declarar
+// varias actividades, la principal es sa.orden = 1.
+async function recalcularAnuarioActividad(): Promise<number> {
+  const { rows } = await pool().query<AnuarioActividadRow>(`
+    SELECT
+      extract(year FROM a.fecha_publicacion)::int AS anio,
+      g.nombre AS grupo_clae,
+      count(*)::int AS cantidad_sociedades
+    FROM actos a
+    JOIN tipos_acto ta ON ta.id = a.tipo_acto_id AND ta.nombre = 'Constitucion'
+    JOIN sociedades s ON s.id = a.sociedad_id AND s.oculta = FALSE
+    JOIN sociedad_actividades sa ON sa.sociedad_id = s.id AND sa.orden = 1
+    JOIN grupos_clae g ON g.codigo = sa.clae_grupo
+    GROUP BY anio, grupo_clae
+  `);
+
+  for (const r of rows) {
+    await pool().query(
+      `INSERT INTO informe_anuario_actividad (anio, grupo_clae, cantidad_sociedades, actualizado_el)
+       VALUES ($1, $2, $3, now())
+       ON CONFLICT (anio, grupo_clae) DO UPDATE SET
+         cantidad_sociedades = EXCLUDED.cantidad_sociedades,
+         actualizado_el = now()`,
+      [r.anio, r.grupo_clae, r.cantidad_sociedades],
+    );
+  }
+  return rows.length;
+}
+
 async function recalcularAnuario(): Promise<number> {
   const base = await pool().query<{ anio: number; sociedades_constituidas: number }>(`
     SELECT extract(year FROM a.fecha_publicacion)::int AS anio, count(*)::int AS sociedades_constituidas
@@ -215,14 +322,21 @@ export async function recalcularInformes(): Promise<{
   departamentos: number;
   anios: number;
   departamentosPorAnio: number;
+  anuarioMeses: number;
+  anuarioTiposSociedad: number;
+  anuarioActividades: number;
 }> {
   const departamentos = await recalcularDepartamentos();
   const anios = await recalcularAnuario();
   const departamentosPorAnio = await recalcularDepartamentosPorAnio();
+  const anuarioMeses = await recalcularAnuarioMes();
+  const anuarioTiposSociedad = await recalcularAnuarioTipoSociedad();
+  const anuarioActividades = await recalcularAnuarioActividad();
   console.log(
-    `[informes] recalculado: ${departamentos} departamentos, ${anios} años, ${departamentosPorAnio} filas departamento×año`,
+    `[informes] recalculado: ${departamentos} departamentos, ${anios} años, ${departamentosPorAnio} filas departamento×año, ` +
+      `${anuarioMeses} filas anuario×mes, ${anuarioTiposSociedad} filas anuario×tipo, ${anuarioActividades} filas anuario×actividad`,
   );
-  return { departamentos, anios, departamentosPorAnio };
+  return { departamentos, anios, departamentosPorAnio, anuarioMeses, anuarioTiposSociedad, anuarioActividades };
 }
 
 // --- Endpoints públicos (sin auth): el frontend los consulta para hidratar
@@ -340,6 +454,61 @@ informesPublicoRouter.get(
     const fila = rows[0];
     if (!fila) return res.status(404).json({ error: "No hay informe para ese año." });
 
+    const { rows: filasMes } = await pool().query<{ mes: number; cantidad_sociedades: number }>(
+      "SELECT mes, cantidad_sociedades FROM informe_anuario_mes WHERE anio = $1",
+      [anio],
+    );
+    const cantidadPorMes = new Map(filasMes.map((r) => [r.mes, r.cantidad_sociedades]));
+    // 12 siempre, con 0 en los meses sin constituciones -- así el gráfico de
+    // barras no salta meses (mismo criterio que "valores" en departamentos-por-anio).
+    const meses = Array.from({ length: 12 }, (_, i) => ({
+      mes: i + 1,
+      cantidad: cantidadPorMes.get(i + 1) ?? 0,
+    }));
+
+    const { rows: filasTipo } = await pool().query<{ tipo_sociedad: string; cantidad_sociedades: number }>(
+      "SELECT tipo_sociedad, cantidad_sociedades FROM informe_anuario_tipo_sociedad WHERE anio = $1 ORDER BY cantidad_sociedades DESC",
+      [anio],
+    );
+    // Agrupa en "Otros" lo que pese menos de 5% del total -- con hasta 11
+    // tipos posibles y uno solo (S.A.S.) dominando la mayoría de los años, un
+    // donut con todas las porciones queda ilegible (varias casi invisibles).
+    const totalTipos = filasTipo.reduce((acc, r) => acc + r.cantidad_sociedades, 0) || 1;
+    const tipoSociedad: { tipo: string; cantidad: number }[] = [];
+    let otros = 0;
+    for (const r of filasTipo) {
+      if (r.cantidad_sociedades / totalTipos < 0.05) otros += r.cantidad_sociedades;
+      else tipoSociedad.push({ tipo: r.tipo_sociedad, cantidad: r.cantidad_sociedades });
+    }
+    if (otros > 0) tipoSociedad.push({ tipo: "Otros", cantidad: otros });
+
+    const { rows: filasActividad } = await pool().query<{ grupo_clae: string; cantidad_sociedades: number }>(
+      "SELECT grupo_clae, cantidad_sociedades FROM informe_anuario_actividad WHERE anio = $1 ORDER BY cantidad_sociedades DESC LIMIT 10",
+      [anio],
+    );
+    const actividadesTop10 = filasActividad.map((r) => ({
+      grupoClae: r.grupo_clae,
+      cantidad: r.cantidad_sociedades,
+    }));
+
+    const { rows: filasDepartamento } = await pool().query<{
+      departamento_id: number;
+      nombre: string;
+      cantidad_sociedades: number;
+    }>(
+      `SELECT i.departamento_id, d.nombre, i.cantidad_sociedades
+       FROM informe_departamento_por_anio i
+       JOIN departamentos d ON d.id = i.departamento_id
+       WHERE i.anio = $1
+       ORDER BY i.cantidad_sociedades DESC`,
+      [anio],
+    );
+    const departamentos = filasDepartamento.map((r) => ({
+      departamentoId: r.departamento_id,
+      nombre: r.nombre,
+      cantidad: r.cantidad_sociedades,
+    }));
+
     return res.json({
       anio: fila.anio,
       sociedadesConstituidas: fila.sociedades_constituidas,
@@ -348,6 +517,10 @@ informesPublicoRouter.get(
       departamentoMasActivo: fila.departamento_mas_activo,
       tipoSociedadMasComun: fila.tipo_sociedad_mas_comun,
       actualizadoEl: fila.actualizado_el,
+      meses,
+      tipoSociedad,
+      actividadesTop10,
+      departamentos,
     });
   }),
 );

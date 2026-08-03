@@ -51,6 +51,28 @@ import {
   PANORAMA,
   TOP_MUJERES,
 } from "./data/mujeresFundadoras.js";
+import {
+  BETWEENNESS_TOP10,
+  ESCENARIOS,
+  ESTRUCTURA_G1,
+  EVOLUCION_TABLA,
+  FUNDADORES_EMBARCA,
+  PARES_NICHOS,
+} from "./data/analisisRedes.js";
+import {
+  BAJAS_SITUACION as BAJAS_SITUACION_CLAE,
+  CLUSTERS as CLUSTERS_CLAE,
+  COBERTURA_ANUAL as COBERTURA_ANUAL_CLAE,
+  COLA_LARGA as COLA_LARGA_CLAE,
+  DIVERSIFICACION as DIVERSIFICACION_CLAE,
+  EVOLUCION_ACTIVIDADES as EVOLUCION_ACTIVIDADES_CLAE,
+  GRUPOS_VACIOS as GRUPOS_VACIOS_CLAE,
+  LOCALIZACION as LOCALIZACION_CLAE,
+  NICHOS_COBERTURA as NICHOS_COBERTURA_CLAE,
+  PARES_COOCURRENCIA as PARES_COOCURRENCIA_CLAE,
+  TASA_BAJA as TASA_BAJA_CLAE,
+  TOP_ACTIVIDADES as TOP_ACTIVIDADES_CLAE,
+} from "./data/actividadesClae.js";
 
 // Middleware de SEO: sirve el mismo index.html de la SPA pero con
 // title/description/canonical/JSON-LD únicos por entidad, más un bloque de
@@ -548,6 +570,8 @@ seoRouter.get(
       <ul>
         <li><a href="/informes/departamentos-mas-activos">Departamentos más activos</a></li>
         <li><a href="/informes/mujeres-fundadoras">Las Mujeres que Fundan Empresas en Mendoza</a></li>
+        <li><a href="/informes/actividades-clae">Qué hacen realmente las empresas mendocinas: anatomía del nomenclador CLAE</a></li>
+        <li><a href="/informes/analisis-redes">El mapa oculto de las sociedades mendocinas: análisis de redes</a></li>
       </ul>
       <h2>Nichos sectoriales</h2>
       <ul>
@@ -740,6 +764,54 @@ seoRouter.get(
     const title = `Anuario ${anio}: sociedades constituidas en Mendoza | INGcome`;
     const description = `En ${anio} se constituyeron ${a.sociedades_constituidas} sociedades en Mendoza, con ${a.personas_involucradas} personas involucradas. Actividad más común: ${a.grupo_clae_mas_activo ?? "sin datos"}.`;
 
+    const MESES_SEO = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    const { rows: filasMes } = await pool().query<{ mes: number; cantidad_sociedades: number }>(
+      "SELECT mes, cantidad_sociedades FROM informe_anuario_mes WHERE anio = $1 ORDER BY mes",
+      [anio],
+    );
+    const mesesHtml = filasMes
+      .map((r) => `<tr><td>${MESES_SEO[r.mes - 1]}</td><td>${r.cantidad_sociedades}</td></tr>`)
+      .join("");
+
+    const { rows: filasTipo } = await pool().query<{ tipo_sociedad: string; cantidad_sociedades: number }>(
+      "SELECT tipo_sociedad, cantidad_sociedades FROM informe_anuario_tipo_sociedad WHERE anio = $1 ORDER BY cantidad_sociedades DESC",
+      [anio],
+    );
+    // Mismo umbral de 5% que el endpoint público (ver informesPublicoRouter
+    // en informes.ts) -- se repite acá porque el SEO lee las tablas directo,
+    // sin pasar por ese endpoint.
+    const totalTipos = filasTipo.reduce((acc, r) => acc + r.cantidad_sociedades, 0) || 1;
+    const tipoSociedadAgrupado: { tipo: string; cantidad: number }[] = [];
+    let otrosSeo = 0;
+    for (const r of filasTipo) {
+      if (r.cantidad_sociedades / totalTipos < 0.05) otrosSeo += r.cantidad_sociedades;
+      else tipoSociedadAgrupado.push({ tipo: r.tipo_sociedad, cantidad: r.cantidad_sociedades });
+    }
+    if (otrosSeo > 0) tipoSociedadAgrupado.push({ tipo: "Otros", cantidad: otrosSeo });
+    const tipoSociedadHtml = tipoSociedadAgrupado
+      .map((t) => `<tr><td>${escapeHtml(t.tipo)}</td><td>${t.cantidad}</td></tr>`)
+      .join("");
+
+    const { rows: filasActividad } = await pool().query<{ grupo_clae: string; cantidad_sociedades: number }>(
+      "SELECT grupo_clae, cantidad_sociedades FROM informe_anuario_actividad WHERE anio = $1 ORDER BY cantidad_sociedades DESC LIMIT 10",
+      [anio],
+    );
+    const actividadesHtml = filasActividad
+      .map((r) => `<li>${escapeHtml(r.grupo_clae)} — ${r.cantidad_sociedades}</li>`)
+      .join("");
+
+    const { rows: filasDepartamento } = await pool().query<{ nombre: string; cantidad_sociedades: number }>(
+      `SELECT d.nombre, i.cantidad_sociedades
+       FROM informe_departamento_por_anio i
+       JOIN departamentos d ON d.id = i.departamento_id
+       WHERE i.anio = $1
+       ORDER BY i.cantidad_sociedades DESC`,
+      [anio],
+    );
+    const departamentosHtml = filasDepartamento
+      .map((r) => `<tr><td>${escapeHtml(r.nombre)}</td><td>${r.cantidad_sociedades}</td></tr>`)
+      .join("");
+
     const actualizadoEl = formatFecha(a.actualizado_el);
     const contentHtml = `
     <main>
@@ -752,6 +824,25 @@ seoRouter.get(
         ${a.departamento_mas_activo ? `<li>Departamento más activo: ${escapeHtml(a.departamento_mas_activo)}</li>` : ""}
         ${a.tipo_sociedad_mas_comun ? `<li>Tipo de sociedad más común: ${escapeHtml(a.tipo_sociedad_mas_comun)}</li>` : ""}
       </ul>
+      ${
+        mesesHtml
+          ? `<h2>Distribución mensual</h2>
+      <table><thead><tr><th>Mes</th><th>Sociedades</th></tr></thead><tbody>${mesesHtml}</tbody></table>`
+          : ""
+      }
+      ${
+        departamentosHtml
+          ? `<h2>Distribución territorial</h2>
+      <table><thead><tr><th>Departamento</th><th>Sociedades</th></tr></thead><tbody>${departamentosHtml}</tbody></table>`
+          : ""
+      }
+      ${
+        tipoSociedadHtml
+          ? `<h2>Tipo de sociedad</h2>
+      <table><thead><tr><th>Tipo</th><th>Sociedades</th></tr></thead><tbody>${tipoSociedadHtml}</tbody></table>`
+          : ""
+      }
+      ${actividadesHtml ? `<h2>Actividades más frecuentes</h2><ol>${actividadesHtml}</ol>` : ""}
       ${fuenteDatosHtml()}
     </main>
   `.trim();
@@ -1329,6 +1420,212 @@ seoRouter.get(
   }),
 );
 
+seoRouter.get(
+  "/informes/actividades-clae",
+  asyncHandler(async (_req: Request, res: Response, next) => {
+    const base = leerIndexHtml();
+    if (!base) return next();
+
+    const title = "Qué hacen realmente las empresas mendocinas: anatomía del nomenclador CLAE | INGcome";
+    const description =
+      "El 42,3% de las asignaciones de actividad CLAE en Mendoza son categorías residuales n.c.p. Análisis de 25.583 asignaciones sobre 11.918 sociedades: clusters, especialización territorial y cobertura, 2017-2026.";
+    const canonical = `${siteUrl()}/informes/actividades-clae`;
+
+    const contentHtml = `
+    <main>
+      <h1>Qué hacen realmente las empresas mendocinas</h1>
+      <p>Anatomía del nomenclador CLAE</p>
+      <p>Este informe no analiza un rubro: analiza el instrumento con el que se clasifican todos los rubros. Sobre 25.583 asignaciones de actividad a 11.918 sociedades mendocinas, mide qué declara cada empresa que hace, qué actividades abandona, qué combinaciones forman cadenas de valor reales, y cuánto de la economía mendocina termina metida en cajones de sastre porque el nomenclador no tiene una casilla mejor.</p>
+      <h2>Resumen ejecutivo</h2>
+      <ul>
+        <li>El 42,3% de todas las asignaciones de actividad son categorías residuales "n.c.p." (no clasificado en otra parte). Entre las principales sube al 44,7%.</li>
+        <li>La actividad más frecuente de toda la economía mendocina es "Servicios empresariales n.c.p." (672 asignaciones).</li>
+        <li>Las bajas de actividad no miden muerte de empresas: ninguna de las 11.918 sociedades tiene todas sus actividades dadas de baja.</li>
+        <li>Diez clusters económicos reales emergen del análisis de co-ocurrencia (modularidad Q=0,390), y no coinciden con la jerarquía del nomenclador.</li>
+        <li>Especialización geográfica nítida: Tupungato tiene 11 veces más servicios de apoyo agrícola de lo que le correspondería por su tamaño; Capital, 2,6 veces más servicios jurídicos.</li>
+        <li>19 grupos CLAE completos no tienen ni una sola sociedad mendocina: pesca, carbón, armas, locomotoras, instrumentos musicales, reaseguros.</li>
+      </ul>
+      <h2>1. El nomenclador es, sobre todo, un cajón de sastre</h2>
+      <table>
+        <thead><tr><th></th><th>Asignaciones</th><th>%</th></tr></thead>
+        <tbody>
+          <tr><td>Categorías n.c.p. (residuales)</td><td>10.819</td><td>42,3%</td></tr>
+          <tr><td>Categorías específicas</td><td>14.764</td><td>57,7%</td></tr>
+          <tr><td>Total</td><td>25.583</td><td>100%</td></tr>
+        </tbody>
+      </table>
+      <h2>Las diez actividades más declaradas de Mendoza</h2>
+      <table>
+        <thead><tr><th>Código</th><th>Actividad</th><th>Asignaciones</th></tr></thead>
+        <tbody>${TOP_ACTIVIDADES_CLAE.map((a) => `<tr><td>${escapeHtml(a.codigo)}</td><td>${escapeHtml(a.actividad)}</td><td>${a.asignaciones}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>Siete de las diez primeras terminan en "n.c.p.". La única actividad del top 10 que describe con precisión lo que la empresa hace —y no lo que no es— es cultivo de vid para vinificar, en sexto lugar.</p>
+      <h2>Cola larga, no concentración</h2>
+      <table>
+        <thead><tr><th>Top N actividades</th><th>% del total</th></tr></thead>
+        <tbody>${COLA_LARGA_CLAE.map((c) => `<tr><td>${escapeHtml(c.etiqueta)}</td><td>${c.valor}%</td></tr>`).join("")}</tbody>
+      </table>
+      <p>Hacen falta 100 códigos distintos para cubrir el 62% de la economía declarada, y los 1.016 códigos del nomenclador se usan todos al menos una vez.</p>
+      <h2>2. Las bajas no son muertes: son podas</h2>
+      <table>
+        <thead><tr><th>Situación</th><th>Sociedades</th></tr></thead>
+        <tbody>${BAJAS_SITUACION_CLAE.map((b) => `<tr><td>${escapeHtml(b.situacion)}</td><td>${b.sociedades.toLocaleString("es-AR")}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>Ninguna sociedad del corpus tiene la totalidad de sus actividades dadas de baja: la que cesa por completo desaparece del padrón de ARCA. Lo que las bajas miden es poda de actividades dentro de empresas que siguen operando.</p>
+      <table>
+        <thead><tr><th>Actividades declaradas</th><th>Sociedades</th><th>% de sus actividades dadas de baja</th></tr></thead>
+        <tbody>${DIVERSIFICACION_CLAE.map((d) => `<tr><td>${escapeHtml(d.rango)}</td><td>${d.sociedades.toLocaleString("es-AR")}</td><td>${d.pctBaja}%</td></tr>`).join("")}</tbody>
+      </table>
+      <h2>Qué se poda y qué no</h2>
+      <table>
+        <thead><tr><th>Actividad</th><th>n</th><th>% baja</th></tr></thead>
+        <tbody>${TASA_BAJA_CLAE.map((t) => `<tr><td>${escapeHtml(t.actividad)}</td><td>${t.n}</td><td>${t.pctBaja}%</td></tr>`).join("")}</tbody>
+      </table>
+      <p>Las actividades que más se abandonan son residuales y financieras — categorías que se declaran "por las dudas" al constituir la sociedad y después no se ejercen. Las que casi nunca se abandonan son actividades con activos físicos e infraestructura específica: un frigorífico, una panadería, un viñedo.</p>
+      <h2>3. Diez clusters que el nomenclador no declara</h2>
+      <table>
+        <thead><tr><th>Cluster</th><th>Actividades</th><th>Asignaciones</th><th>Núcleo</th></tr></thead>
+        <tbody>${CLUSTERS_CLAE.map((c) => `<tr><td>${escapeHtml(c.nombre)}</td><td>${c.actividades}</td><td>${c.asignaciones.toLocaleString("es-AR")}</td><td>${escapeHtml(c.nucleo)}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>Los clusters no respetan la jerarquía del nomenclador. El cluster vitivinícola cruza tres ramas que CLAE trata como mundos separados: agricultura (cultivo de vid), industria manufacturera (elaboración de vinos) y comercio mayorista (venta de vino).</p>
+      <table>
+        <thead><tr><th>Par de actividades</th><th>Sociedades que declaran ambas</th></tr></thead>
+        <tbody>${PARES_COOCURRENCIA_CLAE.map((p) => `<tr><td>${escapeHtml(p.etiqueta)}</td><td>${p.valor}</td></tr>`).join("")}</tbody>
+      </table>
+      <h2>4. La geografía tiene especialidades muy marcadas</h2>
+      <table>
+        <thead><tr><th>Departamento y actividad</th><th>Casos</th><th>Cociente de localización</th></tr></thead>
+        <tbody>${LOCALIZACION_CLAE.map((l) => `<tr><td>${escapeHtml(l.etiqueta)}</td><td>${l.casos}</td><td>${l.valor}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>El Valle de Uco (Tupungato, Tunuyán, San Carlos) aparece como un bloque nítido especializado en servicios de apoyo agrícola y cultivos temporales — no en elaboración de vino, que se concentra más al este (San Martín, Rivadavia). Capital es el único departamento cuya especialización más fuerte no es agropecuaria ni industrial sino de servicios profesionales.</p>
+      <h2>5. Qué crece y qué se apaga</h2>
+      <table>
+        <thead><tr><th>Actividad</th><th>2017-21</th><th>2022-26</th><th>% reciente</th></tr></thead>
+        <tbody>${EVOLUCION_ACTIVIDADES_CLAE.map((e) => `<tr><td>${escapeHtml(e.etiqueta)}</td><td>${e.previo}</td><td>${e.reciente}</td><td>${e.valor}%</td></tr>`).join("")}</tbody>
+      </table>
+      <p>Línea de base global: 54,4% de las asignaciones corresponden al período reciente; una actividad por encima de eso crece, por debajo se apaga. El turismo es el gran ganador de la segunda mitad de la década. "Generación de energía n.c.p." con solo 25,6% confirma por otra vía el hallazgo del informe de Energía Solar y Eólica de esta serie.</p>
+      <h2>6. La cobertura CLAE valida la premisa de la serie de nichos</h2>
+      <table>
+        <thead><tr><th>Nicho</th><th>Sociedades</th><th>Con CLAE</th><th>Código principal más frecuente</th></tr></thead>
+        <tbody>${NICHOS_COBERTURA_CLAE.map((n) => `<tr><td>${escapeHtml(n.nicho)}</td><td>${n.sociedades}</td><td>${n.cobertura}%</td><td>${escapeHtml(n.codigo)}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>Cannabis, con 29,2% de cobertura, es el nicho peor cubierto de todos, y su código más usado aparece una sola vez: no existe ningún código CLAE que contenga la palabra "cannabis". En el otro extremo, Bodegas Boutique, Arquitectura y Software mapean limpiamente a códigos propios y específicos.</p>
+      <h2>7. Lo que Mendoza no hace: 19 grupos vacíos</h2>
+      <table>
+        <thead><tr><th>Grupo</th><th>Actividad ausente</th></tr></thead>
+        <tbody>${GRUPOS_VACIOS_CLAE.map((g) => `<tr><td>${escapeHtml(g.grupo)}</td><td>${escapeHtml(g.actividad)}</td></tr>`).join("")}</tbody>
+      </table>
+      <h2>8. La cobertura CLAE como termómetro de actividad real</h2>
+      <table>
+        <thead><tr><th>Año de constitución</th><th>Sociedades</th><th>Con CLAE</th><th>Cobertura</th></tr></thead>
+        <tbody>${COBERTURA_ANUAL_CLAE.map((c) => `<tr><td>${escapeHtml(c.anio)}</td><td>${c.sociedades.toLocaleString("es-AR")}</td><td>${c.conClae.toLocaleString("es-AR")}</td><td>${c.cobertura}%</td></tr>`).join("")}</tbody>
+      </table>
+      <p>* 2026 parcial (relevamiento hasta julio). La cobertura se estabiliza en torno al 67% desde 2021. El derrumbe de 2026 al 32,9% no indica que las empresas nuevas no operen: refleja el rezago de aproximadamente un año entre constituir la sociedad y darse de alta en el padrón de actividades de ARCA. Leído al revés, ese techo del 67% es informativo: cerca de un tercio de las sociedades que se constituyen en Mendoza nunca registra ninguna actividad económica en ARCA.</p>
+      <h2>Metodología y límites</h2>
+      <p>Fuentes: tablas de actividades CLAE (1.016 códigos), grupos CLAE (225) y sus vínculos con sociedades (25.583 vínculos, 11.918 sociedades), del padrón de ARCA cruzado por CUIT contra las sociedades extraídas del Boletín Oficial. El análisis cubre el 60,9% del corpus, sesgado hacia empresas que efectivamente operaron. Las bajas no miden cese de actividad empresarial sino poda de actividades declaradas. Clusters por detección de comunidades Louvain sobre el grafo de co-ocurrencia, ponderado por 1/(n−1), mejor de 10 semillas (Q=0,390). El cociente de localización se restringe a combinaciones con al menos 15 casos en departamentos con al menos 200 asignaciones, y depende del domicilio legal, que no siempre coincide con el lugar de la actividad productiva.</p>
+      ${fuenteDatosHtml()}
+    </main>
+  `.trim();
+
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      name: title,
+      description,
+      url: canonical,
+      creator: { "@type": "Organization", name: "INGcome" },
+      temporalCoverage: "2017/2026",
+      dateModified: "2026-08-03",
+    };
+
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.send(renderHtml(base, { title, description, canonical, noindex: false, jsonLd, contentHtml }));
+  }),
+);
+
+seoRouter.get(
+  "/informes/analisis-redes",
+  asyncHandler(async (_req: Request, res: Response, next) => {
+    const base = leerIndexHtml();
+    if (!base) return next();
+
+    const title = "El mapa oculto de las sociedades mendocinas: análisis de redes | INGcome";
+    const description =
+      "El registro societario de Mendoza modelado como grafo: 12.004 componentes conexas, un quiebre de conectividad en 2022 y dos estructuras económicas que la centralidad encontró sin hipótesis previa. 2017-2026.";
+    const canonical = `${siteUrl()}/informes/analisis-redes`;
+
+    const contentHtml = `
+    <main>
+      <h1>El mapa oculto de las sociedades mendocinas</h1>
+      <p>Qué dice la teoría de grafos del registro societario</p>
+      <p>De todos los informes de esta serie, el único que no mira un rubro ni una variable: mira la forma del registro societario completo, tratado como lo que es -- un grafo de 62.201 vínculos, 19.563 sociedades y 33.694 personas -- y deja que esa forma, no una hipótesis previa, dicte los hallazgos.</p>
+      <h2>Resumen ejecutivo</h2>
+      <ul>
+        <li>El registro societario mendocino no es una red: es un archipiélago. Sobre 52.056 nodos hay 12.004 componentes conexas, y la componente típica tiene 3 nodos. La más grande reúne apenas el 3,1% del grafo.</li>
+        <li>Los domicilios compartidos, no la sociedad entre personas, son el tejido conectivo real: multiplican por 6,3 el tamaño de la componente gigante (de 3,1% a 18,9%).</li>
+        <li>Hay un quiebre neto en 2022: la conectividad vía domicilio salta de 3,2% a 10,2% en un solo año y sigue creciendo hasta 18,6% en 2026.</li>
+        <li>La misma métrica -- centralidad de intermediación -- encontró dos estructuras completamente distintas: una red de cofundación ligada a una aceleradora de startups real y un holding energético de 15 sociedades con directorio y domicilio idénticos.</li>
+        <li>Los 12 nichos sectoriales de esta serie no se tocan entre sí de forma directa: cuando conectan, es casi siempre a través de domicilios compartidos.</li>
+      </ul>
+      <h2>1. El archipiélago: por qué el registro societario no es una red</h2>
+      <table>
+        <tbody>${ESTRUCTURA_G1.map((s) => `<tr><td>${escapeHtml(s.concepto)}</td><td>${escapeHtml(s.valor)}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>La componente típica del registro societario mendocino son una sociedad y sus dos socios -- la S.A.S. estándar de dos personas, sin ninguna conexión con el resto del universo. No hay "seis grados de separación": hay doce mil islas. Cualquier métrica de centralidad calculada sobre el grafo completo sería casi puro ruido, porque el 97% de los nodos vive en componentes donde no hay nada que medir.</p>
+      <h2>2. Lo que conecta el archipiélago: los domicilios, no las personas</h2>
+      <table>
+        <thead><tr><th>Escenario</th><th>Componentes</th><th>Componente gigante</th></tr></thead>
+        <tbody>${ESCENARIOS.map((s) => `<tr><td>${escapeHtml(s.escenario)}</td><td>${escapeHtml(s.componentes)}</td><td>${escapeHtml(s.nodos)} (${String(s.gigante).replace(".", ",")}%)</td></tr>`).join("")}</tbody>
+      </table>
+      <p>El domicilio compartido multiplica por 6,3 la componente gigante. La estructura del ecosistema societario mendocino no está en quién se asocia con quién: está en dónde se domicilian. El escenario C es una advertencia metodológica: agrupar direcciones sin excluir barrios privados y rutas infla la componente gigante un 23% adicional con puentes que no existen.</p>
+      <h2>3. El quiebre de 2022</h2>
+      <table>
+        <thead><tr><th>Año</th><th>% gigante (solo persona-sociedad)</th><th>% gigante (+ domicilio)</th></tr></thead>
+        <tbody>${EVOLUCION_TABLA.map((e) => `<tr><td>${escapeHtml(e.anio)}</td><td>${String(e.g1).replace(".", ",")}%</td><td>${String(e.g2).replace(".", ",")}%</td></tr>`).join("")}</tbody>
+      </table>
+      <p>Sin domicilios, el archipiélago es estructural desde el origen y prácticamente no cambia: la componente gigante se mantiene por debajo del 2% durante siete años. Con domicilios hay un quiebre neto en 2022, y no vuelve a bajar. La lectura más consistente con el resto de esta serie: la consolidación no vino de que las personas empezaran a co-fundar más entre sí, sino de que más sociedades nuevas empezaron a compartir domicilio con sociedades ya existentes.</p>
+      <h2>4. Quiénes son los puentes</h2>
+      <table>
+        <thead><tr><th>Persona</th><th>Profesión declarada</th><th>Betweenness</th></tr></thead>
+        <tbody>${BETWEENNESS_TOP10.map((b) => `<tr><td>${escapeHtml(b.etiqueta)}</td><td>${escapeHtml(b.etiquetaSecundaria)}</td><td>${String(b.valor).replace(".", ",")}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>El ranking está filtrado a personas: las sociedades con muchos socios aparecían como "puente" por pura estructura bipartita, sin ser intermediarias reales. No aparecen los nombres del informe de Domicilios Hub: el ranking por cantidad de sociedades y el ranking por posición estructural en el grafo no coinciden, porque miden cosas distintas. Nada de lo que aparece acá implica irregularidad: "puente estructural" describe una posición dentro de un grafo, no una conducta.</p>
+      <h2>5.1 La red de cofundación de Embarca</h2>
+      <table>
+        <thead><tr><th>Fundador (fuente pública)</th><th>En la base</th></tr></thead>
+        <tbody>${FUNDADORES_EMBARCA.map((f) => `<tr><td>${escapeHtml(f.publico)}</td><td>${escapeHtml(f.enLaBase)}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>El portfolio público de Embarca son 15 empresas; solo 1 cayó en el clúster que encontró la centralidad, y por coincidencia. Ningún fundador figura como socio en ninguna empresa de su propio portfolio: el equity que una aceleradora toma se transfiere después de la constitución, y esos actos casi no se publican (22 cesiones en 22.065 actos). El clúster no es el portfolio: es la red personal de cofundación de sus socios, con vehículos de sindicación de inversores en el centro.</p>
+      <h2>5.2 El holding energético: gobierno corporativo replicado</h2>
+      <p>El núcleo más denso del grafo (k-core máximo = 7) son 15 sociedades anónimas -- Allen, Auquinco, Butaco, Calbuco, Collico, Kuar, Kuntur, Kunuk, Liuco, Nahuen, Nauco, Petrehué, Trancurá, Xetiu e Yelap Energía S.A. -- todas constituidas en un lapso de tres meses de 2017, con el mismo directorio (tres directores titulares), los mismos tres síndicos titulares y el mismo domicilio (Patricias Mendocinas 1285). Cruzado contra el catálogo CLAE la confirmación es total e independiente: 14 de las 15 tienen actividad registrada, 13 declaran "Generación de energía n.c.p." y 1 "Generación de energía hidráulica". Es la estructura clásica de sociedades vehículo de un grupo de generación de energía.</p>
+      <h2>6. ¿Los nichos de esta serie están aislados entre sí?</h2>
+      <table>
+        <thead><tr><th>Par de nichos</th><th>Personas compartidas</th></tr></thead>
+        <tbody>${PARES_NICHOS.map((p) => `<tr><td>${escapeHtml(p.etiqueta)}</td><td>${p.valor}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>Ninguna sociedad pertenece a dos nichos a la vez; donde hay conexión, es por personas compartidas. El par Cannabis-Publicidad resultó ser un falso cruce: las 8 personas vienen de una sola sociedad capturada por dos criterios de búsqueda distintos. Ningún nicho, por sí solo, es central en el grafo general.</p>
+      <h2>Metodología y límites</h2>
+      <p>Se construyeron tres grafos distintos, nunca mezclados: G1 (societario puro: persona-sociedad), G2 (G1 + sociedad-domicilio) y G3 (proyección persona-persona, ponderada por 1/(n-1) al estilo Newman). Comunidades por Louvain con 10 semillas sobre la componente gigante de G2: entre 100 y 106 comunidades por corrida, con 68,9% de estabilidad. El escribano interviniente se evaluó como eje adicional y se descartó por cobertura insuficiente (6,9% de los actos). Error propio corregido antes de publicar: correr k-core sobre G1 daba un núcleo espurio que mezclaba parques renovables, un grupo farmacéutico y una sociedad sin relación entre ellos; se usó la corrida sobre G2.</p>
+      ${fuenteDatosHtml()}
+    </main>
+  `.trim();
+
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      name: title,
+      description,
+      url: canonical,
+      creator: { "@type": "Organization", name: "INGcome" },
+      temporalCoverage: "2017/2026",
+      dateModified: "2026-08-03",
+    };
+
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.send(renderHtml(base, { title, description, canonical, noindex: false, jsonLd, contentHtml }));
+  }),
+);
+
 seoRouter.get("/robots.txt", (_req: Request, res: Response) => {
   res.type("text/plain").send(
     [
@@ -1379,6 +1676,8 @@ seoRouter.get(
       `  <url><loc>${siteUrl()}/informes/nicho-cripto-fintech</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/nicho-software</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/mujeres-fundadoras</loc><lastmod>${hoy}</lastmod></url>`,
+      `  <url><loc>${siteUrl()}/informes/actividades-clae</loc><lastmod>${hoy}</lastmod></url>`,
+      `  <url><loc>${siteUrl()}/informes/analisis-redes</loc><lastmod>${hoy}</lastmod></url>`,
       ...anios.map(
         (a) =>
           `  <url><loc>${siteUrl()}/informes/anuario-${a.anio}</loc><lastmod>${new Date(a.actualizado_el).toISOString().slice(0, 10)}</lastmod></url>`,

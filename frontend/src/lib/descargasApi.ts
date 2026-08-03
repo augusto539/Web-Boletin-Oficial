@@ -13,7 +13,9 @@ export type TipoDescarga =
   | "informe_nicho_energia_renovable"
   | "informe_nicho_cripto_fintech"
   | "informe_nicho_software"
-  | "informe_mujeres_fundadoras";
+  | "informe_mujeres_fundadoras"
+  | "informe_actividades_clae"
+  | "informe_analisis_redes";
 
 // Fire-and-forget: mismo criterio que registrarBusqueda (historialApi.ts) --
 // no bloquea la descarga ni rompe nada si falla (usuario anónimo -> 401,

@@ -1,4 +1,6 @@
 import { pdf } from "@react-pdf/renderer";
+import { InformeActividadesClaePDF } from "../components/pdf/InformeActividadesClaePDF";
+import { InformeAnalisisRedesPDF } from "../components/pdf/InformeAnalisisRedesPDF";
 import { InformeAnuarioPDF } from "../components/pdf/InformeAnuarioPDF";
 import { InformeDepartamentosPDF } from "../components/pdf/InformeDepartamentosPDF";
 import { InformeNichoCannabisPDF } from "../components/pdf/InformeNichoCannabisPDF";
@@ -78,4 +80,14 @@ export async function exportarNichoSoftwarePDF() {
 export async function exportarMujeresFundadorasPDF() {
   const blob = await pdf(<InformeMujeresFundadorasPDF />).toBlob();
   descargarBlob(blob, "mujeres-que-fundan-empresas-en-mendoza.pdf");
+}
+
+export async function exportarActividadesClaePDF() {
+  const blob = await pdf(<InformeActividadesClaePDF />).toBlob();
+  descargarBlob(blob, "actividades-clae-en-mendoza.pdf");
+}
+
+export async function exportarAnalisisRedesPDF() {
+  const blob = await pdf(<InformeAnalisisRedesPDF />).toBlob();
+  descargarBlob(blob, "mapa-oculto-sociedades-mendocinas.pdf");
 }

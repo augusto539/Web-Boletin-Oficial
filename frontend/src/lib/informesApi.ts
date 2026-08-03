@@ -37,6 +37,12 @@ export interface Anuario {
   departamentoMasActivo: string | null;
   tipoSociedadMasComun: string | null;
   actualizadoEl: string;
+  meses: { mes: number; cantidad: number }[];
+  // "Otros" agrupa lo que pesa menos de 5% del total (ver informes.ts) --
+  // ya viene recortado del backend, no hace falta repetir esa lógica acá.
+  tipoSociedad: { tipo: string; cantidad: number }[];
+  actividadesTop10: { grupoClae: string; cantidad: number }[];
+  departamentos: { departamentoId: number; nombre: string; cantidad: number }[];
 }
 
 async function get<T>(path: string): Promise<T> {

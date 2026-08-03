@@ -92,6 +92,26 @@ export default function InformesHub() {
                 Una brecha que no se cierra, y que se agranda cuanto más arriba se mira.
               </p>
             </Link>
+            <Link
+              to="/informes/analisis-redes"
+              className="block rounded-3xl bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+            >
+              <h3 className="text-lg font-bold text-vino">El Mapa Oculto de las Sociedades Mendocinas</h3>
+              <p className="mt-2 text-sm text-carbon/60">
+                Análisis de redes: un archipiélago de doce mil islas que se conecta por los
+                domicilios, no por las personas.
+              </p>
+            </Link>
+            <Link
+              to="/informes/actividades-clae"
+              className="block rounded-3xl bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+            >
+              <h3 className="text-lg font-bold text-vino">Qué hacen realmente las empresas mendocinas</h3>
+              <p className="mt-2 text-sm text-carbon/60">
+                Anatomía del nomenclador CLAE: cajones de sastre, clusters y especialización
+                territorial.
+              </p>
+            </Link>
           </div>
         </Reveal>
 
