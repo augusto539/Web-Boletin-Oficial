@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { FlechaIcon } from "../components/FlechaIcon";
 import { trackEvent } from "../lib/analytics";
 import { useAuth } from "../lib/auth";
-import { cuit as formatCuit, dato, fecha, hoyISO } from "../lib/format";
+import { cuit as formatCuit, dato, fecha, haceDiasISO, hoyISO } from "../lib/format";
 import { registrarBusqueda } from "../lib/historialApi";
 import {
   BUSCAR_PERSONAS_AVANZADO,
@@ -109,13 +109,17 @@ function Paginador({
 function BusquedaSociedades() {
   const { usuario } = useAuth();
   const [hoy] = useState(hoyISO);
+  // Ventana de 30 días por defecto: antes era solo "hoy", que casi siempre
+  // mostraba 0 resultados en la primera carga. 30 días sigue siendo barato
+  // (Seq Scan + sort en memoria, ~8ms medido con ~20k sociedades — sin esto
+  // Postgres tiene que ordenar la base entera y el sort se derrama a disco,
+  // ver conversación sobre costo de la búsqueda sin filtro de fecha).
+  const [hace30] = useState(() => haceDiasISO(30));
   const [termino, setTermino] = useState("");
   const [grupoClae, setGrupoClae] = useState("");
   const [tipoSociedadId, setTipoSociedadId] = useState("");
   const [departamentoId, setDepartamentoId] = useState("");
-  // Por defecto se filtra a "hoy": así la primera carga de la página no
-  // trae toda la base, solo las sociedades constituidas ese día.
-  const [fechaDesde, setFechaDesde] = useState(hoy);
+  const [fechaDesde, setFechaDesde] = useState(hace30);
   const [fechaHasta, setFechaHasta] = useState(hoy);
   const [pagina, setPagina] = useState(1);
 
@@ -139,7 +143,7 @@ function BusquedaSociedades() {
     });
   }
 
-  // Al entrar, buscar con los valores por defecto (fecha de hoy).
+  // Al entrar, buscar con los valores por defecto (últimos 30 días).
   useEffect(() => {
     ejecutarBusqueda(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -150,10 +154,10 @@ function BusquedaSociedades() {
     setGrupoClae("");
     setTipoSociedadId("");
     setDepartamentoId("");
-    setFechaDesde(hoy);
+    setFechaDesde(hace30);
     setFechaHasta(hoy);
     setPagina(1);
-    buscar({ variables: { fechaDesde: hoy, fechaHasta: hoy, first: POR_PAGINA, offset: 0 } });
+    buscar({ variables: { fechaDesde: hace30, fechaHasta: hoy, first: POR_PAGINA, offset: 0 } });
   }
 
   const resultados = data?.buscarSociedadesAvanzado.nodes ?? [];
@@ -164,7 +168,7 @@ function BusquedaSociedades() {
       grupoClae ||
       tipoSociedadId ||
       departamentoId ||
-      fechaDesde !== hoy ||
+      fechaDesde !== hace30 ||
       fechaHasta !== hoy,
   );
 

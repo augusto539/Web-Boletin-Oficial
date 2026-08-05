@@ -89,3 +89,14 @@ export function hoyISO(): string {
   const dia = String(ahora.getDate()).padStart(2, "0");
   return `${anio}-${mes}-${dia}`;
 }
+
+// Igual que hoyISO() pero `dias` atrás -- para ventanas por defecto tipo
+// "últimos 30 días" (ver BusquedaAvanzada.tsx).
+export function haceDiasISO(dias: number): string {
+  const fecha = new Date();
+  fecha.setDate(fecha.getDate() - dias);
+  const anio = fecha.getFullYear();
+  const mes = String(fecha.getMonth() + 1).padStart(2, "0");
+  const dia = String(fecha.getDate()).padStart(2, "0");
+  return `${anio}-${mes}-${dia}`;
+}

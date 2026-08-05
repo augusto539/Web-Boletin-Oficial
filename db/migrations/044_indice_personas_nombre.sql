@@ -1,0 +1,16 @@
+-- buscar_personas_avanzado() (030) ordena por nombre y, sin ningún filtro
+-- (caso real: la pestaña "Personas" de /busqueda-avanzada, que arranca sin
+-- filtro de fecha), Postgres no tenía otra opción que un Seq Scan + sort de
+-- las ~36k personas -- con work_mem=4MB eso se derramaba a disco (external
+-- merge, medido en ~33ms). Este índice deja que el ORDER BY use un Index
+-- Scan directo: la misma consulta baja a ~0,2ms sin tocar disco.
+--
+-- Parcial (WHERE oculta = FALSE), mismo criterio que idx_personas_documento:
+-- las personas ocultas (habeas data) nunca aparecen en una búsqueda pública,
+-- así que no vale la pena indexarlas.
+--
+-- Sin CONCURRENTLY a propósito: el runner de migraciones (db/migrate.ts)
+-- corre cada archivo dentro de BEGIN/COMMIT, y CONCURRENTLY no puede ir
+-- dentro de una transacción. Con ~36k filas el build es instantáneo, así
+-- que el lock de un CREATE INDEX normal no es un problema acá.
+CREATE INDEX idx_personas_nombre ON personas_fisicas (nombre) WHERE oculta = FALSE;
