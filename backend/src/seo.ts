@@ -47,6 +47,17 @@ import {
   TIPO_ENTIDAD as TIPO_ENTIDAD_SOFTWARE,
 } from "./data/nichoSoftware.js";
 import {
+  DEPARTAMENTOS_SERVICIOS_PROFESIONALES,
+  type EntidadServiciosProfesionales,
+  ENTIDADES as ENTIDADES_SERVICIOS_PROFESIONALES,
+  ESCRIBANOS_TOP,
+  ESPECIALIDAD_ESTUDIOS,
+  EVOLUCION_ANUAL as EVOLUCION_ANUAL_SERVICIOS_PROFESIONALES,
+  PROFESIONES_ECOSISTEMA,
+  RANKING_PROFESIONES_LIBERALES,
+  TIPO_ENTIDAD as TIPO_ENTIDAD_SERVICIOS_PROFESIONALES,
+} from "./data/nichoServiciosProfesionales.js";
+import {
   EVOLUCION_ANUAL as EVOLUCION_ANUAL_MUJERES,
   PANORAMA,
   TOP_MUJERES,
@@ -277,6 +288,40 @@ function entidadSoftwareHtml(e: EntidadSoftware): string {
 
 function entidadesSoftwareHtml(): string {
   return ENTIDADES_SOFTWARE.map(entidadSoftwareHtml).join("");
+}
+
+function entidadServiciosProfesionalesHtml(e: EntidadServiciosProfesionales): string {
+  const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
+  const sociosLinks = e.socios
+    .map((s) =>
+      s.sociedadId
+        ? `<a href="/sociedad/${s.sociedadId}">${escapeHtml(s.nombre)}</a>`
+        : s.personaId
+          ? `<a href="/persona/${s.personaId}">${escapeHtml(s.nombre)}</a>`
+          : escapeHtml(s.nombre),
+    )
+    .join(" · ");
+  return `
+    <h3>${escapeHtml(e.tipo)} — ${nombreLink}</h3>
+    <p>CUIT: ${e.cuit ? escapeHtml(e.cuit) : "—"} · Capital: ${e.capital ? escapeHtml(e.capital) : "—"} · Publicación: ${e.publicacion ? escapeHtml(e.publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
+    ${e.socios.length > 0 ? `<p>Socios/Integrantes: ${sociosLinks}</p>` : ""}
+    <p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>
+  `;
+}
+
+const CATEGORIAS_SERVICIOS_PROFESIONALES: EntidadServiciosProfesionales["categoria"][] = [
+  "Jurídico",
+  "Jurídico-contable",
+  "Contable",
+  "Gestoría y trámites",
+];
+
+function entidadesServiciosProfesionalesHtml(): string {
+  return CATEGORIAS_SERVICIOS_PROFESIONALES.map((categoria) => {
+    const entidadesCategoria = ENTIDADES_SERVICIOS_PROFESIONALES.filter((e) => e.categoria === categoria);
+    if (entidadesCategoria.length === 0) return "";
+    return `<h3>${escapeHtml(categoria)} (${entidadesCategoria.length})</h3>${entidadesCategoria.map(entidadServiciosProfesionalesHtml).join("")}`;
+  }).join("");
 }
 
 function siteUrl(): string {
@@ -581,6 +626,7 @@ seoRouter.get(
         <li><a href="/informes/nicho-energia-renovable">Energía Solar y Eólica en Mendoza</a></li>
         <li><a href="/informes/nicho-cripto-fintech">Cripto y Fintech en Mendoza</a></li>
         <li><a href="/informes/nicho-software">Desarrollo de Software en Mendoza</a></li>
+        <li><a href="/informes/nicho-servicios-profesionales">Abogados, Contadores y Escribanos en Mendoza</a></li>
       </ul>
       ${anios.length > 0 ? `<h2>Anuarios</h2><ul>${anuarioLinksHtml}</ul>` : ""}
       ${fuenteDatosHtml()}
@@ -1304,6 +1350,96 @@ seoRouter.get(
   }),
 );
 
+// Informe de nicho sectorial, séptimo de la serie: mismo criterio que los
+// anteriores — contenido estático duplicado a mano desde
+// frontend/src/data/nichoServiciosProfesionales.ts.
+seoRouter.get(
+  "/informes/nicho-servicios-profesionales",
+  asyncHandler(async (_req: Request, res: Response, next) => {
+    const base = leerIndexHtml();
+    if (!base) return next();
+
+    const title =
+      "Abogados, contadores y escribanos en Mendoza: 46 estudios profesionales 2017–2026 | INGcome";
+    const description =
+      "46 estudios jurídicos, contables y de gestoría en Mendoza (2017–2026), y el otro lado del dato: 821 abogados y 1.136 contadores entre los socios de toda la base, contra apenas 66 escribanos.";
+    const canonical = `${siteUrl()}/informes/nicho-servicios-profesionales`;
+
+    const contentHtml = `
+    <main>
+      <h1>Abogados, contadores y escribanos en Mendoza</h1>
+      <p>Los profesionales que fabrican empresas</p>
+      <p>46 estudios profesionales se constituyeron como sociedad en Mendoza entre 2017 y 2026 — ninguno de ellos una escribanía. El rubro aparece en este informe desde dos lados distintos del mismo dato: como sociedades propias, y como los profesionales que, sin constituir un estudio, más se repiten entre los socios de las demás 19.485 sociedades de la base.</p>
+      <h2>Resumen ejecutivo</h2>
+      <ul>
+        <li>46 estudios profesionales identificados entre 2017 y 2026 — jurídicos (25), contables (11), jurídico-contables (9) y de gestoría y trámites (1). Ninguno notarial.</li>
+        <li>821 abogados/as y 1.136 contadores/as aparecen como socios en 1.028 y 1.639 sociedades de toda la base, muy por encima de cualquier estudio propio del rubro.</li>
+        <li>66 escribanos/as aparecen como socios en cualquier sociedad — la profesión liberal que menos se asocia de las seis relevadas.</li>
+        <li>559 escribanos/as intervinieron en 1.511 actos del boletín — mercado atomizado: el 52,9% (296 de 559) aparece una sola vez.</li>
+        <li>Capital concentra el 73,9% de los 46 estudios (34 de 46).</li>
+      </ul>
+      <h2>Un rubro que está en los dos lados del dato</h2>
+      <table>
+        <thead><tr><th>Especialidad</th><th>Estudios</th></tr></thead>
+        <tbody>${ESPECIALIDAD_ESTUDIOS.map((d) => `<tr><td>${escapeHtml(d.etiqueta)}</td><td>${d.valor}</td></tr>`).join("")}</tbody>
+      </table>
+      <table>
+        <thead><tr>${EVOLUCION_ANUAL_SERVICIOS_PROFESIONALES.map((a) => `<th>${a.etiqueta}</th>`).join("")}</tr></thead>
+        <tbody><tr>${EVOLUCION_ANUAL_SERVICIOS_PROFESIONALES.map((a) => `<td>${a.valor}</td>`).join("")}</tr></tbody>
+      </table>
+      <p>25 de 46 (54,3%) son estudios jurídicos, 11 (23,9%) contables y 9 (19,6%) combinan ambas especialidades. Un solo estudio (2,2%) se dedica exclusivamente a gestoría y trámites. Con números tan bajos por año, no hay tendencia real para leer en la serie temporal.</p>
+      <h2>La escribanía que no existe</h2>
+      <p>Ninguno de los 46 estudios es notarial. El registro notarial es personal e intransferible: un escribano no puede aportarlo como capital a una sociedad ni ejercer la función notarial a través de una persona jurídica. Una escribanía, estructuralmente, no puede aparecer en el Boletín Oficial como sociedad comercial.</p>
+      <h2>El otro lado: los profesionales que fabrican empresas</h2>
+      <table>
+        <thead><tr><th>Profesión</th><th>Personas</th><th>Sociedades donde participan</th></tr></thead>
+        <tbody>${PROFESIONES_ECOSISTEMA.map((p) => `<tr><td>${escapeHtml(p.profesion)}</td><td>${p.personas.toLocaleString("es-AR")}</td><td>${p.sociedades ? p.sociedades.toLocaleString("es-AR") : "—"}</td></tr>`).join("")}</tbody>
+      </table>
+      <table>
+        <thead><tr><th>Profesión liberal</th><th>Personas (socios de toda la base)</th></tr></thead>
+        <tbody>${RANKING_PROFESIONES_LIBERALES.map((r) => `<tr><td>${escapeHtml(r.etiqueta)}</td><td>${r.valor.toLocaleString("es-AR")}</td></tr>`).join("")}</tbody>
+      </table>
+      <h2>Los escribanos del Boletín: un mercado atomizado</h2>
+      <p>559 escribanos/as distintos intervinieron en 1.511 actos del Boletín. Los 10 más activos concentran 237 actos (15,7%), los 50 más activos 589 (39,0%), y 296 de los 559 (52,9%) aparecen una única vez. Solo el 6,9% de los 21.989 actos totales de la base declara qué escribano intervino.</p>
+      <table>
+        <thead><tr><th>Escribano/a</th><th>Actos</th></tr></thead>
+        <tbody>${ESCRIBANOS_TOP.map((e) => `<tr><td>${escapeHtml(e.etiqueta)}</td><td>${e.valor}</td></tr>`).join("")}</tbody>
+      </table>
+      <h2>Perfil societario</h2>
+      <table>
+        <thead><tr><th>Tipo</th><th>Cantidad</th></tr></thead>
+        <tbody>${TIPO_ENTIDAD_SERVICIOS_PROFESIONALES.map((d) => `<tr><td>${d.tipo}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>36 de las 46 (78,3%) son S.A.S. Capital declarado: mediana de $101.000, entre $20.000 y $3.000.000.</p>
+      <h2>Dónde están</h2>
+      <table>
+        <thead><tr><th>Departamento</th><th>Cantidad</th></tr></thead>
+        <tbody>${DEPARTAMENTOS_SERVICIOS_PROFESIONALES.map((d) => `<tr><td>${escapeHtml(d.departamento)}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>45 de los 46 estudios tienen departamento identificado; 1 no. Capital concentra el 73,9% (34 de 46) — la mayor concentración geográfica de toda esta tanda de informes.</p>
+      ${ENTIDADES_SERVICIOS_PROFESIONALES.length > 0 ? `<h2>Directorio completo: los 46 estudios</h2>${entidadesServiciosProfesionalesHtml()}` : ""}
+      <h2>Metodología y límites</h2>
+      <p>Búsqueda por objeto social y nombre: términos jurídicos, contables y notariales — 163 sociedades candidatas. Revisión manual completa: 117 de las 163 (71,8%) se descartaron. Los datos de escribanos y de profesiones entre socios se calculan sobre toda la base de 19.485 sociedades y 21.989 actos, no solo sobre los 46 estudios de este informe. Las constituciones se cuentan por fecha de publicación del acto en el Boletín, no por fecha de constitución declarada.</p>
+      ${fuenteDatosHtml()}
+    </main>
+  `.trim();
+
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      name: title,
+      description,
+      url: canonical,
+      creator: { "@type": "Organization", name: "INGcome" },
+      temporalCoverage: "2017/2026",
+      dateModified: "2026-08-05",
+    };
+
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.send(renderHtml(base, { title, description, canonical, noindex: false, jsonLd, contentHtml }));
+  }),
+);
+
 // Informe de corte transversal (no es un nicho sectorial, ver nota en
 // frontend/src/data/mujeresFundadoras.ts): mismo criterio de duplicado a
 // mano que el resto de /informes. Sin ENTIDADES: no hay sociedades/personas
@@ -1675,6 +1811,7 @@ seoRouter.get(
       `  <url><loc>${siteUrl()}/informes/nicho-energia-renovable</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/nicho-cripto-fintech</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/nicho-software</loc><lastmod>${hoy}</lastmod></url>`,
+      `  <url><loc>${siteUrl()}/informes/nicho-servicios-profesionales</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/mujeres-fundadoras</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/actividades-clae</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/analisis-redes</loc><lastmod>${hoy}</lastmod></url>`,

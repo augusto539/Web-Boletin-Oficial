@@ -9,6 +9,7 @@ import { InformeNichoCriptoFintechPDF } from "../components/pdf/InformeNichoCrip
 import { InformeNichoEnergiaRenovablePDF } from "../components/pdf/InformeNichoEnergiaRenovablePDF";
 import { InformeNichoEnoturismoPDF } from "../components/pdf/InformeNichoEnoturismoPDF";
 import { InformeMujeresFundadorasPDF } from "../components/pdf/InformeMujeresFundadorasPDF";
+import { InformeNichoServiciosProfesionalesPDF } from "../components/pdf/InformeNichoServiciosProfesionalesPDF";
 import { InformeNichoSoftwarePDF } from "../components/pdf/InformeNichoSoftwarePDF";
 import type { Anuario, DepartamentoActivo } from "./informesApi";
 
@@ -75,6 +76,11 @@ export async function exportarNichoCriptoFintechPDF() {
 export async function exportarNichoSoftwarePDF() {
   const blob = await pdf(<InformeNichoSoftwarePDF />).toBlob();
   descargarBlob(blob, "desarrollo-de-software-en-mendoza.pdf");
+}
+
+export async function exportarNichoServiciosProfesionalesPDF() {
+  const blob = await pdf(<InformeNichoServiciosProfesionalesPDF />).toBlob();
+  descargarBlob(blob, "abogados-contadores-y-escribanos-en-mendoza.pdf");
 }
 
 export async function exportarMujeresFundadorasPDF() {

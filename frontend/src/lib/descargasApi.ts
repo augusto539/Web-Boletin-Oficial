@@ -13,6 +13,7 @@ export type TipoDescarga =
   | "informe_nicho_energia_renovable"
   | "informe_nicho_cripto_fintech"
   | "informe_nicho_software"
+  | "informe_nicho_servicios_profesionales"
   | "informe_mujeres_fundadoras"
   | "informe_actividades_clae"
   | "informe_analisis_redes";

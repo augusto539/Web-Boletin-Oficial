@@ -39,6 +39,11 @@ const NICHOS = [
     nombre: "Desarrollo de Software en Mendoza",
     descripcion: "El sector que estuvo ahí desde el primer día, 2017–2026.",
   },
+  {
+    slug: "servicios-profesionales",
+    nombre: "Abogados, Contadores y Escribanos en Mendoza",
+    descripcion: "Los profesionales que fabrican empresas, 2017–2026.",
+  },
 ];
 
 export default function InformesHub() {

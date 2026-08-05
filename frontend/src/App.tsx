@@ -20,6 +20,7 @@ import InformeNichoCannabis from "./pages/InformeNichoCannabis";
 import InformeNichoCriptoFintech from "./pages/InformeNichoCriptoFintech";
 import InformeNichoEnergiaRenovable from "./pages/InformeNichoEnergiaRenovable";
 import InformeNichoEnoturismo from "./pages/InformeNichoEnoturismo";
+import InformeNichoServiciosProfesionales from "./pages/InformeNichoServiciosProfesionales";
 import InformeNichoSoftware from "./pages/InformeNichoSoftware";
 import InformesHub from "./pages/InformesHub";
 import Landing from "./pages/Landing";
@@ -90,6 +91,10 @@ export default function App() {
         <Route path="/informes/nicho-energia-renovable" element={<InformeNichoEnergiaRenovable />} />
         <Route path="/informes/nicho-cripto-fintech" element={<InformeNichoCriptoFintech />} />
         <Route path="/informes/nicho-software" element={<InformeNichoSoftware />} />
+        <Route
+          path="/informes/nicho-servicios-profesionales"
+          element={<InformeNichoServiciosProfesionales />}
+        />
         <Route path="/informes/mujeres-fundadoras" element={<InformeMujeresFundadoras />} />
         <Route path="/informes/actividades-clae" element={<InformeActividadesClae />} />
         <Route path="/informes/analisis-redes" element={<InformeAnalisisRedes />} />
