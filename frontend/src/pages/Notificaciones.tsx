@@ -154,72 +154,140 @@ export default function Notificaciones() {
           ) : notificaciones.length === 0 ? (
             <p className="py-4 text-carbon/50">Todavía no programaste ninguna notificación.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] text-left text-sm">
-                <thead>
-                  <tr className="border-b border-carbon/10 text-xs uppercase tracking-widest text-carbon/50">
-                    <th className="px-6 py-4">Tipo</th>
-                    <th className="px-6 py-4">Nombre</th>
-                    <th className="px-6 py-4">CUIT</th>
-                    <th className="px-6 py-4">Programada</th>
-                    <th className="px-6 py-4">Aviso a</th>
-                    <th className="px-6 py-4" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {notificaciones.map((n) => (
-                    <tr key={n.id} className="border-b border-carbon/5 last:border-0">
-                      <td className="px-6 py-4">
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-bold ${
-                            n.tipo === "sociedad" ? "bg-vino/10 text-vino" : "bg-humo text-carbon/70"
-                          }`}
-                        >
-                          {n.tipo === "sociedad"
-                            ? "Sociedad"
-                            : n.tipo === "persona"
-                              ? "Persona"
-                              : "CUIT/DNI"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 font-bold">
-                        {n.entidadId !== null ? (
-                          <Link
-                            to={`/${n.tipo}/${n.entidadId}`}
-                            className="text-vino underline-offset-4 hover:underline"
-                          >
-                            {n.nombre ?? "(sin nombre)"}
-                          </Link>
-                        ) : (
-                          (n.nombre ?? "(sin nombre)")
-                        )}
-                        {n.entidadId === null && (
-                          <span className="ml-2 rounded-full bg-humo px-2.5 py-0.5 text-xs font-normal text-carbon/50">
-                            sin ficha en la base
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-carbon/60">
-                        {n.cuit ? formatCuit(n.cuit) : "—"}
-                      </td>
-                      <td className="px-6 py-4 text-carbon/60">
-                        {fecha(n.creadaEl.slice(0, 10))}
-                      </td>
-                      <td className="px-6 py-4 text-carbon/60">{usuario?.mail}</td>
-                      <td className="px-6 py-4 text-right">
-                        <button
-                          type="button"
-                          onClick={() => quitar(n.id)}
-                          className="cursor-pointer text-sm font-bold text-carbon/40 transition-colors hover:text-vino"
-                        >
-                          Eliminar
-                        </button>
-                      </td>
+            <>
+              {/* Mobile (< sm): una tarjeta por notificación, con etiqueta +
+                  valor en cada fila — mismo criterio que Búsqueda avanzada,
+                  pero acá se mantienen las etiquetas de la tabla ("Nombre:",
+                  "CUIT:", etc.) porque son 5 datos heterogéneos, no un
+                  conjunto obvio por posición como nombre/actividad/depto. */}
+              <div className="divide-y divide-carbon/5 sm:hidden">
+                {notificaciones.map((n) => (
+                  <div key={n.id} className="px-6 py-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-bold ${
+                          n.tipo === "sociedad" ? "bg-vino/10 text-vino" : "bg-humo text-carbon/70"
+                        }`}
+                      >
+                        {n.tipo === "sociedad"
+                          ? "Sociedad"
+                          : n.tipo === "persona"
+                            ? "Persona"
+                            : "CUIT/DNI"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => quitar(n.id)}
+                        className="shrink-0 cursor-pointer text-sm font-bold text-carbon/40 transition-colors hover:text-vino"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                    <dl className="mt-3 space-y-1.5 text-sm">
+                      <div className="flex gap-1.5">
+                        <dt className="shrink-0 font-bold text-carbon/50">Nombre:</dt>
+                        <dd className="font-bold">
+                          {n.entidadId !== null ? (
+                            <Link
+                              to={`/${n.tipo}/${n.entidadId}`}
+                              className="text-vino underline-offset-4 hover:underline"
+                            >
+                              {n.nombre ?? "(sin nombre)"}
+                            </Link>
+                          ) : (
+                            (n.nombre ?? "(sin nombre)")
+                          )}
+                          {n.entidadId === null && (
+                            <span className="ml-2 rounded-full bg-humo px-2.5 py-0.5 text-xs font-normal text-carbon/50">
+                              sin ficha en la base
+                            </span>
+                          )}
+                        </dd>
+                      </div>
+                      <div className="flex gap-1.5">
+                        <dt className="shrink-0 font-bold text-carbon/50">CUIT:</dt>
+                        <dd className="text-carbon/60">{n.cuit ? formatCuit(n.cuit) : "—"}</dd>
+                      </div>
+                      <div className="flex gap-1.5">
+                        <dt className="shrink-0 font-bold text-carbon/50">Programada:</dt>
+                        <dd className="text-carbon/60">{fecha(n.creadaEl.slice(0, 10))}</dd>
+                      </div>
+                      <div className="flex gap-1.5">
+                        <dt className="shrink-0 font-bold text-carbon/50">Aviso a:</dt>
+                        <dd className="text-carbon/60">{usuario?.mail}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                ))}
+              </div>
+
+              <div className="hidden overflow-x-auto sm:block">
+                <table className="w-full min-w-[640px] text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-carbon/10 text-xs uppercase tracking-widest text-carbon/50">
+                      <th className="px-6 py-4">Tipo</th>
+                      <th className="px-6 py-4">Nombre</th>
+                      <th className="px-6 py-4">CUIT</th>
+                      <th className="px-6 py-4">Programada</th>
+                      <th className="px-6 py-4">Aviso a</th>
+                      <th className="px-6 py-4" />
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {notificaciones.map((n) => (
+                      <tr key={n.id} className="border-b border-carbon/5 last:border-0">
+                        <td className="px-6 py-4">
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-bold ${
+                              n.tipo === "sociedad" ? "bg-vino/10 text-vino" : "bg-humo text-carbon/70"
+                            }`}
+                          >
+                            {n.tipo === "sociedad"
+                              ? "Sociedad"
+                              : n.tipo === "persona"
+                                ? "Persona"
+                                : "CUIT/DNI"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 font-bold">
+                          {n.entidadId !== null ? (
+                            <Link
+                              to={`/${n.tipo}/${n.entidadId}`}
+                              className="text-vino underline-offset-4 hover:underline"
+                            >
+                              {n.nombre ?? "(sin nombre)"}
+                            </Link>
+                          ) : (
+                            (n.nombre ?? "(sin nombre)")
+                          )}
+                          {n.entidadId === null && (
+                            <span className="ml-2 rounded-full bg-humo px-2.5 py-0.5 text-xs font-normal text-carbon/50">
+                              sin ficha en la base
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-carbon/60">
+                          {n.cuit ? formatCuit(n.cuit) : "—"}
+                        </td>
+                        <td className="px-6 py-4 text-carbon/60">
+                          {fecha(n.creadaEl.slice(0, 10))}
+                        </td>
+                        <td className="px-6 py-4 text-carbon/60">{usuario?.mail}</td>
+                        <td className="px-6 py-4 text-right">
+                          <button
+                            type="button"
+                            onClick={() => quitar(n.id)}
+                            className="cursor-pointer text-sm font-bold text-carbon/40 transition-colors hover:text-vino"
+                          >
+                            Eliminar
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </section>
       </div>

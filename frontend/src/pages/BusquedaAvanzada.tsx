@@ -271,7 +271,7 @@ function BusquedaSociedades() {
           </select>
         </div>
 
-        <div className="grid grid-cols-2 gap-5 md:col-span-2">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:col-span-2">
           <div>
             <label
               htmlFor="desde"
@@ -343,7 +343,45 @@ function BusquedaSociedades() {
                 : `${total} sociedad${total === 1 ? "" : "es"} encontrada${total === 1 ? "" : "s"}`}
             </p>
             <div className="overflow-hidden rounded-3xl bg-white">
-              <table className="w-full text-left text-sm">
+              {/* Mobile (< sm): una tarjeta por sociedad, con una fila por
+                  dato en vez de columnas — en una tabla angosta el nombre se
+                  parte en muchas líneas cortas. Desktop sigue con la tabla. */}
+              <div className="divide-y divide-carbon/5 sm:hidden">
+                {resultados.map((s) => {
+                  const principal = s.sociedadActividadesBySociedadId.nodes.find(
+                    (a) => a.orden === 1,
+                  );
+                  return (
+                    <div key={s.id} className="px-6 py-4">
+                      <Link
+                        to={`/sociedad/${s.id}`}
+                        className="font-bold text-vino underline-offset-4 hover:underline"
+                      >
+                        {s.nombre}
+                      </Link>
+                      <p className="mt-0.5 text-xs text-carbon/50">
+                        {s.tipoSociedadByTipoSociedadId?.nombre ?? ""}
+                        {s.cuit ? ` · ${formatCuit(s.cuit)}` : ""}
+                      </p>
+                      <p className="mt-2 text-sm text-carbon/80">
+                        {dato(principal?.grupoClaeByClaeGrupo?.nombre)}
+                      </p>
+                      <div className="mt-2 flex flex-wrap items-center gap-x-2 text-xs text-carbon/50">
+                        <span>
+                          {dato(
+                            s.domicilioByDomicilioId?.localidadByLocalidadId
+                              ?.departamentoByDepartamentoId?.nombre,
+                          )}
+                        </span>
+                        <span aria-hidden="true">·</span>
+                        <span>{fecha(s.fechaConstitucion)}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <table className="hidden w-full text-left text-sm sm:table">
                 <thead>
                   <tr className="border-b border-carbon/10 text-xs uppercase tracking-widest text-carbon/50">
                     <th className="px-6 py-4">Nombre</th>
@@ -570,7 +608,33 @@ function BusquedaPersonas() {
                 : `${total} persona${total === 1 ? "" : "s"} encontrada${total === 1 ? "" : "s"}`}
             </p>
             <div className="overflow-hidden rounded-3xl bg-white">
-              <table className="w-full text-left text-sm">
+              {/* Mobile (< sm): una tarjeta por persona, una fila por dato —
+                  ver el mismo criterio en BusquedaSociedades. */}
+              <div className="divide-y divide-carbon/5 sm:hidden">
+                {resultados.map((p) => (
+                  <div key={p.id} className="px-6 py-4">
+                    <Link
+                      to={`/persona/${p.id}`}
+                      className="font-bold text-vino underline-offset-4 hover:underline"
+                    >
+                      {p.nombre}
+                    </Link>
+                    <p className="mt-0.5 text-xs text-carbon/50">
+                      {p.cuit ? formatCuit(p.cuit) : p.documento ? `DNI ${p.documento}` : ""}
+                    </p>
+                    <p className="mt-2 text-sm text-carbon/80">{dato(p.profesion)}</p>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-2 text-xs text-carbon/50">
+                      <span>
+                        {dato(p.domicilioByDomicilioId?.localidadByLocalidadId?.departamentoByDepartamentoId?.nombre)}
+                      </span>
+                      <span aria-hidden="true">·</span>
+                      <span>{fecha(p.fechaNacimiento)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <table className="hidden w-full text-left text-sm sm:table">
                 <thead>
                   <tr className="border-b border-carbon/10 text-xs uppercase tracking-widest text-carbon/50">
                     <th className="px-6 py-4">Nombre</th>

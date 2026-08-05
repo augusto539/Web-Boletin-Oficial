@@ -58,7 +58,7 @@ function Hero() {
   const puedeBuscar = !modoSoloAdmin || usuario?.admin;
 
   return (
-    <section className="relative flex min-h-screen flex-col justify-center overflow-hidden bg-vino px-6 pt-24 pb-16 text-white">
+    <section className="relative flex min-h-screen flex-col justify-center bg-vino px-6 pt-24 pb-16 text-white">
       {/* <motion.img
         src="/brand/flecha-blanco.svg"
         alt=""

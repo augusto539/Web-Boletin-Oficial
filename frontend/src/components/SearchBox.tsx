@@ -158,10 +158,10 @@ export function SearchBox({
             <li key={r.id}>
               <button
                 onClick={() => elegir(r.id)}
-                className="flex w-full cursor-pointer items-baseline justify-between gap-4 px-5 py-3 text-left transition-colors hover:bg-humo"
+                className="flex w-full cursor-pointer flex-col gap-0.5 px-5 py-3 text-left transition-colors hover:bg-humo sm:flex-row sm:items-baseline sm:justify-between sm:gap-4"
               >
                 <span className="font-bold text-carbon">{r.nombre}</span>
-                <span className="shrink-0 text-xs text-carbon/50">
+                <span className="text-xs text-carbon/50 sm:shrink-0">
                   {r.tipoSociedadByTipoSociedadId?.nombre ?? ""}
                   {r.cuit ? ` · ${formatCuit(r.cuit)}` : ""}
                 </span>
