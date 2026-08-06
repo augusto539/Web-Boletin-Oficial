@@ -44,6 +44,26 @@ const NICHOS = [
     nombre: "Abogados, Contadores y Escribanos en Mendoza",
     descripcion: "Los profesionales que fabrican empresas, 2017–2026.",
   },
+  {
+    slug: "arquitectura",
+    nombre: "Arquitectura en Mendoza",
+    descripcion: "27 estudios y una profesión de asociación media, 2017–2026.",
+  },
+  {
+    slug: "cafe",
+    nombre: "Café de Especialidad en Mendoza",
+    descripcion: "Crecimiento sostenido, sin el boom ni el colapso de la cerveza artesanal, 2017–2026.",
+  },
+  {
+    slug: "cerveza",
+    nombre: "Cerveza Artesanal en Mendoza",
+    descripcion: "Un boom de tres años que no volvió a repetirse, 2017–2026.",
+  },
+  {
+    slug: "reciclaje",
+    nombre: "Reciclaje y Economía Circular en Mendoza",
+    descripcion: "De la chatarrería al \"impacto ambiental\" como marca, 2017–2026.",
+  },
 ];
 
 export default function InformesHub() {

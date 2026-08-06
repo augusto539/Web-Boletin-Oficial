@@ -9,6 +9,10 @@ import { InformeNichoCriptoFintechPDF } from "../components/pdf/InformeNichoCrip
 import { InformeNichoEnergiaRenovablePDF } from "../components/pdf/InformeNichoEnergiaRenovablePDF";
 import { InformeNichoEnoturismoPDF } from "../components/pdf/InformeNichoEnoturismoPDF";
 import { InformeMujeresFundadorasPDF } from "../components/pdf/InformeMujeresFundadorasPDF";
+import { InformeNichoArquitecturaPDF } from "../components/pdf/InformeNichoArquitecturaPDF";
+import { InformeNichoCafePDF } from "../components/pdf/InformeNichoCafePDF";
+import { InformeNichoCervezaPDF } from "../components/pdf/InformeNichoCervezaPDF";
+import { InformeNichoReciclajePDF } from "../components/pdf/InformeNichoReciclajePDF";
 import { InformeNichoServiciosProfesionalesPDF } from "../components/pdf/InformeNichoServiciosProfesionalesPDF";
 import { InformeNichoSoftwarePDF } from "../components/pdf/InformeNichoSoftwarePDF";
 import type { Anuario, DepartamentoActivo } from "./informesApi";
@@ -81,6 +85,26 @@ export async function exportarNichoSoftwarePDF() {
 export async function exportarNichoServiciosProfesionalesPDF() {
   const blob = await pdf(<InformeNichoServiciosProfesionalesPDF />).toBlob();
   descargarBlob(blob, "abogados-contadores-y-escribanos-en-mendoza.pdf");
+}
+
+export async function exportarNichoArquitecturaPDF() {
+  const blob = await pdf(<InformeNichoArquitecturaPDF />).toBlob();
+  descargarBlob(blob, "arquitectura-en-mendoza.pdf");
+}
+
+export async function exportarNichoCafePDF() {
+  const blob = await pdf(<InformeNichoCafePDF />).toBlob();
+  descargarBlob(blob, "cafe-de-especialidad-en-mendoza.pdf");
+}
+
+export async function exportarNichoCervezaPDF() {
+  const blob = await pdf(<InformeNichoCervezaPDF />).toBlob();
+  descargarBlob(blob, "cerveza-artesanal-en-mendoza.pdf");
+}
+
+export async function exportarNichoReciclajePDF() {
+  const blob = await pdf(<InformeNichoReciclajePDF />).toBlob();
+  descargarBlob(blob, "reciclaje-y-economia-circular-en-mendoza.pdf");
 }
 
 export async function exportarMujeresFundadorasPDF() {

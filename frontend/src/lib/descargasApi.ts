@@ -14,6 +14,10 @@ export type TipoDescarga =
   | "informe_nicho_cripto_fintech"
   | "informe_nicho_software"
   | "informe_nicho_servicios_profesionales"
+  | "informe_nicho_arquitectura"
+  | "informe_nicho_cafe"
+  | "informe_nicho_cerveza"
+  | "informe_nicho_reciclaje"
   | "informe_mujeres_fundadoras"
   | "informe_actividades_clae"
   | "informe_analisis_redes";

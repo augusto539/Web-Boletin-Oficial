@@ -19,6 +19,10 @@ import InformeNichoBodegasBoutique from "./pages/InformeNichoBodegasBoutique";
 import InformeNichoCannabis from "./pages/InformeNichoCannabis";
 import InformeNichoCriptoFintech from "./pages/InformeNichoCriptoFintech";
 import InformeNichoEnergiaRenovable from "./pages/InformeNichoEnergiaRenovable";
+import InformeNichoArquitectura from "./pages/InformeNichoArquitectura";
+import InformeNichoCafe from "./pages/InformeNichoCafe";
+import InformeNichoCerveza from "./pages/InformeNichoCerveza";
+import InformeNichoReciclaje from "./pages/InformeNichoReciclaje";
 import InformeNichoEnoturismo from "./pages/InformeNichoEnoturismo";
 import InformeNichoServiciosProfesionales from "./pages/InformeNichoServiciosProfesionales";
 import InformeNichoSoftware from "./pages/InformeNichoSoftware";
@@ -95,6 +99,10 @@ export default function App() {
           path="/informes/nicho-servicios-profesionales"
           element={<InformeNichoServiciosProfesionales />}
         />
+        <Route path="/informes/nicho-arquitectura" element={<InformeNichoArquitectura />} />
+        <Route path="/informes/nicho-cafe" element={<InformeNichoCafe />} />
+        <Route path="/informes/nicho-cerveza" element={<InformeNichoCerveza />} />
+        <Route path="/informes/nicho-reciclaje" element={<InformeNichoReciclaje />} />
         <Route path="/informes/mujeres-fundadoras" element={<InformeMujeresFundadoras />} />
         <Route path="/informes/actividades-clae" element={<InformeActividadesClae />} />
         <Route path="/informes/analisis-redes" element={<InformeAnalisisRedes />} />

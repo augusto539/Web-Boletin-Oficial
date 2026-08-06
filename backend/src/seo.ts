@@ -58,6 +58,36 @@ import {
   TIPO_ENTIDAD as TIPO_ENTIDAD_SERVICIOS_PROFESIONALES,
 } from "./data/nichoServiciosProfesionales.js";
 import {
+  DEPARTAMENTOS_ARQUITECTURA,
+  ECOSISTEMA_PROFESIONES,
+  type EntidadArquitectura,
+  ENTIDADES as ENTIDADES_ARQUITECTURA,
+  EVOLUCION_ANUAL as EVOLUCION_ANUAL_ARQUITECTURA,
+  TIPO_ENTIDAD as TIPO_ENTIDAD_ARQUITECTURA,
+} from "./data/nichoArquitectura.js";
+import {
+  DEPARTAMENTOS_CAFE,
+  type EntidadCafe,
+  ENTIDADES as ENTIDADES_CAFE,
+  EVOLUCION_ANUAL as EVOLUCION_ANUAL_CAFE,
+  TIPO_ENTIDAD as TIPO_ENTIDAD_CAFE,
+} from "./data/nichoCafe.js";
+import {
+  DEPARTAMENTOS_CERVEZA,
+  type EntidadCerveza,
+  ENTIDADES as ENTIDADES_CERVEZA,
+  EVOLUCION_ANUAL as EVOLUCION_ANUAL_CERVEZA,
+  TIPO_ENTIDAD as TIPO_ENTIDAD_CERVEZA,
+} from "./data/nichoCerveza.js";
+import {
+  DEPARTAMENTOS_RECICLAJE,
+  type EntidadReciclaje,
+  ENTIDADES as ENTIDADES_RECICLAJE,
+  OLEADAS as OLEADAS_RECICLAJE,
+  TIPO_ENTIDAD as TIPO_ENTIDAD_RECICLAJE,
+  TOP_CAPITALES as TOP_CAPITALES_RECICLAJE,
+} from "./data/nichoReciclaje.js";
+import {
   EVOLUCION_ANUAL as EVOLUCION_ANUAL_MUJERES,
   PANORAMA,
   TOP_MUJERES,
@@ -322,6 +352,98 @@ function entidadesServiciosProfesionalesHtml(): string {
     if (entidadesCategoria.length === 0) return "";
     return `<h3>${escapeHtml(categoria)} (${entidadesCategoria.length})</h3>${entidadesCategoria.map(entidadServiciosProfesionalesHtml).join("")}`;
   }).join("");
+}
+
+function entidadArquitecturaHtml(e: EntidadArquitectura): string {
+  const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
+  const sociosLinks = e.socios
+    .map((s) =>
+      s.sociedadId
+        ? `<a href="/sociedad/${s.sociedadId}">${escapeHtml(s.nombre)}</a>`
+        : s.personaId
+          ? `<a href="/persona/${s.personaId}">${escapeHtml(s.nombre)}</a>`
+          : escapeHtml(s.nombre),
+    )
+    .join(" · ");
+  return `
+    <h3>${escapeHtml(e.tipo)} — ${nombreLink}</h3>
+    <p>CUIT: ${e.cuit ? escapeHtml(e.cuit) : "—"} · Capital: ${e.capital ? escapeHtml(e.capital) : "—"} · Publicación: ${e.publicacion ? escapeHtml(e.publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
+    ${e.socios.length > 0 ? `<p>Socios/Integrantes: ${sociosLinks}</p>` : ""}
+    <p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>
+  `;
+}
+
+function entidadesArquitecturaHtml(): string {
+  return ENTIDADES_ARQUITECTURA.map(entidadArquitecturaHtml).join("");
+}
+
+function entidadCafeHtml(e: EntidadCafe): string {
+  const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
+  const sociosLinks = e.socios
+    .map((s) =>
+      s.sociedadId
+        ? `<a href="/sociedad/${s.sociedadId}">${escapeHtml(s.nombre)}</a>`
+        : s.personaId
+          ? `<a href="/persona/${s.personaId}">${escapeHtml(s.nombre)}</a>`
+          : escapeHtml(s.nombre),
+    )
+    .join(" · ");
+  return `
+    <h3>${escapeHtml(e.tipo)} — ${nombreLink}</h3>
+    <p>CUIT: ${e.cuit ? escapeHtml(e.cuit) : "—"} · Capital: ${e.capital ? escapeHtml(e.capital) : "—"} · Publicación: ${e.publicacion ? escapeHtml(e.publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
+    ${e.socios.length > 0 ? `<p>Socios/Integrantes: ${sociosLinks}</p>` : ""}
+    <p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>
+  `;
+}
+
+function entidadesCafeHtml(): string {
+  return ENTIDADES_CAFE.map(entidadCafeHtml).join("");
+}
+
+function entidadCervezaHtml(e: EntidadCerveza): string {
+  const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
+  const sociosLinks = e.socios
+    .map((s) =>
+      s.sociedadId
+        ? `<a href="/sociedad/${s.sociedadId}">${escapeHtml(s.nombre)}</a>`
+        : s.personaId
+          ? `<a href="/persona/${s.personaId}">${escapeHtml(s.nombre)}</a>`
+          : escapeHtml(s.nombre),
+    )
+    .join(" · ");
+  return `
+    <h3>${escapeHtml(e.tipo)} — ${nombreLink}</h3>
+    <p>CUIT: ${e.cuit ? escapeHtml(e.cuit) : "—"} · Capital: ${e.capital ? escapeHtml(e.capital) : "—"} · Publicación: ${e.publicacion ? escapeHtml(e.publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
+    ${e.socios.length > 0 ? `<p>Socios/Integrantes: ${sociosLinks}</p>` : ""}
+    <p>Objeto social: ${e.objetoSocial ? escapeHtml(e.objetoSocial) : "—"}</p>
+  `;
+}
+
+function entidadesCervezaHtml(): string {
+  return ENTIDADES_CERVEZA.map(entidadCervezaHtml).join("");
+}
+
+function entidadReciclajeHtml(e: EntidadReciclaje): string {
+  const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
+  const sociosLinks = e.socios
+    .map((s) =>
+      s.sociedadId
+        ? `<a href="/sociedad/${s.sociedadId}">${escapeHtml(s.nombre)}</a>`
+        : s.personaId
+          ? `<a href="/persona/${s.personaId}">${escapeHtml(s.nombre)}</a>`
+          : escapeHtml(s.nombre),
+    )
+    .join(" · ");
+  return `
+    <h3>${escapeHtml(e.tipo)} — ${nombreLink}</h3>
+    <p>CUIT: ${e.cuit ? escapeHtml(e.cuit) : "—"} · Capital: ${e.capital ? escapeHtml(e.capital) : "—"} · Publicación: ${e.publicacion ? escapeHtml(e.publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
+    ${e.socios.length > 0 ? `<p>Socios/Integrantes: ${sociosLinks}</p>` : ""}
+    <p>Objeto social: ${e.objetoSocial ? escapeHtml(e.objetoSocial) : "—"}</p>
+  `;
+}
+
+function entidadesReciclajeHtml(): string {
+  return ENTIDADES_RECICLAJE.map(entidadReciclajeHtml).join("");
 }
 
 function siteUrl(): string {
@@ -627,6 +749,10 @@ seoRouter.get(
         <li><a href="/informes/nicho-cripto-fintech">Cripto y Fintech en Mendoza</a></li>
         <li><a href="/informes/nicho-software">Desarrollo de Software en Mendoza</a></li>
         <li><a href="/informes/nicho-servicios-profesionales">Abogados, Contadores y Escribanos en Mendoza</a></li>
+        <li><a href="/informes/nicho-arquitectura">Arquitectura en Mendoza</a></li>
+        <li><a href="/informes/nicho-cafe">Café de Especialidad en Mendoza</a></li>
+        <li><a href="/informes/nicho-cerveza">Cerveza Artesanal en Mendoza</a></li>
+        <li><a href="/informes/nicho-reciclaje">Reciclaje y Economía Circular en Mendoza</a></li>
       </ul>
       ${anios.length > 0 ? `<h2>Anuarios</h2><ul>${anuarioLinksHtml}</ul>` : ""}
       ${fuenteDatosHtml()}
@@ -1440,6 +1566,311 @@ seoRouter.get(
   }),
 );
 
+// Informe de nicho sectorial, octavo de la serie: mismo criterio que los
+// anteriores — contenido estático duplicado a mano desde
+// frontend/src/data/nichoArquitectura.ts.
+seoRouter.get(
+  "/informes/nicho-arquitectura",
+  asyncHandler(async (_req: Request, res: Response, next) => {
+    const base = leerIndexHtml();
+    if (!base) return next();
+
+    const title = "Arquitectura en Mendoza: 27 estudios y una profesión de asociación media | INGcome";
+    const description =
+      "27 estudios de arquitectura constituidos como sociedad en Mendoza (2018–2026), sin patrón temporal y con la menor concentración en Capital de toda la serie de nichos sectoriales.";
+    const canonical = `${siteUrl()}/informes/nicho-arquitectura`;
+
+    const contentHtml = `
+    <main>
+      <h1>Arquitectura en Mendoza</h1>
+      <p>27 estudios y una profesión de asociación media</p>
+      <p>Hermano chico del informe de Servicios Profesionales: la arquitectura es otra profesión regulada por colegio propio que el nomenclador CLAE mezcla con la ingeniería en una categoría poco discriminante, y que ese informe no cubrió. 27 estudios constituidos como sociedad entre 2018 y 2026 — el nicho más chico de toda esta serie.</p>
+      <h2>Resumen ejecutivo</h2>
+      <ul>
+        <li>27 estudios de arquitectura constituidos como sociedad comercial entre 2018 y 2026 — el nicho más chico de todos los evaluados en esta ronda.</li>
+        <li>Sin patrón temporal: entre 1 y 5 constituciones por año, sin boom, sin colapso, sin meseta — un goteo constante desde 2018.</li>
+        <li>Geografía mucho menos concentrada que el resto de la serie: solo el 26% (7 de 27) está en Capital — la proporción más baja de todos los nichos evaluados.</li>
+        <li>475 personas declaran ser arquitectos/as en toda la base; 464 figuran como socios en alguna sociedad — menos que abogados (770) y contadores (952).</li>
+        <li>Capital declarado: mediana de $450.000 — más alto que Software ($100.000) o Café ($300.000).</li>
+      </ul>
+      <h2>Un goteo, no una curva</h2>
+      <table>
+        <thead><tr><th>Año</th><th>Estudios de arquitectura</th></tr></thead>
+        <tbody>${EVOLUCION_ANUAL_ARQUITECTURA.map((d) => `<tr><td>${d.etiqueta}</td><td>${d.valor}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>* 2026 es un año parcial: boletines relevados hasta julio de 2026. Con un universo de 27 no hay volumen suficiente para hablar de tendencia: la serie oscila entre 1 y 5 por año sin ningún patrón identificable, ni boom ni colapso.</p>
+      <h2>El ángulo de ecosistema</h2>
+      <table>
+        <thead><tr><th>Profesión (socios, personas únicas)</th><th>Cantidad</th></tr></thead>
+        <tbody>${ECOSISTEMA_PROFESIONES.map((p) => `<tr><td>${escapeHtml(p.etiqueta)}</td><td>${p.valor.toLocaleString("es-AR")}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>475 personas declaran una profesión que contiene "arquitect@", y 464 (98%) figuran como socias en al menos una sociedad — la profesión liberal con menos socios de las cuatro comparadas. Los arquitectos con más sociedades a su nombre no siempre están al frente de un estudio de arquitectura: el caso de mayor participación, con 7 sociedades, está vinculado a una serie de sociedades anónimas de desarrollo inmobiliario, no a ninguno de los 27 estudios de este relevamiento.</p>
+      <h2>Perfil societario</h2>
+      <table>
+        <thead><tr><th>Tipo</th><th>Cantidad</th></tr></thead>
+        <tbody>${TIPO_ENTIDAD_ARQUITECTURA.map((d) => `<tr><td>${d.tipo}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>Mediana de capital declarado: $450.000 (rango $40.000-$15.000.000).</p>
+      <h2>Dónde están</h2>
+      <table>
+        <thead><tr><th>Departamento</th><th>Cantidad</th></tr></thead>
+        <tbody>${DEPARTAMENTOS_ARQUITECTURA.map((d) => `<tr><td>${escapeHtml(d.departamento)}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>Capital reúne solo el 26% de los estudios — la proporción más baja de cualquier nicho evaluado en esta tanda. El desarrollo inmobiliario y la obra privada que sostiene a un estudio de arquitectura ocurre en todos los departamentos donde hay crecimiento urbano: General Alvear, San Carlos y Tupungato, que casi no aparecen en el resto de esta serie, tienen acá su propio estudio.</p>
+      ${ENTIDADES_ARQUITECTURA.length > 0 ? `<h2>Directorio completo: los 27 estudios</h2>${entidadesArquitecturaHtml()}` : ""}
+      <h2>Metodología y límites</h2>
+      <p>Búsqueda solo por nombre ("arquitect%"), a diferencia de casi todos los demás nichos de esta serie — el objeto social es una frase de boilerplate demasiado común en constructoras e inmobiliarias sin relación con un estudio real. Las 27 candidatas por nombre no tuvieron que depurarse. El ángulo de ecosistema usa el campo profesión autodeclarado de personas_fisicas, sin verificación contra la matrícula del Colegio de Arquitectos de Mendoza. Universo chico: cualquier lectura de tendencia temporal o geográfica debe tomarse como orientativa. Las constituciones se cuentan por fecha de publicación del acto en el Boletín, no por fecha de constitución declarada.</p>
+      ${fuenteDatosHtml()}
+    </main>
+  `.trim();
+
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      name: title,
+      description,
+      url: canonical,
+      creator: { "@type": "Organization", name: "INGcome" },
+      temporalCoverage: "2017/2026",
+      dateModified: "2026-08-05",
+    };
+
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.send(renderHtml(base, { title, description, canonical, noindex: false, jsonLd, contentHtml }));
+  }),
+);
+
+// Informe de nicho sectorial, noveno de la serie: mismo criterio que los
+// anteriores — contenido estático duplicado a mano desde
+// frontend/src/data/nichoCafe.ts.
+seoRouter.get(
+  "/informes/nicho-cafe",
+  asyncHandler(async (_req: Request, res: Response, next) => {
+    const base = leerIndexHtml();
+    if (!base) return next();
+
+    const title =
+      "Café de especialidad en Mendoza: crecimiento sostenido, sin el boom ni el colapso de la cerveza artesanal | INGcome";
+    const description =
+      "42 sociedades cafeteras en Mendoza (2017–2026): crecimiento parejo desde 2017, sin boom ni colapso. Norbu S.A.S., único caso de integración vertical real, y un grupo familiar de tres cafeterías en San Rafael.";
+    const canonical = `${siteUrl()}/informes/nicho-cafe`;
+
+    const contentHtml = `
+    <main>
+      <h1>Café de especialidad en Mendoza</h1>
+      <p>Crecimiento sostenido, sin el boom ni el colapso de la cerveza artesanal</p>
+      <p>42 sociedades cafeteras se constituyeron en Mendoza entre 2017 y 2026, casi todas nombradas explícitamente con "café" o "coffee" — a diferencia de otros nichos de esta serie, acá el propio nombre comercial es el filtro más confiable.</p>
+      <h2>Resumen ejecutivo</h2>
+      <ul>
+        <li>42 sociedades cafeteras identificadas entre 2017 y 2026, casi todas nombradas explícitamente con "café" o "coffee".</li>
+        <li>Crecimiento sostenido, sin boom ni colapso: de 2 sociedades en 2017 sube de forma pareja hasta un pico de 7 en 2022, y se mantiene estable en 5-6 por año hasta 2025 — el patrón opuesto al de la cerveza artesanal, que colapsó después de 2020.</li>
+        <li>Norbu S.A.S. (2024) es el único caso de "especialidad" en sentido estricto: importa granos de café verde, tuesta y fabrica sus propias máquinas tostadoras, con $10.000.000 de capital declarado, el más alto del nicho por lejos.</li>
+        <li>Un pequeño grupo familiar (Guillén) participa, en distintas combinaciones, de tres cafeterías en San Rafael entre 2021 y 2026.</li>
+        <li>Capital y San Rafael concentran a partes iguales una porción relevante del nicho (11 y 5 de 42).</li>
+      </ul>
+      <h2>Una curva sin sobresaltos</h2>
+      <table>
+        <thead><tr><th>Año</th><th>Cafeterías constituidas</th></tr></thead>
+        <tbody>${EVOLUCION_ANUAL_CAFE.map((d) => `<tr><td>${d.etiqueta}</td><td>${d.valor}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>* 2026 es parcial. La cerveza artesanal tuvo un boom concentrado en 2017-2019 y un colapso casi total después de 2020. El café de especialidad, en cambio, crece de forma pareja y sostenida, sin un año de despegue evidente ni una caída posterior.</p>
+      <h2>El único caso de especialidad en sentido estricto</h2>
+      <p>Norbu S.A.S. (03/07/2024): "Compraventas, importación y exportación de granos de café verde, procesos de tostado, torrado y molienda de café. Fabricación de maquinarias tostadoras." Capital declarado: $10.000.000 — más del doble del segundo capital más alto del nicho ($5.000.000, Un Café Copado Mza S.A.S., 2025). Ningún otro caso del nicho declara importación de grano verde ni fabricación de maquinaria propia.</p>
+      <h2>Un pequeño grupo familiar</h2>
+      <table>
+        <thead><tr><th>Personas</th><th>Sociedades</th><th>Departamento</th><th>Años</th></tr></thead>
+        <tbody>
+          <tr><td>Lilia Laura Guillén</td><td>My Coffee S.A.S. → Grupo Café Del Mundo S.A.S.</td><td>San Rafael</td><td>2021 → 2023</td></tr>
+          <tr><td>Marcos David Guillén</td><td>Grupo Café Del Mundo S.A.S. → Café Del Mundo Alvear S.A.S.</td><td>San Rafael</td><td>2023 → 2026</td></tr>
+          <tr><td>Mateo Samuel Guillén</td><td>Café Del Mundo Alvear S.A.S.</td><td>San Rafael</td><td>2026</td></tr>
+        </tbody>
+      </table>
+      <p>Familia sanrafaelina construyendo, en tres años, una cadena chica de tres cafeterías bajo el nombre "Café Del Mundo". Otros dos pares de fundadores repetidos: María Mercedes Rossi (Cafe 2020 S.R.L., 2020, y Cafe Rossi Tostadores S.A.S., 2022) y Lucas Germán Laborde (Café Lyn S.A.S. y El Club Del Café S.A., ambas 2022).</p>
+      <h2>Perfil societario</h2>
+      <table>
+        <thead><tr><th>Tipo</th><th>Cantidad</th></tr></thead>
+        <tbody>${TIPO_ENTIDAD_CAFE.map((d) => `<tr><td>${d.tipo}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>La S.A.S. domina con más fuerza que en el resto de la serie (81%). Capital declarado: mediana de $300.000, rango de $50.000 a $10.000.000.</p>
+      <h2>Dónde están</h2>
+      <table>
+        <thead><tr><th>Departamento</th><th>Cafeterías</th></tr></thead>
+        <tbody>${DEPARTAMENTOS_CAFE.map((d) => `<tr><td>${escapeHtml(d.departamento)}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>San Rafael, con 5 cafeterías (12% del nicho), es un polo llamativo para un departamento fuera del Gran Mendoza — explicado en buena parte por el grupo familiar Guillén.</p>
+      <h2>Un caso de duplicado detectado</h2>
+      <p>Cafeteria Tina S.A.S. aparece dos veces en la base con fechas de publicación separadas por solo 8 días, el mismo socio, el mismo capital y un objeto social casi idéntico. Es, con alta probabilidad, la misma constitución societaria publicada dos veces en el Boletín. Se cuenta una sola vez en todos los números de este informe (42 sociedades, no 43).</p>
+      ${ENTIDADES_CAFE.length > 0 ? `<h2>Directorio completo: las 42 cafeterías y tostadurías</h2>${entidadesCafeHtml()}` : ""}
+      <h2>Metodología y límites</h2>
+      <p>Búsqueda por nombre ("café", "coffee", "tostad%", "barista", "roaster") — 41 de las 43 candidatas tienen "café" o "coffee" literalmente en su razón social. Solo 2 (Mondovi S.A. y Norbu S.A.S.) se incluyeron exclusivamente por objeto social. Cobertura ARCA: 20 de 42 (47,6%). Las constituciones se cuentan por fecha de publicación del acto en el Boletín, no por fecha de constitución declarada.</p>
+      ${fuenteDatosHtml()}
+    </main>
+  `.trim();
+
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      name: title,
+      description,
+      url: canonical,
+      creator: { "@type": "Organization", name: "INGcome" },
+      temporalCoverage: "2017/2026",
+      dateModified: "2026-08-05",
+    };
+
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.send(renderHtml(base, { title, description, canonical, noindex: false, jsonLd, contentHtml }));
+  }),
+);
+
+// Informe de nicho sectorial, décimo de la serie: mismo criterio que los
+// anteriores — contenido estático duplicado a mano desde
+// frontend/src/data/nichoCerveza.ts.
+seoRouter.get(
+  "/informes/nicho-cerveza",
+  asyncHandler(async (_req: Request, res: Response, next) => {
+    const base = leerIndexHtml();
+    if (!base) return next();
+
+    const title = "Cerveza artesanal en Mendoza: un boom de tres años que no volvió a repetirse | INGcome";
+    const description =
+      "36 sociedades cerveceras en Mendoza (2017–2026): el 72% se constituyó en apenas tres años (2017-2019) y la curva colapsó después de 2020. Perfil societario, geografía y clúster de cofundadores repetidos.";
+    const canonical = `${siteUrl()}/informes/nicho-cerveza`;
+
+    const contentHtml = `
+    <main>
+      <h1>Cerveza artesanal en Mendoza</h1>
+      <p>Un boom de tres años que no volvió a repetirse</p>
+      <p>36 sociedades cerveceras se constituyeron en Mendoza entre 2017 y 2026: productoras artesanales, cervecerías-bar con elaboración propia y una cámara gremial del sector. El 72% se concentró en apenas tres años.</p>
+      <h2>Resumen ejecutivo</h2>
+      <ul>
+        <li>36 sociedades cerveceras identificadas entre 2017 y 2026: productoras artesanales, cervecerías-bar con elaboración propia y una cámara gremial del sector.</li>
+        <li>El sector nació de golpe y se apagó rápido: 26 de las 36 (72%) se constituyeron en apenas tres años, 2017-2019. Desde 2020 la curva colapsa, y ninguna desde 2023.</li>
+        <li>La forma societaria dominante es la S.A.S. (22 de 36, 61%), pero con una proporción de S.A. inusualmente alta (6 de 36, 17%).</li>
+        <li>Geografía: Capital (9) y Godoy Cruz (8) concentran casi la mitad de las cerveceras.</li>
+        <li>La Asociación Cámara Mendocina de Cervecerías Artesanales se constituyó en 2018, año pico del boom.</li>
+        <li>Cuatro socios fundaron Rodder S.A.S. y Leven Anclas S.A.S. con apenas tres semanas de diferencia (noviembre-diciembre de 2018).</li>
+      </ul>
+      <h2>El boom de 2017-2019, y lo que vino después</h2>
+      <table>
+        <thead><tr><th>Año</th><th>Cerveceras constituidas</th></tr></thead>
+        <tbody>${EVOLUCION_ANUAL_CERVEZA.map((d) => `<tr><td>${d.etiqueta}</td><td>${d.valor}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>El patrón es opuesto al de casi todos los nichos de esta serie. El pico es 2018 (11 sociedades) y la caída es abrupta: 2020 marca el quiebre, coincidiendo con las restricciones a la gastronomía durante la pandemia. La caída no se recupera después: solo 5 cerveceras más se registraron entre 2021 y 2026, y ninguna desde 2023.</p>
+      <h2>Perfil societario</h2>
+      <table>
+        <thead><tr><th>Tipo</th><th>Cantidad</th></tr></thead>
+        <tbody>${TIPO_ENTIDAD_CERVEZA.map((d) => `<tr><td>${d.tipo}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>El 17% de Sociedades Anónimas es alto para un nicho de emprendimientos chicos. Capital declarado: mediana de $120.000, rango de $20.000 a $2.074.600 (Kühlen Beer S.A.S., 2019).</p>
+      <h2>Dónde están</h2>
+      <table>
+        <thead><tr><th>Departamento</th><th>Cerveceras</th></tr></thead>
+        <tbody>${DEPARTAMENTOS_CERVEZA.map((d) => `<tr><td>${escapeHtml(d.departamento)}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>Capital y Godoy Cruz juntos concentran el 47% del sector — el corredor gastronómico y de vida nocturna del Gran Mendoza, no las zonas rurales donde se cultiva el lúpulo o la cebada.</p>
+      <h2>Un pequeño clúster de cofundadores repetidos</h2>
+      <p>Cruzando los socios de las 36 cerveceras aparecen ocho personas que participan en más de una. El caso más llamativo: los cuatro socios de Leven Anclas S.A.S. (20/12/2018) son los mismos cuatro de Rodder S.A.S. (29/11/2018) — veintiún días antes.</p>
+      <h2>La cámara gremial</h2>
+      <p>La Asociación Cámara Mendocina de Cervecerías Artesanales se constituyó en 2018, en pleno pico del boom (11 cerveceras ese año).</p>
+      ${ENTIDADES_CERVEZA.length > 0 ? `<h2>Directorio completo: las 36 cervecerías</h2>${entidadesCervezaHtml()}` : ""}
+      <h2>Metodología y límites</h2>
+      <p>Búsqueda por "cerveza", "cervecer[íi]a", "l[uú]pulo", "malter[íi]a", "brewing", "brewery" en nombre y objeto social — 90 sociedades candidatas. Clasificación manual: 54 de las 90 quedaron afuera por objeto social genérico sin que la cerveza fuera el eje del negocio. Cobertura ARCA: 14 de 36 (39%). Las constituciones se cuentan por fecha de publicación del acto en el Boletín, no por fecha de constitución declarada.</p>
+      ${fuenteDatosHtml()}
+    </main>
+  `.trim();
+
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      name: title,
+      description,
+      url: canonical,
+      creator: { "@type": "Organization", name: "INGcome" },
+      temporalCoverage: "2017/2026",
+      dateModified: "2026-08-06",
+    };
+
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.send(renderHtml(base, { title, description, canonical, noindex: false, jsonLd, contentHtml }));
+  }),
+);
+
+// Informe de nicho sectorial, undécimo de la serie: mismo criterio que los
+// anteriores — contenido estático duplicado a mano desde
+// frontend/src/data/nichoReciclaje.ts.
+seoRouter.get(
+  "/informes/nicho-reciclaje",
+  asyncHandler(async (_req: Request, res: Response, next) => {
+    const base = leerIndexHtml();
+    if (!base) return next();
+
+    const title =
+      "Reciclaje y economía circular en Mendoza: de la chatarrería al \"impacto ambiental\" como marca | INGcome";
+    const description =
+      "41 sociedades de reciclaje y economía circular en Mendoza (2018–2026): tres oleadas sucesivas por tipo de material — plásticos, metales/chatarra, y consultoras ambientales con capitales sensiblemente más altos.";
+    const canonical = `${siteUrl()}/informes/nicho-reciclaje`;
+
+    const contentHtml = `
+    <main>
+      <h1>Reciclaje y economía circular en Mendoza</h1>
+      <p>De la chatarrería al "impacto ambiental" como marca</p>
+      <p>41 sociedades se constituyeron en Mendoza entre 2018 y 2026 con la gestión, comercialización o reciclado de residuos como actividad central. No hay una única curva: tres oleadas sucesivas, por tipo de material y de negocio.</p>
+      <h2>Resumen ejecutivo</h2>
+      <ul>
+        <li>41 sociedades identificadas entre 2018 y 2026: recicladoras de metales y plásticos, gestión de residuos peligrosos y urbanos, y consultoras ambientales.</li>
+        <li>No hay una única curva sino tres oleadas sucesivas: recicladoras de plástico concentradas en 2018-2020, recicladoras de metales/chatarra en 2021-2023, y consultoras ambientales/economía circular desde 2023.</li>
+        <li>La capitalización sube fuerte en la capa más nueva: mediana general $440.000, pero Trigenus S.A. ($4.500.000, 2023), Palcriva Estrategias Integrales ($3.000.000, 2025) y Transformación Estratégica Circular S.A. ($60.000.000, 2024) son los tres capitales más altos del nicho.</li>
+        <li>Capital y Guaymallén concentran el 51% de las sociedades (21 de 41).</li>
+        <li>Aparece una cooperativa (Economía Popular Y Circular Ltda., 2023) y una Unión Transitoria entre dos empresas para construir tres centros ambientales municipales en Tupungato, San Carlos y Tunuyán (2021).</li>
+      </ul>
+      <h2>Tres oleadas, no una curva</h2>
+      <table>
+        <thead><tr><th>Período</th><th>Plásticos</th><th>Chatarra/Metales</th><th>Ambiental/consultoría/otros</th></tr></thead>
+        <tbody>${OLEADAS_RECICLAJE.map((o) => `<tr><td>${o.periodo}</td><td>${o.plasticos}</td><td>${o.metales}</td><td>${o.ambiental}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>A diferencia de la mayoría de los nichos de esta serie, acá no hay un solo quiebre o boom identificable, sino un relevo entre subrubros: plástico primero, metales/chatarra después, y desde 2023 la categoría más numerosa pasa a ser la de consultoras y gestoras ambientales bajo la bandera de "economía circular" o "triple impacto".</p>
+      <h2>La profesionalización se nota en el capital declarado</h2>
+      <table>
+        <thead><tr><th>Sociedad</th><th>Capital declarado</th></tr></thead>
+        <tbody>${TOP_CAPITALES_RECICLAJE.map((c) => `<tr><td>${escapeHtml(c.etiqueta)}</td><td>$${c.valor.toLocaleString("es-AR")}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>Mediana del nicho completo: $440.000 (rango $30.000-$60.000.000). Las tres consultoras/estrategas ambientales de 2023-2026 están entre los cinco capitales más altos del nicho — llamativo para un rubro que en su primera oleada (2018-2020) tenía capitales típicos de $50.000 a $300.000.</p>
+      <h2>Perfil societario</h2>
+      <table>
+        <thead><tr><th>Tipo</th><th>Cantidad</th></tr></thead>
+        <tbody>${TIPO_ENTIDAD_RECICLAJE.map((d) => `<tr><td>${d.tipo}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>La S.A.S. domina, pero el 24% de S.A. es alto para un nicho de este tamaño — probablemente por la escala de capital de trabajo que requiere el acopio y comercio de materiales.</p>
+      <h2>Dónde están</h2>
+      <table>
+        <thead><tr><th>Departamento</th><th>Sociedades</th></tr></thead>
+        <tbody>${DEPARTAMENTOS_RECICLAJE.map((d) => `<tr><td>${escapeHtml(d.departamento)}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>Capital y Guaymallén concentran más de la mitad del nicho — el corredor urbano del Gran Mendoza, donde se genera la mayor parte de los residuos a gestionar.</p>
+      ${ENTIDADES_RECICLAJE.length > 0 ? `<h2>Directorio completo: las 41 empresas de reciclaje</h2>${entidadesReciclajeHtml()}` : ""}
+      <h2>Metodología y límites</h2>
+      <p>Búsqueda por "recicl%", "circular", "residuo%", "chatarr%", "compost%", "scrap" en nombre y objeto social — 81 sociedades candidatas. Clasificación manual: 40 de las 81 quedaron afuera por objeto social catálogo sin que el reciclaje/residuos fuera el eje del negocio. Las constituciones se cuentan por fecha de publicación del acto en el Boletín, no por fecha de constitución declarada.</p>
+      ${fuenteDatosHtml()}
+    </main>
+  `.trim();
+
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      name: title,
+      description,
+      url: canonical,
+      creator: { "@type": "Organization", name: "INGcome" },
+      temporalCoverage: "2017/2026",
+      dateModified: "2026-08-06",
+    };
+
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.send(renderHtml(base, { title, description, canonical, noindex: false, jsonLd, contentHtml }));
+  }),
+);
+
 // Informe de corte transversal (no es un nicho sectorial, ver nota en
 // frontend/src/data/mujeresFundadoras.ts): mismo criterio de duplicado a
 // mano que el resto de /informes. Sin ENTIDADES: no hay sociedades/personas
@@ -1812,6 +2243,10 @@ seoRouter.get(
       `  <url><loc>${siteUrl()}/informes/nicho-cripto-fintech</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/nicho-software</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/nicho-servicios-profesionales</loc><lastmod>${hoy}</lastmod></url>`,
+      `  <url><loc>${siteUrl()}/informes/nicho-arquitectura</loc><lastmod>${hoy}</lastmod></url>`,
+      `  <url><loc>${siteUrl()}/informes/nicho-cafe</loc><lastmod>${hoy}</lastmod></url>`,
+      `  <url><loc>${siteUrl()}/informes/nicho-cerveza</loc><lastmod>${hoy}</lastmod></url>`,
+      `  <url><loc>${siteUrl()}/informes/nicho-reciclaje</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/mujeres-fundadoras</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/actividades-clae</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/analisis-redes</loc><lastmod>${hoy}</lastmod></url>`,
