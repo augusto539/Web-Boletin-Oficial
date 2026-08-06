@@ -6,6 +6,7 @@ import {
   alternarAdminUsuario,
   alternarOcultaPersona,
   alternarOcultaSociedad,
+  enviarMailPersonalizadoAdmin,
   obtenerConfiguracionAdmin,
   obtenerEstadisticasAdmin,
   obtenerGastoAnthropicAdmin,
@@ -29,12 +30,13 @@ import { cuit as formatCuit, dato, fecha } from "../lib/format";
 const fmtUSD = (n: number | null | undefined) =>
   n == null || Number.isNaN(n) ? "…" : `US$ ${n.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-type Pestana = "estadisticas" | "configuracion" | "datos";
+type Pestana = "estadisticas" | "configuracion" | "datos" | "email";
 
 const PESTANAS: { id: Pestana; etiqueta: string }[] = [
   { id: "estadisticas", etiqueta: "Estadísticas de la página" },
   { id: "configuracion", etiqueta: "Configuración" },
   { id: "datos", etiqueta: "Datos" },
+  { id: "email", etiqueta: "E-mail" },
 ];
 
 export default function Admin() {
@@ -78,6 +80,7 @@ export default function Admin() {
         {pestana === "estadisticas" && <TabEstadisticas />}
         {pestana === "configuracion" && <TabConfiguracion />}
         {pestana === "datos" && <TabDatos />}
+        {pestana === "email" && <TabEmail />}
       </div>
     </main>
   );
@@ -288,6 +291,103 @@ function TabConfiguracion() {
             {recalculando ? "Recalculando…" : "Recalcular ahora"}
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// Mail suelto a mano, sin ligar a ningún flujo automático de la app -- sale
+// siempre desde privacidad@ingcome.com.ar (ver enviarMailPersonalizado en
+// backend/src/mail.ts), con el cuerpo tipeado acá insertado dentro del
+// mismo layout de marca (header vino + "INGcome") que usan el resto de los
+// mails transaccionales.
+function TabEmail() {
+  const [destinatario, setDestinatario] = useState("");
+  const [asunto, setAsunto] = useState("");
+  const [cuerpo, setCuerpo] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [resultado, setResultado] = useState<{ ok: boolean; texto: string } | null>(null);
+
+  const formularioValido = destinatario.trim() && asunto.trim() && cuerpo.trim();
+
+  function alEnviar(e: React.FormEvent) {
+    e.preventDefault();
+    if (!formularioValido || enviando) return;
+    setEnviando(true);
+    setResultado(null);
+    enviarMailPersonalizadoAdmin(destinatario.trim(), asunto.trim(), cuerpo)
+      .then(() => {
+        setResultado({ ok: true, texto: `Mail enviado a ${destinatario.trim()}.` });
+        setDestinatario("");
+        setAsunto("");
+        setCuerpo("");
+      })
+      .catch(() => setResultado({ ok: false, texto: "Hubo un error, probá de nuevo." }))
+      .finally(() => setEnviando(false));
+  }
+
+  return (
+    <div className="mt-6 max-w-2xl">
+      <div className="rounded-3xl bg-white p-7">
+        <p className="font-bold">Enviar mail</p>
+        <p className="mt-1.5 text-sm text-carbon/60">
+          Sale desde <span className="font-bold">privacidad@ingcome.com.ar</span>, con el cuerpo
+          insertado dentro del layout de marca de INGcome.
+        </p>
+        <form onSubmit={alEnviar} className="mt-5 space-y-4">
+          <div>
+            <label htmlFor="mail-destinatario" className="text-xs font-bold uppercase tracking-widest text-carbon/50">
+              Destinatario
+            </label>
+            <input
+              id="mail-destinatario"
+              type="email"
+              required
+              value={destinatario}
+              onChange={(e) => setDestinatario(e.target.value)}
+              placeholder="persona@ejemplo.com"
+              className="mt-1.5 w-full rounded-lg border border-carbon/15 px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label htmlFor="mail-asunto" className="text-xs font-bold uppercase tracking-widest text-carbon/50">
+              Asunto
+            </label>
+            <input
+              id="mail-asunto"
+              type="text"
+              required
+              value={asunto}
+              onChange={(e) => setAsunto(e.target.value)}
+              className="mt-1.5 w-full rounded-lg border border-carbon/15 px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label htmlFor="mail-cuerpo" className="text-xs font-bold uppercase tracking-widest text-carbon/50">
+              Cuerpo del mail
+            </label>
+            <textarea
+              id="mail-cuerpo"
+              required
+              rows={10}
+              value={cuerpo}
+              onChange={(e) => setCuerpo(e.target.value)}
+              className="mt-1.5 w-full rounded-lg border border-carbon/15 px-3 py-2 text-sm"
+            />
+          </div>
+          {resultado && (
+            <p className={`text-sm font-bold ${resultado.ok ? "text-vino" : "text-red-600"}`}>
+              {resultado.texto}
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={!formularioValido || enviando}
+            className="cursor-pointer rounded-full bg-vino px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-vino-oscuro disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {enviando ? "Enviando…" : "Enviar"}
+          </button>
+        </form>
       </div>
     </div>
   );

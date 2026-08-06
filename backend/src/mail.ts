@@ -196,6 +196,37 @@ export async function enviarNotificacionActualizaciones(
   }
 }
 
+// Mail ad-hoc enviado a mano desde el panel de admin (tab "E-mail"), no
+// ligado a ningún flujo automático. A diferencia del resto del archivo, sí
+// devuelve el resultado en vez de tragarse el error: acá el admin está
+// esperando una confirmación en el momento, no tiene sentido que la UI diga
+// "enviado" si Resend lo rechazó. Remitente fijo (no mailFrom()): este envío
+// puntual usa la casilla de privacidad, no la de no-responder del resto de
+// la app.
+export async function enviarMailPersonalizado(
+  destinatario: string,
+  asunto: string,
+  cuerpo: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const cuerpoHtml = esc(cuerpo).replace(/\n/g, "<br>");
+  const html = layout(`
+    <p style="margin:0;line-height:1.6;color:#5a5f63;">${cuerpoHtml}</p>
+  `);
+  try {
+    const { error } = await resend().emails.send({
+      from: "INGcome <privacidad@ingcome.com.ar>",
+      to: destinatario,
+      subject: asunto,
+      html,
+    });
+    if (error) throw error;
+    return { ok: true };
+  } catch (err) {
+    console.error("Error enviando mail personalizado desde admin:", err);
+    return { ok: false, error: err instanceof Error ? err.message : "Error desconocido" };
+  }
+}
+
 // Tampoco lanza, a propósito: el endpoint que la llama responde el mismo
 // mensaje genérico exista o no la cuenta / haya fallado o no el envío, para
 // no filtrar qué mails están registrados.

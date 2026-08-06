@@ -237,3 +237,11 @@ export function vincularSocioJuridico(
 ): Promise<{ sociedadId: string; nombre: string }> {
   return post("/api/admin/socios-juridicos/vincular", { nombre, cuit, vinculoIds });
 }
+
+export function enviarMailPersonalizadoAdmin(
+  destinatario: string,
+  asunto: string,
+  cuerpo: string,
+): Promise<{ ok: boolean }> {
+  return post("/api/admin/mail/enviar", { destinatario, asunto, cuerpo });
+}

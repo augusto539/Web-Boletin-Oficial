@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apollo } from "../apollo";
 import { trackEvent } from "../lib/analytics";
+import { useAuth } from "../lib/auth";
 import { useAccionConSesion } from "../lib/useAccionConSesion";
 import { ModalRegistro } from "./auth/ModalRegistro";
 import { DescargarIcon } from "./DescargarIcon";
@@ -23,6 +24,11 @@ const COLORES: Record<string, string> = {
 const GRIS_SIN_ACTOS = "#c9c9c9";
 
 const FACTOR_ZOOM = 1.2;
+// Tope de expansiones (individuales + "expandir todo") por sesión de
+// exploración para usuarios no admin -- cada expansión dispara una o más
+// queries GraphQL nuevas, así que sin límite un usuario anónimo podría
+// recorrer buena parte del grafo completo desde una sola sociedad.
+const LIMITE_EXPANSIONES = 3;
 
 export type TipoNodo = "sociedad" | "persona";
 
@@ -123,6 +129,12 @@ export function GrafoExploracion({
   // la referencia de nodos/aristas siempre está expandida, sin este estado.
   const [leyendaAbierta, setLeyendaAbierta] = useState(false);
   const { modalAbierto, ejecutar, alExito, cerrar } = useAccionConSesion();
+  const { usuario } = useAuth();
+  // Cuenta expansiones exitosas (individuales + "expandir todo") sin bajar
+  // al retraer -- si bajara, alcanzaría con expandir y retraer para esquivar
+  // el límite sin perder las queries ya gastadas del lado del servidor.
+  const [expansionesUsadas, setExpansionesUsadas] = useState(0);
+  const limiteExpansionesAlcanzado = !usuario?.admin && expansionesUsadas >= LIMITE_EXPANSIONES;
 
   function mostrarMensaje(texto: string) {
     setMensaje(texto);
@@ -180,6 +192,10 @@ export function GrafoExploracion({
   async function expandirTodos() {
     const cy = cyRef.current;
     if (!cy || expandiendo || cargando) return;
+    if (limiteExpansionesAlcanzado) {
+      mostrarMensaje(`Alcanzaste el límite de ${LIMITE_EXPANSIONES} expansiones para esta vista.`);
+      return;
+    }
     const pendientes = cy
       .nodes()
       .filter((n) => (n.data("tipo") === "sociedad" || n.data("tipo") === "persona") && !expandidosRef.current.has(n.id()))
@@ -259,6 +275,7 @@ export function GrafoExploracion({
           nodeRepulsion: 200048,
           randomize: false,
         }).run();
+        setExpansionesUsadas((n) => n + 1);
       } else {
         mostrarMensaje("Sin vínculos nuevos para mostrar.");
       }
@@ -574,6 +591,11 @@ export function GrafoExploracion({
 
   async function expandirNodo() {
     if (!menu || menu.yaExpandido || expandiendo) return;
+    if (limiteExpansionesAlcanzado) {
+      mostrarMensaje(`Alcanzaste el límite de ${LIMITE_EXPANSIONES} expansiones para esta vista.`);
+      setMenu(null);
+      return;
+    }
     const cy = cyRef.current;
     if (!cy) return;
     const { tipo, id, clave } = menu;
@@ -600,6 +622,7 @@ export function GrafoExploracion({
         }).run();
         viejos.unlock();
         actualizarConteo(cy);
+        setExpansionesUsadas((n) => n + 1);
       } else {
         mostrarMensaje("Sin vínculos nuevos para mostrar acá.");
       }
@@ -622,12 +645,11 @@ export function GrafoExploracion({
   }
 
   function textoConteo(): string {
-    // historialRef.current.length: un snapshot por cada expandirTodos() sin
-    // retraer todavía (ver guardarSnapshot/retraerUnPaso) -- ya dispara
-    // re-render en esos dos puntos vía setPuedeRetraer, así que leerlo acá
-    // en cada render no necesita estado propio.
-    const expansiones = historialRef.current.length;
-    return `${conteo.sociedades} sociedad${conteo.sociedades === 1 ? "" : "es"} · ${conteo.personas} persona${conteo.personas === 1 ? "" : "s"} en pantalla · ${expansiones} expansi${expansiones === 1 ? "ón" : "ones"}`;
+    const base = `${conteo.sociedades} sociedad${conteo.sociedades === 1 ? "" : "es"} · ${conteo.personas} persona${conteo.personas === 1 ? "" : "s"} en pantalla`;
+    if (usuario?.admin) {
+      return `${base} · ${expansionesUsadas} expansi${expansionesUsadas === 1 ? "ón" : "ones"}`;
+    }
+    return `${base} · ${expansionesUsadas}/${LIMITE_EXPANSIONES} expansiones`;
   }
 
   function dibujarRectRedondeado(
@@ -818,8 +840,12 @@ export function GrafoExploracion({
             <button
               type="button"
               onClick={expandirTodos}
-              disabled={expandiendo || cargando}
-              title="Expandir todos los nodos visibles un nivel"
+              disabled={expandiendo || cargando || limiteExpansionesAlcanzado}
+              title={
+                limiteExpansionesAlcanzado
+                  ? `Alcanzaste el límite de ${LIMITE_EXPANSIONES} expansiones para esta vista`
+                  : "Expandir todos los nodos visibles un nivel"
+              }
               className="cursor-pointer px-4 py-2.5 text-sm font-bold text-carbon transition-colors hover:bg-humo disabled:cursor-not-allowed disabled:text-carbon/30 disabled:hover:bg-transparent"
             >
               ▲ Expandir todo
@@ -890,10 +916,14 @@ export function GrafoExploracion({
           <button
             type="button"
             onClick={expandirNodo}
-            disabled={menu.yaExpandido || expandiendo}
+            disabled={menu.yaExpandido || expandiendo || limiteExpansionesAlcanzado}
             className="block w-full cursor-pointer border-t border-carbon/10 px-5 py-3 text-left text-sm font-bold text-carbon transition-colors hover:bg-humo disabled:cursor-not-allowed disabled:text-carbon/30 disabled:hover:bg-transparent"
           >
-            {menu.yaExpandido ? "Ya expandido" : "Expandir grafo"}
+            {menu.yaExpandido
+              ? "Ya expandido"
+              : limiteExpansionesAlcanzado
+                ? `Límite de ${LIMITE_EXPANSIONES} expansiones alcanzado`
+                : "Expandir grafo"}
           </button>
         </div>
       )}

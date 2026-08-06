@@ -2,6 +2,7 @@ import { type Request, type Response, Router } from "express";
 import { asyncHandler } from "./asyncHandler.js";
 import { pool } from "./auth.js";
 import { recalcularInformes } from "./informes.js";
+import { enviarMailPersonalizado } from "./mail.js";
 import { procesarNotificaciones } from "./notificaciones.js";
 
 // Todas las rutas de acá abajo ya pasaron por requireAdmin() (ver server.ts),
@@ -629,5 +630,35 @@ adminRouter.post(
     );
 
     return res.json({ sociedadId, nombre });
+  }),
+);
+
+const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Mail suelto disparado a mano desde el tab "E-mail" del panel de admin —
+// no ligado a ningún flujo automático, siempre sale desde
+// privacidad@ingcome.com.ar (ver enviarMailPersonalizado en mail.ts).
+adminRouter.post(
+  "/mail/enviar",
+  asyncHandler(async (req: Request, res: Response) => {
+    const destinatario = req.body?.destinatario;
+    const asunto = req.body?.asunto;
+    const cuerpo = req.body?.cuerpo;
+
+    if (typeof destinatario !== "string" || !REGEX_EMAIL.test(destinatario.trim())) {
+      return res.status(400).json({ error: "Destinatario inválido." });
+    }
+    if (typeof asunto !== "string" || !asunto.trim()) {
+      return res.status(400).json({ error: "Falta el asunto." });
+    }
+    if (typeof cuerpo !== "string" || !cuerpo.trim()) {
+      return res.status(400).json({ error: "Falta el cuerpo del mail." });
+    }
+
+    const resultado = await enviarMailPersonalizado(destinatario.trim(), asunto.trim(), cuerpo);
+    if (!resultado.ok) {
+      return res.status(502).json({ error: resultado.error ?? "Resend rechazó el envío." });
+    }
+    return res.json({ ok: true });
   }),
 );
