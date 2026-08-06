@@ -29,8 +29,8 @@ function layout(contenidoHtml: string): string {
         <td align="center">
           <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:24px;overflow:hidden;">
             <tr>
-              <td style="background:${VINO};padding:28px 32px;">
-                <span style="color:#ffffff;font-size:20px;font-weight:bold;">INGcome</span>
+              <td style="background:${VINO};padding:24px 32px;">
+                <img src="${sitioUrl()}/brand/horizontal-blanco.svg" alt="INGcome" height="28" style="display:block;border:0;" />
               </td>
             </tr>
             <tr>
