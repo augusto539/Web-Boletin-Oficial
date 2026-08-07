@@ -110,7 +110,7 @@ export default function InformeAnuario() {
         aria-hidden="true"
       />
       <div className="relative mx-auto max-w-4xl">
-        <Reveal>
+        <Reveal inmediato>
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h1 className="text-4xl font-bold md:text-5xl">

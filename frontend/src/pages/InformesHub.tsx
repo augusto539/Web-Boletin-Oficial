@@ -93,7 +93,7 @@ export default function InformesHub() {
         aria-hidden="true"
       />
       <div className="relative mx-auto max-w-5xl">
-        <Reveal>
+        <Reveal inmediato>
           <h1 className="text-4xl font-bold md:text-5xl">Informes</h1>
           <p className="mt-3 max-w-2xl text-lg text-carbon/60">
             Estadísticas de sociedades constituidas en Mendoza, con fuente

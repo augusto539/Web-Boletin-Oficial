@@ -1,10 +1,9 @@
 import { useQuery } from "@apollo/client/react";
 import { motion } from "framer-motion";
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, lazy, Suspense, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { CountUp } from "../components/CountUp";
 import { FlechaIcon } from "../components/FlechaIcon";
-import { GrafoSociedad } from "../components/GrafoSociedad";
 import { Reveal } from "../components/Reveal";
 import { SearchBox } from "../components/SearchBox";
 import { Ticker } from "../components/Ticker";
@@ -14,6 +13,16 @@ import { useConfiguracion } from "../lib/configuracion";
 import { fecha } from "../lib/format";
 import { ESTADISTICAS_LANDING, type DataEstadisticasLanding } from "../lib/queries";
 import { scrollToSection } from "../lib/scroll";
+
+// Cargado bajo demanda: arrastra Cytoscape (librería de grafos, pesada), y
+// esta demo vive bien abajo de la página -- si se importa estático acá,
+// Cytoscape queda embebido en el bundle principal y se ejecuta en el hilo
+// principal durante el parseo inicial de la landing, aunque nadie vaya a
+// scrollear hasta esta sección. Mismo criterio que el code-splitting por
+// ruta de App.tsx, pero a nivel de un componente puntual.
+const GrafoSociedad = lazy(() =>
+  import("../components/GrafoSociedad").then((m) => ({ default: m.GrafoSociedad })),
+);
 
 // Sociedad real con red rica (19 vínculos) que usamos como demo en vivo del
 // grafo — no es un mock, es el mismo componente que ve cualquier usuario en
@@ -243,7 +252,9 @@ function QueEncontras() {
               </Link>
             )}
             <div className="mt-6">
-              <GrafoSociedad sociedadId={SOCIEDAD_DEMO_ID} nombre={SOCIEDAD_DEMO_NOMBRE} />
+              <Suspense fallback={<div className="h-[480px] w-full rounded-3xl bg-humo" />}>
+                <GrafoSociedad sociedadId={SOCIEDAD_DEMO_ID} nombre={SOCIEDAD_DEMO_NOMBRE} />
+              </Suspense>
             </div>
           </div>
         </Reveal>
