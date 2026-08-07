@@ -2,6 +2,7 @@ import { useQuery } from "@apollo/client/react";
 import { motion } from "framer-motion";
 import { type FormEvent, lazy, Suspense, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { CargarAlVerse } from "../components/CargarAlVerse";
 import { CountUp } from "../components/CountUp";
 import { FlechaIcon } from "../components/FlechaIcon";
 import { Reveal } from "../components/Reveal";
@@ -251,11 +252,11 @@ function QueEncontras() {
                 Ver red completa
               </Link>
             )}
-            <div className="mt-6">
+            <CargarAlVerse alto={480} className="mt-6">
               <Suspense fallback={<div className="h-[480px] w-full rounded-3xl bg-humo" />}>
                 <GrafoSociedad sociedadId={SOCIEDAD_DEMO_ID} nombre={SOCIEDAD_DEMO_NOMBRE} />
               </Suspense>
-            </div>
+            </CargarAlVerse>
           </div>
         </Reveal>
 

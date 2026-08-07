@@ -1,9 +1,10 @@
 import { useQuery } from "@apollo/client/react";
+import { lazy, Suspense } from "react";
 import { Link, useParams } from "react-router-dom";
 import { BotonNotificarme } from "../components/BotonNotificarme";
+import { CargarAlVerse } from "../components/CargarAlVerse";
 import { DescargarFicha } from "../components/DescargarFicha";
 import { FlechaIcon } from "../components/FlechaIcon";
-import { GrafoSociedad } from "../components/GrafoSociedad";
 import { Reveal } from "../components/Reveal";
 import { SearchBox } from "../components/SearchBox";
 import { registrarDescarga } from "../lib/descargasApi";
@@ -20,6 +21,14 @@ import {
   SIN_DATO,
 } from "../lib/format";
 import { SOCIEDAD, type Acto, type Actividad, type DataSociedad, type Vinculo } from "../lib/queries";
+
+// Cargado bajo demanda: arrastra Cytoscape (~435 KB), y el grafo es lo
+// último de la ficha, bien abajo del fold. Importado estático metía toda esa
+// librería en el camino crítico de la página -- PageSpeed lo medía como 1,3 s
+// de ejecución de JS y ~150 KB de bundle sin usar en el primer pintado.
+const GrafoSociedad = lazy(() =>
+  import("../components/GrafoSociedad").then((m) => ({ default: m.GrafoSociedad })),
+);
 
 export default function Sociedad() {
   const { id } = useParams();
@@ -227,7 +236,11 @@ export default function Sociedad() {
                 Ver red completa
               </Link>
             </div>
-            <GrafoSociedad sociedadId={sociedad.id} nombre={sociedad.nombre} />
+            <CargarAlVerse alto={480}>
+              <Suspense fallback={<div className="h-[480px] w-full rounded-3xl bg-humo" />}>
+                <GrafoSociedad sociedadId={sociedad.id} nombre={sociedad.nombre} />
+              </Suspense>
+            </CargarAlVerse>
           </section>
         </Reveal>
       </div>

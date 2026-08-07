@@ -1,9 +1,10 @@
 import { useQuery } from "@apollo/client/react";
+import { lazy, Suspense } from "react";
 import { Link, useParams } from "react-router-dom";
 import { BotonNotificarme } from "../components/BotonNotificarme";
+import { CargarAlVerse } from "../components/CargarAlVerse";
 import { DescargarFicha } from "../components/DescargarFicha";
 import { FlechaIcon } from "../components/FlechaIcon";
-import { GrafoPersona } from "../components/GrafoPersona";
 import { Reveal } from "../components/Reveal";
 import { SearchBox } from "../components/SearchBox";
 import { registrarDescarga } from "../lib/descargasApi";
@@ -18,6 +19,12 @@ import {
   SIN_DATO,
 } from "../lib/format";
 import { PERSONA, type DataPersona, type VinculoPersona } from "../lib/queries";
+
+// Ver el comentario equivalente en Sociedad.tsx: Cytoscape (~435 KB) fuera
+// del camino crítico, ya que el grafo es lo último de la ficha.
+const GrafoPersona = lazy(() =>
+  import("../components/GrafoPersona").then((m) => ({ default: m.GrafoPersona })),
+);
 
 export default function Persona() {
   const { id } = useParams();
@@ -180,7 +187,11 @@ export default function Persona() {
                 Ver red completa
               </Link>
             </div>
-            <GrafoPersona personaId={persona.id} nombre={persona.nombre} />
+            <CargarAlVerse alto={480}>
+              <Suspense fallback={<div className="h-[480px] w-full rounded-3xl bg-humo" />}>
+                <GrafoPersona personaId={persona.id} nombre={persona.nombre} />
+              </Suspense>
+            </CargarAlVerse>
           </section>
         </Reveal>
       </div>

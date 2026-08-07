@@ -59,7 +59,7 @@ export function Nav() {
     >
       <nav className="mx-auto flex h-18 max-w-7xl items-center justify-between px-6">
         <Link to="/" aria-label="INGcome, inicio">
-          <Logo claro={claro} className="h-25 w-auto" />
+          <Logo claro={claro} className="h-25 w-auto" prioridad />
         </Link>
 
         <div className="hidden items-center gap-8 md:flex">

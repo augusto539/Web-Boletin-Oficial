@@ -3,6 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- El logo del Nav lo renderiza React, así que el navegador no puede
+         descubrirlo hasta que baja y ejecuta el bundle. En las páginas sin
+         imagen destacada (fichas de sociedad/persona) ese logo termina
+         siendo el elemento LCP, y PageSpeed marcaba "request is not
+         discoverable in initial document". Con el preload arranca la
+         descarga junto con el HTML. Es la variante que usa todo el sitio:
+         la blanca solo aparece en el hero de la landing sin scrollear, y
+         apenas se scrollea el Nav pasa igual a esta. -->
+    <link
+      rel="preload"
+      as="image"
+      href="/brand/horizontal-color.svg"
+      type="image/svg+xml"
+      fetchpriority="high"
+    />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
