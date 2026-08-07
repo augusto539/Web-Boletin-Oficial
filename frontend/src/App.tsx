@@ -92,6 +92,15 @@ export default function App() {
   return (
     <>
       <Nav />
+      {/* El Footer va DENTRO del Suspense a propósito. Si queda afuera, se
+          pinta junto al fallback (que mide ~400px) y después, cuando llega
+          el chunk de la ruta y se renderiza el contenido real (varios miles
+          de px), el footer se va de golpe hacia abajo. Ese salto era casi
+          todo el CLS de las páginas con contenido largo: PageSpeed lo
+          atribuía 100% al <footer>, justamente porque es el único elemento
+          que existe en los dos frames y cambia de posición. Adentro del
+          Suspense el footer no se pinta hasta que el contenido está listo,
+          y aparecer por primera vez no cuenta como layout shift. */}
       <Suspense fallback={<CargandoRuta />}>
         <Routes>
           <Route path="/" element={<Landing />} />
@@ -208,8 +217,8 @@ export default function App() {
           />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        {!pathname.startsWith("/exploracion") && <Footer />}
       </Suspense>
-      {!pathname.startsWith("/exploracion") && <Footer />}
     </>
   );
 }
