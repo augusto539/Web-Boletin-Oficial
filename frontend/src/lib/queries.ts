@@ -425,6 +425,61 @@ export interface DataGrafo {
   grafoDeSociedad: { nodes: Arista[] };
 }
 
+// Versión en lote de GRAFO/GRAFO_PERSONA: usada por "expandir todo" en
+// GrafoExploracion para pedir las aristas de varios nodos en una sola
+// llamada en vez de una por nodo. raizId indica de qué id de entrada vino
+// cada arista, así el frontend puede seguir agrupando por nodo para el
+// posicionamiento del layout incremental.
+export const GRAFO_LOTE = gql`
+  query GrafoLote($ids: [BigInt]!) {
+    grafoDeSociedadesLote(sociedadIds: $ids) {
+      nodes {
+        raizId
+        origenTipo
+        origenId
+        origenNombre
+        destinoTipo
+        destinoId
+        destinoNombre
+        relacion
+        origenSinActos
+        destinoSinActos
+      }
+    }
+  }
+`;
+
+export interface AristaLote extends Arista {
+  raizId: Id | null;
+}
+
+export interface DataGrafoLote {
+  grafoDeSociedadesLote: { nodes: AristaLote[] };
+}
+
+export const GRAFO_PERSONA_LOTE = gql`
+  query GrafoPersonaLote($ids: [BigInt]!) {
+    grafoDePersonasLote(personaIds: $ids) {
+      nodes {
+        raizId
+        origenTipo
+        origenId
+        origenNombre
+        destinoTipo
+        destinoId
+        destinoNombre
+        relacion
+        origenSinActos
+        destinoSinActos
+      }
+    }
+  }
+`;
+
+export interface DataGrafoPersonaLote {
+  grafoDePersonasLote: { nodes: AristaLote[] };
+}
+
 // Los listados de admin (sociedades/personas, incluidas las ocultas) viven
 // en frontend/src/lib/adminApi.ts vía REST (boletin_auth bypassea la RLS de
 // habeas data), no acá — este GraphQL siempre pasa por boletin_api, que

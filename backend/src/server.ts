@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import { config } from "dotenv";
 import express, { type NextFunction, type Request, type Response } from "express";
+import rateLimit from "express-rate-limit";
 import cron from "node-cron";
 import pluralize from "pluralize";
 import { postgraphile } from "postgraphile";
@@ -22,6 +23,7 @@ import { informesPublicoRouter, recalcularInformes } from "./informes.js";
 import { leadsRouter } from "./leads.js";
 import { notificacionesRouter, procesarNotificaciones } from "./notificaciones.js";
 import { seoRouter } from "./seo.js";
+import { solicitudesInformeRouter } from "./solicitudesInforme.js";
 
 config({ path: join(dirname(fileURLToPath(import.meta.url)), "..", "..", ".env") });
 
@@ -57,6 +59,14 @@ for (const [singular, plural] of irregulares) {
 
 const app = express();
 
+// En producción, Caddy es el único reverse proxy delante de este proceso
+// (ver docker-compose.prod.yml/deploy/Caddyfile) -- confiar en 1 solo hop
+// hace que Express lea la IP real del cliente desde X-Forwarded-For en vez
+// de la IP interna de Caddy. Necesario para que el rate limiting de abajo
+// limite por usuario real y no por IP del proxy (que sería la misma para
+// todo el tráfico).
+app.set("trust proxy", 1);
+
 // credentials: true para que el navegador mande/reciba las cookies de auth en
 // los fetch cross-origin (front 5173 -> back 5050). Requiere origin explícito,
 // no "*".
@@ -79,12 +89,39 @@ app.use(
 app.use(cookieParser());
 app.use(express.json());
 
+// El server de producción es una instancia chica de 1 vCPU compartida entre
+// Postgres, este proceso y Caddy, sin límites de recursos por contenedor
+// (ver docker-compose.prod.yml) y sin ningún otro freno de tráfico -- una
+// ráfaga de requests (una expansión de grafo masiva multiplicada por varios
+// usuarios, un script pegándole directo a /graphql sin pasar por el
+// frontend, etc.) satura la única CPU y el sitio se pone lento para todos.
+// Esto no previene un ataque serio, pero corta el caso más común: un burst
+// accidental o un loop simple. /graphql tiene un límite más bajo porque ahí
+// viven las queries más pesadas (grafoDeSociedad, búsqueda avanzada).
+const limitadorApi = rateLimit({
+  windowMs: 60_000,
+  limit: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Demasiadas solicitudes, probá de nuevo en un momento." },
+});
+const limitadorGraphql = rateLimit({
+  windowMs: 60_000,
+  limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Demasiadas solicitudes, probá de nuevo en un momento." },
+});
+app.use("/api", limitadorApi);
+app.use("/graphql", limitadorGraphql);
+
 // Auth (REST) va antes de PostGraphile; son rutas separadas de la API GraphQL.
 app.use("/api/auth", authRouter);
 app.use("/api/admin", requireAdmin(), adminRouter);
 app.use("/api/admin", requireAdmin(), configuracionAdminRouter);
 app.use("/api/configuracion", configuracionPublicaRouter);
 app.use("/api/leads", leadsRouter);
+app.use("/api/solicitudes-informe", solicitudesInformeRouter);
 app.use("/api/historial", historialRouter);
 app.use("/api/descargas", descargasRouter);
 app.use("/api/informes", informesPublicoRouter);

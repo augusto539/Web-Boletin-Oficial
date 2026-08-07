@@ -14,6 +14,7 @@ import {
   obtenerPersonasAdmin,
   obtenerSociedadesAdmin,
   obtenerSociosJuridicosAdmin,
+  obtenerSolicitudesInformeAdmin,
   obtenerUsuariosAdmin,
   recalcularInformesAdmin,
   vincularSocioJuridico,
@@ -23,12 +24,15 @@ import {
   type PersonaAdmin,
   type SociedadAdmin,
   type SocioJuridicoGrupo,
+  type SolicitudInformeAdmin,
   type UsuarioAdmin,
 } from "../lib/adminApi";
 import { cuit as formatCuit, dato, fecha } from "../lib/format";
 
 const fmtUSD = (n: number | null | undefined) =>
-  n == null || Number.isNaN(n) ? "…" : `US$ ${n.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  n == null || Number.isNaN(n)
+    ? "…"
+    : `US$ ${n.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 type Pestana = "estadisticas" | "configuracion" | "datos" | "email";
 
@@ -47,7 +51,8 @@ export default function Admin() {
       <div
         className="pointer-events-none absolute inset-0"
         style={{
-          backgroundImage: "radial-gradient(circle, rgba(105,24,36,0.16) 1.5px, transparent 1.5px)",
+          backgroundImage:
+            "radial-gradient(circle, rgba(105,24,36,0.16) 1.5px, transparent 1.5px)",
           backgroundSize: "20px 20px",
           maskImage: "radial-gradient(black, transparent 80%)",
           WebkitMaskImage: "radial-gradient(black, transparent 80%)",
@@ -76,7 +81,9 @@ export default function Admin() {
         </div>
       </div>
 
-      <div className={`relative mx-auto ${pestana === "datos" ? "max-w-none" : "max-w-6xl"}`}>
+      <div
+        className={`relative mx-auto ${pestana === "datos" ? "max-w-none" : "max-w-6xl"}`}
+      >
         {pestana === "estadisticas" && <TabEstadisticas />}
         {pestana === "configuracion" && <TabConfiguracion />}
         {pestana === "datos" && <TabDatos />}
@@ -100,19 +107,35 @@ function TarjetaEstadistica({
 }) {
   return (
     <div className="flex h-full min-h-[7.5rem] flex-col rounded-3xl bg-white p-7">
-      <p className="text-xs font-bold uppercase tracking-widest text-carbon/50">{etiqueta}</p>
+      <p className="text-xs font-bold uppercase tracking-widest text-carbon/50">
+        {etiqueta}
+      </p>
       {/* mt-auto ancla el valor al borde de abajo de la tarjeta, sin
           importar si la etiqueta de arriba ocupa una línea o dos. */}
-      <p className={`mt-auto pt-2 font-bold whitespace-nowrap text-vino ${tamanioValor}`}>{valor}</p>
+      <p
+        className={`mt-auto pt-2 font-bold whitespace-nowrap text-vino ${tamanioValor}`}
+      >
+        {valor}
+      </p>
     </div>
   );
 }
 
-function CategoriaEstadisticas({ titulo, children }: { titulo: string; children: ReactNode }) {
+function CategoriaEstadisticas({
+  titulo,
+  children,
+}: {
+  titulo: string;
+  children: ReactNode;
+}) {
   return (
     <section>
-      <h2 className="mb-4 text-xs font-bold uppercase tracking-widest text-carbon/50">{titulo}</h2>
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">{children}</div>
+      <h2 className="mb-4 text-xs font-bold uppercase tracking-widest text-carbon/50">
+        {titulo}
+      </h2>
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        {children}
+      </div>
     </section>
   );
 }
@@ -132,17 +155,36 @@ function TabEstadisticas() {
       .catch(() => setGasto(null));
   }, []);
 
-  const fmt = (n: number | undefined) => (n === undefined ? "…" : n.toLocaleString("es-AR"));
+  const fmt = (n: number | undefined) =>
+    n === undefined ? "…" : n.toLocaleString("es-AR");
 
   return (
     <div className="mt-6 space-y-10">
       <CategoriaEstadisticas titulo="Base de datos">
-        <TarjetaEstadistica etiqueta="Sociedades" valor={fmt(est?.baseDeDatos.sociedades)} />
-        <TarjetaEstadistica etiqueta="Personas físicas" valor={fmt(est?.baseDeDatos.personas)} />
-        <TarjetaEstadistica etiqueta="Relaciones" valor={fmt(est?.baseDeDatos.relaciones)} />
-        <TarjetaEstadistica etiqueta="Dados de baja" valor={fmt(est?.baseDeDatos.dadosDeBaja)} />
-        <TarjetaEstadistica etiqueta="Boletines extraídos" valor={fmt(est?.baseDeDatos.boletinesExtraidos)} />
-        <TarjetaEstadistica etiqueta="Emails en la base" valor={fmt(est?.baseDeDatos.emailsEnBase)} />
+        <TarjetaEstadistica
+          etiqueta="Sociedades"
+          valor={fmt(est?.baseDeDatos.sociedades)}
+        />
+        <TarjetaEstadistica
+          etiqueta="Personas físicas"
+          valor={fmt(est?.baseDeDatos.personas)}
+        />
+        <TarjetaEstadistica
+          etiqueta="Relaciones"
+          valor={fmt(est?.baseDeDatos.relaciones)}
+        />
+        <TarjetaEstadistica
+          etiqueta="Dados de baja"
+          valor={fmt(est?.baseDeDatos.dadosDeBaja)}
+        />
+        <TarjetaEstadistica
+          etiqueta="Boletines extraídos"
+          valor={fmt(est?.baseDeDatos.boletinesExtraidos)}
+        />
+        <TarjetaEstadistica
+          etiqueta="Emails en la base"
+          valor={fmt(est?.baseDeDatos.emailsEnBase)}
+        />
       </CategoriaEstadisticas>
 
       <CategoriaEstadisticas titulo="Últimos datos cargados">
@@ -170,17 +212,41 @@ function TabEstadisticas() {
       </CategoriaEstadisticas>
 
       <CategoriaEstadisticas titulo="Gasto API">
-        <TarjetaEstadistica etiqueta="Gasto total" valor={fmtUSD(gasto?.total)} tamanioValor="text-2xl" />
-        <TarjetaEstadistica etiqueta="Últimos 30 días" valor={fmtUSD(gasto?.ultimos30Dias)} tamanioValor="text-2xl" />
-        <TarjetaEstadistica etiqueta="Hoy" valor={fmtUSD(gasto?.hoy)} tamanioValor="text-2xl" />
+        <TarjetaEstadistica
+          etiqueta="Gasto total"
+          valor={fmtUSD(gasto?.total)}
+          tamanioValor="text-2xl"
+        />
+        <TarjetaEstadistica
+          etiqueta="Últimos 30 días"
+          valor={fmtUSD(gasto?.ultimos30Dias)}
+          tamanioValor="text-2xl"
+        />
+        <TarjetaEstadistica
+          etiqueta="Hoy"
+          valor={fmtUSD(gasto?.hoy)}
+          tamanioValor="text-2xl"
+        />
       </CategoriaEstadisticas>
 
       <CategoriaEstadisticas titulo="Usuarios">
-        <TarjetaEstadistica etiqueta="Usuarios registrados" valor={fmt(est?.usuarios.registrados)} />
+        <TarjetaEstadistica
+          etiqueta="Usuarios registrados"
+          valor={fmt(est?.usuarios.registrados)}
+        />
         <TarjetaEstadistica etiqueta="Leads" valor={fmt(est?.usuarios.leads)} />
-        <TarjetaEstadistica etiqueta="Búsquedas" valor={fmt(est?.usuarios.busquedas)} />
-        <TarjetaEstadistica etiqueta="Descargas" valor={fmt(est?.usuarios.descargas)} />
-        <TarjetaEstadistica etiqueta="Notificaciones activas" valor={fmt(est?.usuarios.notificacionesActivas)} />
+        <TarjetaEstadistica
+          etiqueta="Búsquedas"
+          valor={fmt(est?.usuarios.busquedas)}
+        />
+        <TarjetaEstadistica
+          etiqueta="Descargas"
+          valor={fmt(est?.usuarios.descargas)}
+        />
+        <TarjetaEstadistica
+          etiqueta="Notificaciones activas"
+          valor={fmt(est?.usuarios.notificacionesActivas)}
+        />
       </CategoriaEstadisticas>
     </div>
   );
@@ -219,7 +285,9 @@ function TabConfiguracion() {
   const [modoSoloAdmin, setModoSoloAdmin] = useState<boolean | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [recalculando, setRecalculando] = useState(false);
-  const [resultadoRecalculo, setResultadoRecalculo] = useState<string | null>(null);
+  const [resultadoRecalculo, setResultadoRecalculo] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     obtenerConfiguracionAdmin()
@@ -257,9 +325,9 @@ function TabConfiguracion() {
           <div>
             <p className="font-bold">Modo solo administradores</p>
             <p className="mt-1.5 max-w-xl text-sm text-carbon/60">
-              Mientras esté activo, la búsqueda avanzada, la exploración del grafo y el
-              buscador de la portada quedan ocultos e inaccesibles para cualquier
-              visitante que no sea administrador.
+              Mientras esté activo, la búsqueda avanzada, la exploración del
+              grafo y el buscador de la portada quedan ocultos e inaccesibles
+              para cualquier visitante que no sea administrador.
             </p>
           </div>
           <Toggle
@@ -275,11 +343,14 @@ function TabConfiguracion() {
           <div>
             <p className="font-bold">Informes</p>
             <p className="mt-1.5 max-w-xl text-sm text-carbon/60">
-              Los datos de "/informes" se recalculan solos todos los días. Usá esto para
-              forzar el recálculo ahora (ej. después de una carga grande de datos).
+              Los datos de "/informes" se recalculan solos todos los días. Usá
+              esto para forzar el recálculo ahora (ej. después de una carga
+              grande de datos).
             </p>
             {resultadoRecalculo && (
-              <p className="mt-2 text-sm font-bold text-vino">{resultadoRecalculo}</p>
+              <p className="mt-2 text-sm font-bold text-vino">
+                {resultadoRecalculo}
+              </p>
             )}
           </div>
           <button
@@ -306,9 +377,13 @@ function TabEmail() {
   const [asunto, setAsunto] = useState("");
   const [cuerpo, setCuerpo] = useState("");
   const [enviando, setEnviando] = useState(false);
-  const [resultado, setResultado] = useState<{ ok: boolean; texto: string } | null>(null);
+  const [resultado, setResultado] = useState<{
+    ok: boolean;
+    texto: string;
+  } | null>(null);
 
-  const formularioValido = destinatario.trim() && asunto.trim() && cuerpo.trim();
+  const formularioValido =
+    destinatario.trim() && asunto.trim() && cuerpo.trim();
 
   function alEnviar(e: React.FormEvent) {
     e.preventDefault();
@@ -317,12 +392,17 @@ function TabEmail() {
     setResultado(null);
     enviarMailPersonalizadoAdmin(destinatario.trim(), asunto.trim(), cuerpo)
       .then(() => {
-        setResultado({ ok: true, texto: `Mail enviado a ${destinatario.trim()}.` });
+        setResultado({
+          ok: true,
+          texto: `Mail enviado a ${destinatario.trim()}.`,
+        });
         setDestinatario("");
         setAsunto("");
         setCuerpo("");
       })
-      .catch(() => setResultado({ ok: false, texto: "Hubo un error, probá de nuevo." }))
+      .catch(() =>
+        setResultado({ ok: false, texto: "Hubo un error, probá de nuevo." }),
+      )
       .finally(() => setEnviando(false));
   }
 
@@ -331,12 +411,16 @@ function TabEmail() {
       <div className="rounded-3xl bg-white p-7">
         <p className="font-bold">Enviar mail</p>
         <p className="mt-1.5 text-sm text-carbon/60">
-          Sale desde <span className="font-bold">privacidad@ingcome.com.ar</span>, con el cuerpo
-          insertado dentro del layout de marca de INGcome.
+          Sale desde{" "}
+          <span className="font-bold">privacidad@ingcome.com.ar</span>, con el
+          cuerpo insertado dentro del layout de marca de INGcome.
         </p>
         <form onSubmit={alEnviar} className="mt-5 space-y-4">
           <div>
-            <label htmlFor="mail-destinatario" className="text-xs font-bold uppercase tracking-widest text-carbon/50">
+            <label
+              htmlFor="mail-destinatario"
+              className="text-xs font-bold uppercase tracking-widest text-carbon/50"
+            >
               Destinatario
             </label>
             <input
@@ -350,7 +434,10 @@ function TabEmail() {
             />
           </div>
           <div>
-            <label htmlFor="mail-asunto" className="text-xs font-bold uppercase tracking-widest text-carbon/50">
+            <label
+              htmlFor="mail-asunto"
+              className="text-xs font-bold uppercase tracking-widest text-carbon/50"
+            >
               Asunto
             </label>
             <input
@@ -363,7 +450,10 @@ function TabEmail() {
             />
           </div>
           <div>
-            <label htmlFor="mail-cuerpo" className="text-xs font-bold uppercase tracking-widest text-carbon/50">
+            <label
+              htmlFor="mail-cuerpo"
+              className="text-xs font-bold uppercase tracking-widest text-carbon/50"
+            >
               Cuerpo del mail
             </label>
             <textarea
@@ -376,7 +466,9 @@ function TabEmail() {
             />
           </div>
           {resultado && (
-            <p className={`text-sm font-bold ${resultado.ok ? "text-vino" : "text-red-600"}`}>
+            <p
+              className={`text-sm font-bold ${resultado.ok ? "text-vino" : "text-red-600"}`}
+            >
               {resultado.texto}
             </p>
           )}
@@ -395,13 +487,20 @@ function TabEmail() {
 
 const POR_PAGINA = 100;
 
-type SubPestana = "sociedades" | "personas" | "usuarios" | "leads" | "socios-juridicos";
+type SubPestana =
+  | "sociedades"
+  | "personas"
+  | "usuarios"
+  | "leads"
+  | "solicitudes-informe"
+  | "socios-juridicos";
 
 const SUBPESTANAS: { id: SubPestana; etiqueta: string }[] = [
   { id: "sociedades", etiqueta: "Sociedades" },
   { id: "personas", etiqueta: "Personas físicas" },
   { id: "usuarios", etiqueta: "Usuarios" },
   { id: "leads", etiqueta: "Leads" },
+  { id: "solicitudes-informe", etiqueta: "Informes pedidos" },
   { id: "socios-juridicos", etiqueta: "Socios jurídicos" },
 ];
 
@@ -422,7 +521,9 @@ function TabDatos() {
             type="button"
             onClick={() => setSub(s.id)}
             className={`shrink-0 cursor-pointer rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
-              sub === s.id ? "bg-vino text-white" : "bg-white text-carbon/60 hover:bg-carbon/10"
+              sub === s.id
+                ? "bg-vino text-white"
+                : "bg-white text-carbon/60 hover:bg-carbon/10"
             }`}
           >
             {s.etiqueta}
@@ -434,6 +535,7 @@ function TabDatos() {
       {sub === "personas" && <TablaPersonas />}
       {sub === "usuarios" && <TablaUsuarios />}
       {sub === "leads" && <TablaLeads />}
+      {sub === "solicitudes-informe" && <TablaSolicitudesInforme />}
       {sub === "socios-juridicos" && <TablaSociosJuridicos />}
     </div>
   );
@@ -498,7 +600,10 @@ function BotonOculta({
 
 function TablaSociedades() {
   const [pagina, setPagina] = useState(1);
-  const [datos, setDatos] = useState<{ total: number; sociedades: SociedadAdmin[] }>({
+  const [datos, setDatos] = useState<{
+    total: number;
+    sociedades: SociedadAdmin[];
+  }>({
     total: 0,
     sociedades: [],
   });
@@ -515,12 +620,16 @@ function TablaSociedades() {
     const nuevoValor = !s.oculta;
     setDatos((d) => ({
       ...d,
-      sociedades: d.sociedades.map((x) => (x.id === s.id ? { ...x, oculta: nuevoValor } : x)),
+      sociedades: d.sociedades.map((x) =>
+        x.id === s.id ? { ...x, oculta: nuevoValor } : x,
+      ),
     }));
     alternarOcultaSociedad(s.id, nuevoValor).catch(() => {
       setDatos((d) => ({
         ...d,
-        sociedades: d.sociedades.map((x) => (x.id === s.id ? { ...x, oculta: s.oculta } : x)),
+        sociedades: d.sociedades.map((x) =>
+          x.id === s.id ? { ...x, oculta: s.oculta } : x,
+        ),
       }));
     });
   }
@@ -563,7 +672,9 @@ function TablaSociedades() {
                     {s.nombre}
                   </Link>
                 </td>
-                <td className="py-3 pr-4">{s.cuit ? formatCuit(s.cuit) : dato(null)}</td>
+                <td className="py-3 pr-4">
+                  {s.cuit ? formatCuit(s.cuit) : dato(null)}
+                </td>
                 <td className="py-3 pr-4">{dato(s.claeGrupoNombre)}</td>
                 <td className="py-3 pr-4">{dato(s.claeDescripcion)}</td>
                 <td className="py-3 pr-4">{fecha(s.fechaConstitucion)}</td>
@@ -571,21 +682,31 @@ function TablaSociedades() {
                 <td className="py-3 pr-4">{dato(s.domicilioCompleto)}</td>
                 <td className="py-3 pr-4">{dato(s.domicilioElectronico)}</td>
                 <td className="py-3">
-                  <BotonOculta oculta={s.oculta} onClick={() => alAlternarOculta(s)} />
+                  <BotonOculta
+                    oculta={s.oculta}
+                    onClick={() => alAlternarOculta(s)}
+                  />
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <Paginador pagina={pagina} totalPaginas={totalPaginas} onCambiar={setPagina} />
+      <Paginador
+        pagina={pagina}
+        totalPaginas={totalPaginas}
+        onCambiar={setPagina}
+      />
     </div>
   );
 }
 
 function TablaPersonas() {
   const [pagina, setPagina] = useState(1);
-  const [datos, setDatos] = useState<{ total: number; personas: PersonaAdmin[] }>({
+  const [datos, setDatos] = useState<{
+    total: number;
+    personas: PersonaAdmin[];
+  }>({
     total: 0,
     personas: [],
   });
@@ -602,12 +723,16 @@ function TablaPersonas() {
     const nuevoValor = !p.oculta;
     setDatos((d) => ({
       ...d,
-      personas: d.personas.map((x) => (x.id === p.id ? { ...x, oculta: nuevoValor } : x)),
+      personas: d.personas.map((x) =>
+        x.id === p.id ? { ...x, oculta: nuevoValor } : x,
+      ),
     }));
     alternarOcultaPersona(p.id, nuevoValor).catch(() => {
       setDatos((d) => ({
         ...d,
-        personas: d.personas.map((x) => (x.id === p.id ? { ...x, oculta: p.oculta } : x)),
+        personas: d.personas.map((x) =>
+          x.id === p.id ? { ...x, oculta: p.oculta } : x,
+        ),
       }));
     });
   }
@@ -642,32 +767,47 @@ function TablaPersonas() {
                 className={`border-b border-carbon/5 last:border-0 align-top ${p.oculta ? "opacity-50" : ""}`}
               >
                 <td className="py-3 pr-4 font-bold">
-                  <Link to={`/persona/${p.id}`} className="text-vino underline-offset-4 hover:underline">
+                  <Link
+                    to={`/persona/${p.id}`}
+                    className="text-vino underline-offset-4 hover:underline"
+                  >
                     {p.nombre}
                   </Link>
                 </td>
                 <td className="py-3 pr-4">{dato(p.documento)}</td>
-                <td className="py-3 pr-4">{p.cuit ? formatCuit(p.cuit) : dato(null)}</td>
+                <td className="py-3 pr-4">
+                  {p.cuit ? formatCuit(p.cuit) : dato(null)}
+                </td>
                 <td className="py-3 pr-4">{dato(p.profesion)}</td>
                 <td className="py-3 pr-4">{fecha(p.fechaNacimiento)}</td>
                 <td className="py-3 pr-4">{dato(p.domicilioCompleto)}</td>
                 <td className="py-3 pr-4">{dato(p.domicilioElectronico)}</td>
                 <td className="py-3">
-                  <BotonOculta oculta={p.oculta} onClick={() => alAlternarOculta(p)} />
+                  <BotonOculta
+                    oculta={p.oculta}
+                    onClick={() => alAlternarOculta(p)}
+                  />
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <Paginador pagina={pagina} totalPaginas={totalPaginas} onCambiar={setPagina} />
+      <Paginador
+        pagina={pagina}
+        totalPaginas={totalPaginas}
+        onCambiar={setPagina}
+      />
     </div>
   );
 }
 
 function TablaUsuarios() {
   const [pagina, setPagina] = useState(1);
-  const [datos, setDatos] = useState<{ total: number; usuarios: UsuarioAdmin[] }>({
+  const [datos, setDatos] = useState<{
+    total: number;
+    usuarios: UsuarioAdmin[];
+  }>({
     total: 0,
     usuarios: [],
   });
@@ -683,13 +823,17 @@ function TablaUsuarios() {
   function alAlternarAdmin(usuario: UsuarioAdmin) {
     setDatos((d) => ({
       ...d,
-      usuarios: d.usuarios.map((u) => (u.id === usuario.id ? { ...u, admin: !u.admin } : u)),
+      usuarios: d.usuarios.map((u) =>
+        u.id === usuario.id ? { ...u, admin: !u.admin } : u,
+      ),
     }));
     alternarAdminUsuario(usuario.id, !usuario.admin).catch(() => {
       // Si falla (ej. intentar auto-degradarse), se revierte el cambio optimista.
       setDatos((d) => ({
         ...d,
-        usuarios: d.usuarios.map((u) => (u.id === usuario.id ? { ...u, admin: usuario.admin } : u)),
+        usuarios: d.usuarios.map((u) =>
+          u.id === usuario.id ? { ...u, admin: usuario.admin } : u,
+        ),
       }));
     });
   }
@@ -744,7 +888,11 @@ function TablaUsuarios() {
           </tbody>
         </table>
       </div>
-      <Paginador pagina={pagina} totalPaginas={totalPaginas} onCambiar={setPagina} />
+      <Paginador
+        pagina={pagina}
+        totalPaginas={totalPaginas}
+        onCambiar={setPagina}
+      />
     </div>
   );
 }
@@ -756,7 +904,9 @@ function TablaUsuarios() {
 // paginación acá: son ~300 grupos en total, entra cómodo en una sola tabla.
 function TablaSociosJuridicos() {
   const [grupos, setGrupos] = useState<SocioJuridicoGrupo[] | null>(null);
-  const [ediciones, setEdiciones] = useState<Record<string, { nombre: string; cuit: string }>>({});
+  const [ediciones, setEdiciones] = useState<
+    Record<string, { nombre: string; cuit: string }>
+  >({});
   const [vinculando, setVinculando] = useState<string | null>(null);
 
   useEffect(() => {
@@ -766,11 +916,24 @@ function TablaSociosJuridicos() {
   }, []);
 
   function campo(g: SocioJuridicoGrupo) {
-    return ediciones[g.clave] ?? { nombre: g.nombreSugerido, cuit: g.cuitSugerido ?? "" };
+    return (
+      ediciones[g.clave] ?? {
+        nombre: g.nombreSugerido,
+        cuit: g.cuitSugerido ?? "",
+      }
+    );
   }
 
-  function alEditar(clave: string, campoEditado: "nombre" | "cuit", valor: string, g: SocioJuridicoGrupo) {
-    setEdiciones((e) => ({ ...e, [clave]: { ...campo(g), [campoEditado]: valor } }));
+  function alEditar(
+    clave: string,
+    campoEditado: "nombre" | "cuit",
+    valor: string,
+    g: SocioJuridicoGrupo,
+  ) {
+    setEdiciones((e) => ({
+      ...e,
+      [clave]: { ...campo(g), [campoEditado]: valor },
+    }));
   }
 
   async function alVincular(g: SocioJuridicoGrupo) {
@@ -793,7 +956,9 @@ function TablaSociosJuridicos() {
   return (
     <div className="rounded-3xl bg-white p-7">
       <p className="mb-4 text-sm text-carbon/50">
-        {grupos === null ? "Cargando…" : `${grupos.length} socios jurídicos sin vincular`}
+        {grupos === null
+          ? "Cargando…"
+          : `${grupos.length} socios jurídicos sin vincular`}
       </p>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1100px] text-left text-sm">
@@ -810,18 +975,25 @@ function TablaSociosJuridicos() {
             {(grupos ?? []).map((g) => {
               const { nombre, cuit } = campo(g);
               return (
-                <tr key={g.clave} className="border-b border-carbon/5 last:border-0 align-top">
+                <tr
+                  key={g.clave}
+                  className="border-b border-carbon/5 last:border-0 align-top"
+                >
                   <td className="py-3 pr-4">
                     <input
                       value={nombre}
-                      onChange={(e) => alEditar(g.clave, "nombre", e.target.value, g)}
+                      onChange={(e) =>
+                        alEditar(g.clave, "nombre", e.target.value, g)
+                      }
                       className="w-56 rounded-lg border border-carbon/15 px-2.5 py-1.5 text-sm font-bold"
                     />
                   </td>
                   <td className="py-3 pr-4">
                     <input
                       value={cuit}
-                      onChange={(e) => alEditar(g.clave, "cuit", e.target.value, g)}
+                      onChange={(e) =>
+                        alEditar(g.clave, "cuit", e.target.value, g)
+                      }
                       placeholder="Sin CUIT"
                       className="w-32 rounded-lg border border-carbon/15 px-2.5 py-1.5 text-sm"
                     />
@@ -896,7 +1068,69 @@ function TablaLeads() {
           </tbody>
         </table>
       </div>
-      <Paginador pagina={pagina} totalPaginas={totalPaginas} onCambiar={setPagina} />
+      <Paginador
+        pagina={pagina}
+        totalPaginas={totalPaginas}
+        onCambiar={setPagina}
+      />
+    </div>
+  );
+}
+
+function TablaSolicitudesInforme() {
+  const [pagina, setPagina] = useState(1);
+  const [datos, setDatos] = useState<{
+    total: number;
+    solicitudes: SolicitudInformeAdmin[];
+  }>({
+    total: 0,
+    solicitudes: [],
+  });
+  const [cargando, setCargando] = useState(true);
+
+  useEffect(() => {
+    setCargando(true);
+    obtenerSolicitudesInformeAdmin(POR_PAGINA, (pagina - 1) * POR_PAGINA)
+      .then(setDatos)
+      .finally(() => setCargando(false));
+  }, [pagina]);
+
+  const totalPaginas = Math.ceil(datos.total / POR_PAGINA);
+
+  return (
+    <div className="rounded-3xl bg-white p-7">
+      <p className="mb-4 text-sm text-carbon/50">
+        {cargando
+          ? "Cargando…"
+          : `Mostrando ${datos.solicitudes.length} de ${datos.total.toLocaleString("es-AR")}`}
+      </p>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[500px] text-left text-sm">
+          <thead>
+            <tr className="border-b border-carbon/10 text-xs uppercase tracking-widest text-carbon/50">
+              <th className="py-3 pr-4">Pedido</th>
+              <th className="py-3 pr-4">Mail</th>
+              <th className="py-3">Creado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {datos.solicitudes.map((s) => (
+              <tr key={s.id} className="border-b border-carbon/5 last:border-0">
+                <td className="py-3 pr-4">{s.texto}</td>
+                <td className="py-3 pr-4 font-bold">{s.mail ?? "—"}</td>
+                <td className="py-3 whitespace-nowrap">
+                  {fecha(s.creadoEl.slice(0, 10))}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <Paginador
+        pagina={pagina}
+        totalPaginas={totalPaginas}
+        onCambiar={setPagina}
+      />
     </div>
   );
 }

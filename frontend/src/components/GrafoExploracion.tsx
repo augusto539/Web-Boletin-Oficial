@@ -9,10 +9,14 @@ import { ModalRegistro } from "./auth/ModalRegistro";
 import { DescargarIcon } from "./DescargarIcon";
 import {
   GRAFO,
+  GRAFO_LOTE,
   GRAFO_PERSONA,
+  GRAFO_PERSONA_LOTE,
   type Arista,
   type DataGrafo,
+  type DataGrafoLote,
   type DataGrafoPersona,
+  type DataGrafoPersonaLote,
   type Id,
 } from "../lib/queries";
 
@@ -84,6 +88,48 @@ async function obtenerAristas(tipo: TipoNodo, id: Id): Promise<Arista[]> {
     fetchPolicy: "network-only",
   });
   return resultado.data?.grafoDePersona.nodes ?? [];
+}
+
+// Versión en lote de obtenerAristas: agrupa los pendientes por tipo y pide
+// las aristas de todos los de un mismo tipo en una sola query (grafoDe*Lote,
+// ver 046_grafo_batch.sql), en vez de una query por nodo. Como máximo 2
+// requests (uno para sociedades, uno para personas) sin importar cuántos
+// nodos haya que expandir. Devuelve un Map clave->aristas para que
+// fusionarAristas siga pudiendo procesar cada nodo por separado (necesita
+// saber qué aristas corresponden a cuál, para el posicionamiento radial).
+async function obtenerAristasLote(
+  pendientes: { clave: string; tipo: TipoNodo; id: Id }[],
+): Promise<Map<string, Arista[]>> {
+  const idsSociedad = pendientes.filter((p) => p.tipo === "sociedad").map((p) => p.id);
+  const idsPersona = pendientes.filter((p) => p.tipo === "persona").map((p) => p.id);
+
+  const porNodo = new Map<string, Arista[]>();
+  const agregar = (tipo: TipoNodo, aristas: { raizId: Id | null }[] & Arista[]) => {
+    for (const arista of aristas) {
+      const clave = idNodo(tipo, arista.raizId);
+      const lista = porNodo.get(clave);
+      if (lista) lista.push(arista);
+      else porNodo.set(clave, [arista]);
+    }
+  };
+
+  const promesas: Promise<void>[] = [];
+  if (idsSociedad.length > 0) {
+    promesas.push(
+      apollo
+        .query<DataGrafoLote>({ query: GRAFO_LOTE, variables: { ids: idsSociedad }, fetchPolicy: "network-only" })
+        .then((r) => agregar("sociedad", r.data?.grafoDeSociedadesLote.nodes ?? [])),
+    );
+  }
+  if (idsPersona.length > 0) {
+    promesas.push(
+      apollo
+        .query<DataGrafoPersonaLote>({ query: GRAFO_PERSONA_LOTE, variables: { ids: idsPersona }, fetchPolicy: "network-only" })
+        .then((r) => agregar("persona", r.data?.grafoDePersonasLote.nodes ?? [])),
+    );
+  }
+  await Promise.all(promesas);
+  return porNodo;
 }
 
 export function GrafoExploracion({
@@ -218,7 +264,7 @@ export function GrafoExploracion({
       cantidad: pendientes.length,
     });
     try {
-      const resultados = await Promise.all(pendientes.map((n) => obtenerAristas(n.tipo, n.id)));
+      const porNodo = await obtenerAristasLote(pendientes);
 
       // Centroide de TODO lo que ya está en pantalla (antes de agregar nada
       // de esta tanda), fijo para todo el batch. Antes cada llamada a
@@ -242,8 +288,8 @@ export function GrafoExploracion({
       }
 
       const idsNuevosTotal: string[] = [];
-      pendientes.forEach((nodo, i) => {
-        const { idsNuevos } = fusionarAristas(cy, resultados[i], nodo.clave, centro);
+      pendientes.forEach((nodo) => {
+        const { idsNuevos } = fusionarAristas(cy, porNodo.get(nodo.clave) ?? [], nodo.clave, centro);
         idsNuevosTotal.push(...idsNuevos);
         expandidosRef.current.add(nodo.clave);
       });

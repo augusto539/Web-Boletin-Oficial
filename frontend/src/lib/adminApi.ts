@@ -1,6 +1,7 @@
 // Ver apollo.ts: mismo criterio, usar el host actual en vez de "localhost"
 // fijo para que funcione igual entrando por LAN desde el celu.
-const API = import.meta.env.VITE_API_URL ?? `http://${window.location.hostname}:5050`;
+const API =
+  import.meta.env.VITE_API_URL ?? `http://${window.location.hostname}:5050`;
 
 export interface EstadisticasAdmin {
   baseDeDatos: {
@@ -64,6 +65,13 @@ export interface UsuarioAdmin {
 export interface LeadAdmin {
   id: string;
   mail: string;
+  creadoEl: string;
+}
+
+export interface SolicitudInformeAdmin {
+  id: string;
+  texto: string;
+  mail: string | null;
   creadoEl: string;
 }
 
@@ -158,11 +166,23 @@ export function obtenerLeadsAdmin(
   return get(`/api/admin/leads?limit=${first}&offset=${offset}`);
 }
 
-export function obtenerUsuarioAdmin(id: string): Promise<{ usuario: UsuarioAdmin }> {
+export function obtenerSolicitudesInformeAdmin(
+  first: number,
+  offset: number,
+): Promise<{ total: number; solicitudes: SolicitudInformeAdmin[] }> {
+  return get(`/api/admin/solicitudes-informe?limit=${first}&offset=${offset}`);
+}
+
+export function obtenerUsuarioAdmin(
+  id: string,
+): Promise<{ usuario: UsuarioAdmin }> {
   return get(`/api/admin/usuarios/${id}`);
 }
 
-export function alternarAdminUsuario(id: string, admin: boolean): Promise<{ usuario: UsuarioAdmin }> {
+export function alternarAdminUsuario(
+  id: string,
+  admin: boolean,
+): Promise<{ usuario: UsuarioAdmin }> {
   return patch(`/api/admin/usuarios/${id}/admin`, { admin });
 }
 
@@ -171,7 +191,9 @@ export function obtenerHistorialUsuario(
   first: number,
   offset: number,
 ): Promise<{ total: number; historial: HistorialItem[] }> {
-  return get(`/api/admin/usuarios/${id}/historial?limit=${first}&offset=${offset}`);
+  return get(
+    `/api/admin/usuarios/${id}/historial?limit=${first}&offset=${offset}`,
+  );
 }
 
 export function obtenerHistorialDescargasUsuario(
@@ -179,7 +201,9 @@ export function obtenerHistorialDescargasUsuario(
   first: number,
   offset: number,
 ): Promise<{ total: number; historial: DescargaItem[] }> {
-  return get(`/api/admin/usuarios/${id}/historial-descargas?limit=${first}&offset=${offset}`);
+  return get(
+    `/api/admin/usuarios/${id}/historial-descargas?limit=${first}&offset=${offset}`,
+  );
 }
 
 export function obtenerSociedadesAdmin(
@@ -210,11 +234,15 @@ export function alternarOcultaPersona(
   return patch(`/api/admin/personas/${id}/oculta`, { oculta });
 }
 
-export function obtenerConfiguracionAdmin(): Promise<{ modoSoloAdmin: boolean }> {
+export function obtenerConfiguracionAdmin(): Promise<{
+  modoSoloAdmin: boolean;
+}> {
   return get("/api/admin/configuracion");
 }
 
-export function actualizarModoSoloAdmin(modoSoloAdmin: boolean): Promise<{ modoSoloAdmin: boolean }> {
+export function actualizarModoSoloAdmin(
+  modoSoloAdmin: boolean,
+): Promise<{ modoSoloAdmin: boolean }> {
   return patch("/api/admin/configuracion", { modoSoloAdmin });
 }
 
@@ -226,7 +254,9 @@ export function recalcularInformesAdmin(): Promise<{
   return post("/api/admin/informes/recalcular");
 }
 
-export function obtenerSociosJuridicosAdmin(): Promise<{ grupos: SocioJuridicoGrupo[] }> {
+export function obtenerSociosJuridicosAdmin(): Promise<{
+  grupos: SocioJuridicoGrupo[];
+}> {
   return get("/api/admin/socios-juridicos");
 }
 
@@ -235,7 +265,11 @@ export function vincularSocioJuridico(
   cuit: string | null,
   vinculoIds: number[],
 ): Promise<{ sociedadId: string; nombre: string }> {
-  return post("/api/admin/socios-juridicos/vincular", { nombre, cuit, vinculoIds });
+  return post("/api/admin/socios-juridicos/vincular", {
+    nombre,
+    cuit,
+    vinculoIds,
+  });
 }
 
 export function enviarMailPersonalizadoAdmin(

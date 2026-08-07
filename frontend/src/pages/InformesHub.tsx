@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FuenteDatos } from "../components/FuenteDatos";
 import { Reveal } from "../components/Reveal";
 import { obtenerAniosDisponibles } from "../lib/informesApi";
+
+const API = import.meta.env.VITE_API_URL ?? "http://localhost:5050";
 
 // Informes de nicho: a diferencia de "Estudios" y "Anuarios" (tablas
 // precomputadas), estos son contenido estático (texto + cifras ya
@@ -52,7 +54,8 @@ const NICHOS = [
   {
     slug: "cafe",
     nombre: "Café de Especialidad en Mendoza",
-    descripcion: "Crecimiento sostenido, sin el boom ni el colapso de la cerveza artesanal, 2017–2026.",
+    descripcion:
+      "Crecimiento sostenido, sin el boom ni el colapso de la cerveza artesanal, 2017–2026.",
   },
   {
     slug: "cerveza",
@@ -62,7 +65,8 @@ const NICHOS = [
   {
     slug: "reciclaje",
     nombre: "Reciclaje y Economía Circular en Mendoza",
-    descripcion: "De la chatarrería al \"impacto ambiental\" como marca, 2017–2026.",
+    descripcion:
+      'De la chatarrería al "impacto ambiental" como marca, 2017–2026.',
   },
 ];
 
@@ -80,7 +84,8 @@ export default function InformesHub() {
       <div
         className="pointer-events-none absolute inset-0"
         style={{
-          backgroundImage: "radial-gradient(circle, rgba(105,24,36,0.16) 1.5px, transparent 1.5px)",
+          backgroundImage:
+            "radial-gradient(circle, rgba(105,24,36,0.16) 1.5px, transparent 1.5px)",
           backgroundSize: "20px 20px",
           maskImage: "radial-gradient(black, transparent 80%)",
           WebkitMaskImage: "radial-gradient(black, transparent 80%)",
@@ -91,8 +96,9 @@ export default function InformesHub() {
         <Reveal>
           <h1 className="text-4xl font-bold md:text-5xl">Informes</h1>
           <p className="mt-3 max-w-2xl text-lg text-carbon/60">
-            Estadísticas de sociedades constituidas en Mendoza, con fuente citada en cada dato —
-            del mismo Boletín Oficial que alimenta toda la base.
+            Estadísticas de sociedades constituidas en Mendoza, con fuente
+            citada en cada dato — del mismo Boletín Oficial que alimenta toda la
+            base.
           </p>
         </Reveal>
 
@@ -103,38 +109,48 @@ export default function InformesHub() {
               to="/informes/departamentos-mas-activos"
               className="block rounded-3xl bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
             >
-              <h3 className="text-lg font-bold text-vino">Departamentos más activos</h3>
+              <h3 className="text-lg font-bold text-vino">
+                Departamentos más activos
+              </h3>
               <p className="mt-2 text-sm text-carbon/60">
-                Ranking de departamentos por cantidad de sociedades constituidas.
+                Ranking de departamentos por cantidad de sociedades
+                constituidas.
               </p>
             </Link>
             <Link
               to="/informes/mujeres-fundadoras"
               className="block rounded-3xl bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
             >
-              <h3 className="text-lg font-bold text-vino">Las Mujeres que Fundan Empresas en Mendoza</h3>
+              <h3 className="text-lg font-bold text-vino">
+                Las Mujeres que Fundan Empresas en Mendoza
+              </h3>
               <p className="mt-2 text-sm text-carbon/60">
-                Una brecha que no se cierra, y que se agranda cuanto más arriba se mira.
+                Una brecha que no se cierra, y que se agranda cuanto más arriba
+                se mira.
               </p>
             </Link>
             <Link
               to="/informes/analisis-redes"
               className="block rounded-3xl bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
             >
-              <h3 className="text-lg font-bold text-vino">El Mapa Oculto de las Sociedades Mendocinas</h3>
+              <h3 className="text-lg font-bold text-vino">
+                El Mapa Oculto de las Sociedades Mendocinas
+              </h3>
               <p className="mt-2 text-sm text-carbon/60">
-                Análisis de redes: un archipiélago de doce mil islas que se conecta por los
-                domicilios, no por las personas.
+                Análisis de redes: un archipiélago de doce mil islas que se
+                conecta por los domicilios, no por las personas.
               </p>
             </Link>
             <Link
               to="/informes/actividades-clae"
               className="block rounded-3xl bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
             >
-              <h3 className="text-lg font-bold text-vino">Qué hacen realmente las empresas mendocinas</h3>
+              <h3 className="text-lg font-bold text-vino">
+                Qué hacen realmente las empresas mendocinas
+              </h3>
               <p className="mt-2 text-sm text-carbon/60">
-                Anatomía del nomenclador CLAE: cajones de sastre, clusters y especialización
-                territorial.
+                Anatomía del nomenclador CLAE: cajones de sastre, clusters y
+                especialización territorial.
               </p>
             </Link>
           </div>
@@ -175,6 +191,12 @@ export default function InformesHub() {
           </Reveal>
         )}
 
+        <Reveal delay={0.18}>
+          <div className="mt-12">
+            <PedirInforme />
+          </div>
+        </Reveal>
+
         <Reveal delay={0.22}>
           <div className="mt-12">
             <FuenteDatos />
@@ -182,5 +204,80 @@ export default function InformesHub() {
         </Reveal>
       </div>
     </main>
+  );
+}
+
+function PedirInforme() {
+  const [texto, setTexto] = useState("");
+  const [mail, setMail] = useState("");
+  const [estado, setEstado] = useState<"idle" | "enviando" | "listo" | "error">(
+    "idle",
+  );
+
+  async function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    setEstado("enviando");
+    try {
+      const res = await fetch(`${API}/api/solicitudes-informe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ texto, mail: mail || undefined }),
+      });
+      if (!res.ok) throw new Error();
+      setEstado("listo");
+      setTexto("");
+      setMail("");
+    } catch {
+      setEstado("error");
+    }
+  }
+
+  return (
+    <div className="rounded-3xl bg-white p-8 shadow-sm">
+      <h2 className="text-2xl font-bold">¿Qué informe estás buscando?</h2>
+      <p className="mt-2 max-w-xl text-carbon/60">
+        Si hay un rubro, un dato o una zona de Mendoza que te gustaría ver
+        analizado, contanos — estos informes se eligen en buena parte por lo que
+        nos piden.
+      </p>
+
+      {estado === "listo" ? (
+        <p className="mt-6 rounded-2xl bg-humo p-6 font-bold text-carbon">
+          Gracias, lo tenemos anotado.
+        </p>
+      ) : (
+        <form onSubmit={onSubmit} className="mt-6 space-y-3">
+          <textarea
+            required
+            rows={3}
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+            placeholder="Ej: un informe sobre logística y transporte en Mendoza"
+            className="w-full rounded-2xl border border-carbon/15 px-4 py-3 text-carbon outline-none focus:border-vino"
+          />
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <input
+              type="email"
+              value={mail}
+              onChange={(e) => setMail(e.target.value)}
+              placeholder="Tu mail (opcional, para avisarte cuando salga)"
+              className="w-full flex-1 rounded-full border border-carbon/15 px-5 py-3 text-carbon outline-none focus:border-vino"
+            />
+            <button
+              type="submit"
+              disabled={estado === "enviando"}
+              className="shrink-0 cursor-pointer rounded-full bg-vino px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-vino-oscuro disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {estado === "enviando" ? "Enviando…" : "Pedir informe"}
+            </button>
+          </div>
+        </form>
+      )}
+      {estado === "error" && (
+        <p className="mt-3 text-sm text-carbon/50">
+          No pudimos guardar el pedido. Probá de nuevo en un rato.
+        </p>
+      )}
+    </div>
   );
 }

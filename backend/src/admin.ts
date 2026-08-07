@@ -338,6 +338,32 @@ adminRouter.get(
   }),
 );
 
+adminRouter.get(
+  "/solicitudes-informe",
+  asyncHandler(async (req: Request, res: Response) => {
+    const limite = Math.min(Number(req.query.limit) || 100, 500);
+    const offset = Number(req.query.offset) || 0;
+
+    const [{ rows: totalRows }, { rows }] = await Promise.all([
+      pool().query<{ count: string }>("SELECT count(*) FROM solicitudes_informe"),
+      pool().query<{ id: string; texto: string; mail: string | null; creado_el: string }>(
+        "SELECT id, texto, mail, creado_el FROM solicitudes_informe ORDER BY creado_el DESC LIMIT $1 OFFSET $2",
+        [limite, offset],
+      ),
+    ]);
+
+    return res.json({
+      total: Number(totalRows[0].count),
+      solicitudes: rows.map((s) => ({
+        id: s.id,
+        texto: s.texto,
+        mail: s.mail,
+        creadoEl: s.creado_el,
+      })),
+    });
+  }),
+);
+
 // A diferencia de la búsqueda pública (GraphQL vía boletin_api, filtrada por
 // RLS a oculta=false), estos dos listados usan boletin_auth para mostrar
 // también las sociedades/personas ya ocultas — si no, un admin nunca podría
