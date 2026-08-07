@@ -241,11 +241,54 @@ mails. Mitigaciones, todas antes de aplicar nada:
   cambió el padrón, no la realidad.
 
 ### R2 — No sabemos cuánto ruido tiene ARCA semana a semana
-Nadie midió todavía cuántos cambios reales produce una semana. Si son 50,
-perfecto; si son 8.000, el diseño de notificaciones necesita otra forma.
-**Recomiendo fuertemente correr 2 semanas en modo observación** (registra
-en `cambios_arca`, no manda un solo mail) antes de encender los avisos.
-Es gratis y convierte una incógnita en un dato.
+
+**Actualizado 2026-08-06 — ya no es una incógnita, se midió con datos reales.**
+Se descargó un padrón fresco (vía `actualizar_padrones_arca.py`, contra un
+directorio aislado, sin tocar nada de producción) y se comparó contra el
+que ya teníamos en el repo (del 31/7 — una ventana de ~6 días, casi
+exactamente el ciclo semanal que se planea):
+
+| | Padrón Contribuyentes (nacional, 536k CUITs) | Registro Nacional (Mendoza, 53.5k CUITs) |
+|---|---|---|
+| Altas de CUIT | 1.629 | **226** |
+| Bajas (desaparecen) | 853 | 3 |
+| Cambios de campo sobre los que siguen en ambos | **1.984** (0,37%) | **298** (0,56%) actividades |
+| → de eso, `empleador` | **1.672** | — |
+| → de eso, `ganancias` | 219 | — |
+| → de eso, `iva` | 126 | — |
+
+Conclusiones que esto habilita:
+
+- **El volumen es perfectamente manejable.** ~2.000 cambios/semana a nivel
+  nacional, pero acá solo importan los que tocan sociedades de Mendoza que
+  además están en nuestra base — un subconjunto bastante más chico. Nada
+  cerca de los "8.000 en una sola corrida" que ameritarían el tope de
+  seguridad de más abajo.
+- **`empleador` es, con diferencia, el campo que más se mueve** (1.672 de
+  1.984 cambios, 84%) — confirma que priorizarlo como señal de negocio
+  fue la decisión correcta.
+- **226 altas de CUIT en Mendoza en menos de una semana** es volumen real
+  y valioso — confirma que notificar altas de CUIT tiene sentido.
+- Los cambios de actividad (298, ejemplos reales: `INSTITUTO NEWEN SA`
+  agregó la 870100, `CONTRA FUEGOS SAS` agregó 3 actividades y dio de baja
+  una) son concretos y no parecen ruido de reordenamiento.
+
+Con esto, **la fase de "modo observación" de 2 semanas pasa a ser opcional
+en vez de obligatoria** — ya hay evidencia de que el volumen no va a
+sorprender. Sigue siendo bien barata de hacer igual, como red de
+seguridad adicional antes de encender los mails (por ejemplo, para
+confirmar que el join por `nombre_normalizado` del §3/R3 no genera
+ambigüedades en la práctica), pero ya no es indispensable para decidir el
+diseño.
+
+**Nota aparte, no bloqueante**: el campo `denominacion` del padrón de AFIP
+trae corrupción de caracteres en el origen — ej. "PATI#O" en vez de
+"PATIÑO". Confirmado que no lo introduce nuestro `preparar_padron.py`
+(decodifica con `latin-1, errors="replace"`, que produce `�` ante un byte
+inválido, no `#` literal) — es un artefacto de la propia exportación de
+AFIP, probablemente de mainframes viejos del Estado que sustituyen
+letras con tilde/Ñ por `#`. Ya está en los datos que tenemos hoy en
+producción (viene de antes, mismo origen); no es algo nuevo de este job.
 
 ### R3 — Alta de CUIT y el UNIQUE
 `sociedades.cuit` es UNIQUE. El alta de CUIT se resuelve **por nombre**
@@ -335,16 +378,18 @@ cambio registrado que no se aplicó (ni al revés).
 
 ## 9. Orden de implementación sugerido
 
+Actualizado tras la medición real de §6/R2: la fase de observación pasa
+de "obligatoria antes de decidir nada" a "red de seguridad barata antes
+de encender los mails" — el volumen y la forma de los cambios ya se
+conocen.
+
 | Fase | Qué | Por qué en este orden |
 |---|---|---|
 | 1 | Migración con las 5 tablas (+RLS de §8.1) + `limpiar_padron.py` con chunking | Base de todo, sin efectos visibles |
-| 2 | `refresco_arca.py` hasta el paso 6, **en modo observación** (registra en `cambios_arca`, NO aplica UPDATE ni notifica) + timer | Mide el ruido real de ARCA (R2) sin arriesgar nada |
-| 3 | *(esperar 2 corridas y mirar los datos)* | Decide el diseño final de notificaciones con datos, no con suposiciones |
-| 4 | Activar el UPDATE a `sociedades` | Ya con confianza en el diff |
-| 5 | Línea de tiempo en la ficha pública (grants + `Sociedad.tsx`) | Ya hay datos reales que mostrar; independiente de los mails |
-| 6 | Worker de notificaciones + endpoint + mail nuevo | Lo último, cuando ya sabemos qué volumen tiene |
+| 2 | `refresco_arca.py` hasta el paso 6, **en modo observación** (registra en `cambios_arca`, NO aplica UPDATE ni notifica) + timer | Confirma en producción lo que ya se vio en la medición manual (§6/R2), y valida el join por nombre (R3) contra la base real antes de tocarla |
+| 3 | Activar el UPDATE a `sociedades` | Ya con confianza en el diff, medida dos veces |
+| 4 | Línea de tiempo en la ficha pública (grants + `Sociedad.tsx`) | Ya hay datos reales que mostrar; independiente de los mails |
+| 5 | Worker de notificaciones + endpoint + mail nuevo | Último paso — ya se sabe que ~2.000 cambios/semana a nivel nacional (bastante menos para Mendoza) es un volumen tranquilo para mandar mails |
 
-La fase 3 no es burocracia: es la diferencia entre encender los mails
-sabiendo qué va a pasar y encenderlos a ciegas. Las fases 5 y 6 son
-independientes entre sí — se pueden hacer en cualquier orden, o en
-paralelo.
+Las fases 4 y 5 son independientes entre sí — se pueden hacer en
+cualquier orden, o en paralelo.
