@@ -8,4 +8,16 @@ export default defineConfig({
   // sin esto Vite solo miraría frontend/.env y las VITE_* del .env raíz
   // (como VITE_GA_ID) nunca llegarían al build.
   envDir: "..",
+  // Target default de Vite (~2020: chrome87/firefox78/safari14/edge88) hace
+  // que esbuild transpile clases/spread a formas más viejas y agregue
+  // polyfills (Math.hypot) que no hacen falta en los navegadores reales de
+  // hoy -- "esnext" en optimizeDeps evita esa transpilación de más al
+  // pre-empaquetar las dependencias (PageSpeed Insights lo marcaba como
+  // "Legacy JavaScript").
+  optimizeDeps: {
+    esbuildOptions: { target: "esnext" },
+  },
+  build: {
+    target: "esnext",
+  },
 });

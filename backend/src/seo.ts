@@ -2211,6 +2211,33 @@ seoRouter.get("/robots.txt", (_req: Request, res: Response) => {
   );
 });
 
+// Formato de llmstxt.org: Markdown con un único H1 obligatorio, blockquote
+// de resumen, y secciones H2 con listas de links -- Lighthouse (categoría
+// "Agentic browsing") lo valida como texto plano en /llms.txt, y sin esta
+// ruta el catch-all de la SPA (server.ts) devolvía el index.html ahí mismo,
+// que Lighthouse interpretaba como "sin H1 ni links" al no ser Markdown.
+seoRouter.get("/llms.txt", (_req: Request, res: Response) => {
+  res.type("text/plain").send(
+    `# INGcome
+
+> Buscador de sociedades, personas y vínculos societarios de Mendoza, construido sobre los edictos que la provincia publica en el Boletín Oficial desde 2017. Cada dato citado con link a la publicación de origen.
+
+INGcome estructura constituciones, modificaciones y demás actos societarios publicados en el Boletín Oficial de Mendoza en una base consultable: fichas de sociedades y personas, la red de vínculos entre ellas, e informes agregados por rubro y período. Los datos se actualizan a diario a partir de los boletines nuevos.
+
+## Páginas principales
+
+- [${siteUrl()}](${siteUrl()}): búsqueda de sociedades por nombre o CUIT/DNI.
+- [${siteUrl()}/busqueda-avanzada](${siteUrl()}/busqueda-avanzada): búsqueda filtrada por rubro, departamento y fecha de constitución.
+- [${siteUrl()}/informes](${siteUrl()}/informes): estudios agregados y series de datos por rubro, incluida una serie de informes sectoriales (café, cerveza artesanal, cannabis, energías renovables, arquitectura, y más).
+
+## Datos y fuente
+
+- [${siteUrl()}/sitemap.xml](${siteUrl()}/sitemap.xml): mapa completo de fichas de sociedades e informes.
+- Fuente primaria: Boletín Oficial de la Provincia de Mendoza, https://boletinoficial.mendoza.gov.ar/.
+`,
+  );
+});
+
 seoRouter.get("/sitemap.xml", (_req: Request, res: Response) => {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

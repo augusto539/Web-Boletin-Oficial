@@ -7,7 +7,6 @@ import { FlechaIcon } from "../components/FlechaIcon";
 import { GrafoSociedad } from "../components/GrafoSociedad";
 import { Reveal } from "../components/Reveal";
 import { SearchBox } from "../components/SearchBox";
-import { SplitText } from "../components/SplitText";
 import { Ticker } from "../components/Ticker";
 import { EMAIL_BAJA_DATOS, FUENTES } from "../lib/constantes";
 import { useAuth } from "../lib/auth";
@@ -89,10 +88,16 @@ function Hero() {
           Información pública, estructurada
         </motion.p>
 
+        {/* Sin animación de entrada a propósito: es el elemento LCP de la
+            página, y una animación que arranca invisible (aunque sea corta)
+            retrasa el momento en que Lighthouse la cuenta como "pintada" —
+            en el peor caso (CPU/red lentas) eso sumaba varios segundos al
+            LCP. El resto del hero sí anima, porque no es el elemento más
+            grande. */}
         <h1 className="max-w-4xl text-5xl leading-[1.05] font-bold md:text-7xl">
-          <SplitText texto="Quién es socio de quién" delay={0.15} />
+          Quién es socio de quién
           <br />
-          <SplitText texto="en Mendoza" delay={0.55} className="text-white/60" />
+          <span className="text-white/60">en Mendoza</span>
         </h1>
 
         <motion.p
