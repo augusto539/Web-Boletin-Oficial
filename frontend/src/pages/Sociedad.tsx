@@ -151,9 +151,11 @@ export default function Sociedad() {
                 valor={dato(sociedad.tipoMatchArcaByTipoMatchArcaId?.nombre)}
               />
               <Campo etiqueta="Domicilio" valor={formatDomicilio(domicilio)} />
-              <div className="md:col-span-3">
-                <Campo etiqueta="Objeto social" valor={dato(sociedad.objetoSocial)} />
-              </div>
+              <Campo
+                etiqueta="Objeto social"
+                valor={dato(sociedad.objetoSocial)}
+                className="md:col-span-3"
+              />
             </dl>
           </section>
         </Reveal>
@@ -252,10 +254,24 @@ function TituloSeccion({ children }: { children: React.ReactNode }) {
   return <h2 className="mb-8 text-3xl font-bold">{children}</h2>;
 }
 
-function Campo({ etiqueta, valor }: { etiqueta: string; valor: string }) {
+function Campo({
+  etiqueta,
+  valor,
+  className = "",
+}: {
+  etiqueta: string;
+  valor: string;
+  /** Ej. "md:col-span-3" para que un campo ocupe todo el ancho de la grilla
+   * -- va acá y no en un <div> envolvente: un <dl> solo admite como hijos
+   * directos pares dt+dd o <div> que a su vez contengan dt+dd directamente,
+   * nunca un <div> conteniendo a otro <div>. Envolver a Campo (que ya es un
+   * <div><dt/><dd/></div>) en un <div> aparte para el grid-span rompía esa
+   * regla -- exactamente lo que marcaba el audit de accesibilidad. */
+  className?: string;
+}) {
   const vacio = valor === SIN_DATO;
   return (
-    <div>
+    <div className={className}>
       <dt className="text-xs uppercase tracking-widest text-carbon/50">{etiqueta}</dt>
       <dd className={`mt-1.5 leading-relaxed ${vacio ? "text-carbon/35" : "text-carbon"}`}>
         {vacio ? "No publicado" : valor}

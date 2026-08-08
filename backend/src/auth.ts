@@ -163,10 +163,19 @@ authRouter.post("/login", async (req: Request, res: Response) => {
   return res.json({ usuario });
 });
 
+// /refresh siempre responde 200: es un sondeo ("¿esta cookie todavía sirve
+// para renovar la sesión?"), no una acción que requiera autenticación previa
+// -- lo llama el AuthProvider en cada carga de página para cualquier
+// visitante, logueado o no. Que "no, no hay sesión" fuera un 401 hacía que
+// el navegador lo logueara como error de red en la consola de TODOS los
+// visitantes anónimos (la inmensa mayoría), que es lo que marcaba el audit
+// de Lighthouse "Browser errors were logged to console". Las rutas
+// protegidas de verdad (requireUsuario/requireAdmin, más abajo) siguen
+// devolviendo 401 sin cambios -- ahí sí es un error real.
 authRouter.post("/refresh", async (req: Request, res: Response) => {
   const raw = req.cookies?.refresh_token;
   if (typeof raw !== "string" || !raw) {
-    return res.status(401).json({ error: "Sin sesión." });
+    return res.json({ usuario: null });
   }
 
   const { rows } = await pool().query<{
@@ -180,7 +189,7 @@ authRouter.post("/refresh", async (req: Request, res: Response) => {
   const sesion = rows[0];
   if (!sesion) {
     clearCookies(res);
-    return res.status(401).json({ error: "Sesión inválida." });
+    return res.json({ usuario: null });
   }
 
   // Reuso: llegó un refresh token ya rotado/cerrado. Puede ser un token robado;
@@ -190,12 +199,12 @@ authRouter.post("/refresh", async (req: Request, res: Response) => {
       sesion.usuario_id,
     ]);
     clearCookies(res);
-    return res.status(401).json({ error: "Sesión inválida." });
+    return res.json({ usuario: null });
   }
 
   if (new Date(sesion.expira_el) < new Date()) {
     clearCookies(res);
-    return res.status(401).json({ error: "Sesión expirada." });
+    return res.json({ usuario: null });
   }
 
   const { rows: urows } = await pool().query<UsuarioRow>(
@@ -204,7 +213,7 @@ authRouter.post("/refresh", async (req: Request, res: Response) => {
   );
   if (!urows[0]) {
     clearCookies(res);
-    return res.status(401).json({ error: "Sesión inválida." });
+    return res.json({ usuario: null });
   }
 
   // Rotación: se invalida el refresh usado y se emite uno nuevo.
@@ -226,10 +235,14 @@ authRouter.post("/logout", async (req: Request, res: Response) => {
   return res.json({ ok: true });
 });
 
+// También siempre 200 (ver comentario en /refresh): es el sondeo que corre
+// en cada carga de página. `expirado: true` distingue "había un access
+// token pero ya no sirve" (vale la pena que el front intente /refresh) de
+// "nunca hubo cookie" (visitante anónimo, no hay nada que refrescar).
 authRouter.get("/me", async (req: Request, res: Response) => {
   const token = req.cookies?.access_token;
   if (typeof token !== "string" || !token) {
-    return res.status(401).json({ error: "Sin sesión." });
+    return res.json({ usuario: null });
   }
   let sub: string;
   try {
@@ -237,7 +250,7 @@ authRouter.get("/me", async (req: Request, res: Response) => {
     if (!payload.sub) throw new Error("sin sub");
     sub = payload.sub;
   } catch {
-    return res.status(401).json({ error: "Token inválido o expirado." });
+    return res.json({ usuario: null, expirado: true });
   }
 
   // Se relee de la base (no se confía en los claims) para que plan/admin estén
@@ -246,7 +259,7 @@ authRouter.get("/me", async (req: Request, res: Response) => {
     "SELECT id, mail, contrasena_hash, nombre, plan, admin FROM usuarios WHERE id = $1",
     [sub],
   );
-  if (!rows[0]) return res.status(401).json({ error: "Sin sesión." });
+  if (!rows[0]) return res.json({ usuario: null });
   return res.json({ usuario: usuarioPublico(rows[0]) });
 });
 

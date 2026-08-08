@@ -19,5 +19,11 @@ export default defineConfig({
   },
   build: {
     target: "esnext",
+    // Sin esto, Lighthouse marca "Missing source maps for large first-party
+    // JavaScript" (no puede mapear el bundle minificado al código fuente).
+    // El .map se sirve como un archivo estático más junto al .js -- lo baja
+    // el browser solo si el usuario abre DevTools con sourcemaps activado,
+    // así que no pesa nada en una carga normal.
+    sourcemap: true,
   },
 });
