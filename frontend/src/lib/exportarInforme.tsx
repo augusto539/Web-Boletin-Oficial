@@ -13,6 +13,7 @@ import { InformeNichoArquitecturaPDF } from "../components/pdf/InformeNichoArqui
 import { InformeNichoCafePDF } from "../components/pdf/InformeNichoCafePDF";
 import { InformeNichoCervezaPDF } from "../components/pdf/InformeNichoCervezaPDF";
 import { InformeNichoReciclajePDF } from "../components/pdf/InformeNichoReciclajePDF";
+import { InformeNichoFideicomisosPDF } from "../components/pdf/InformeNichoFideicomisosPDF";
 import { InformeNichoServiciosProfesionalesPDF } from "../components/pdf/InformeNichoServiciosProfesionalesPDF";
 import { InformeNichoSoftwarePDF } from "../components/pdf/InformeNichoSoftwarePDF";
 import type { Anuario, DepartamentoActivo } from "./informesApi";
@@ -105,6 +106,11 @@ export async function exportarNichoCervezaPDF() {
 export async function exportarNichoReciclajePDF() {
   const blob = await pdf(<InformeNichoReciclajePDF />).toBlob();
   descargarBlob(blob, "reciclaje-y-economia-circular-en-mendoza.pdf");
+}
+
+export async function exportarNichoFideicomisosPDF() {
+  const blob = await pdf(<InformeNichoFideicomisosPDF />).toBlob();
+  descargarBlob(blob, "servicios-de-fideicomisos-en-mendoza.pdf");
 }
 
 export async function exportarMujeresFundadorasPDF() {

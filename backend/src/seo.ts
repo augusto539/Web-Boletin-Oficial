@@ -88,6 +88,13 @@ import {
   TOP_CAPITALES as TOP_CAPITALES_RECICLAJE,
 } from "./data/nichoReciclaje.js";
 import {
+  DEPARTAMENTOS_FIDEICOMISOS,
+  type EntidadFideicomisos,
+  ENTIDADES as ENTIDADES_FIDEICOMISOS,
+  EVOLUCION_ANUAL as EVOLUCION_ANUAL_FIDEICOMISOS,
+  TIPO_ENTIDAD as TIPO_ENTIDAD_FIDEICOMISOS,
+} from "./data/nichoFideicomisos.js";
+import {
   EVOLUCION_ANUAL as EVOLUCION_ANUAL_MUJERES,
   PANORAMA,
   TOP_MUJERES,
@@ -446,6 +453,29 @@ function entidadesReciclajeHtml(): string {
   return ENTIDADES_RECICLAJE.map(entidadReciclajeHtml).join("");
 }
 
+function entidadFideicomisosHtml(e: EntidadFideicomisos): string {
+  const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
+  const sociosLinks = e.socios
+    .map((s) =>
+      s.sociedadId
+        ? `<a href="/sociedad/${s.sociedadId}">${escapeHtml(s.nombre)}</a>`
+        : s.personaId
+          ? `<a href="/persona/${s.personaId}">${escapeHtml(s.nombre)}</a>`
+          : escapeHtml(s.nombre),
+    )
+    .join(" · ");
+  return `
+    <h3>${escapeHtml(e.tipo)} — ${nombreLink}</h3>
+    <p>CUIT: ${e.cuit ? escapeHtml(e.cuit) : "—"} · Capital: ${e.capital ? escapeHtml(e.capital) : "—"} · Publicación: ${e.publicacion ? escapeHtml(e.publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
+    ${e.socios.length > 0 ? `<p>Socios/Integrantes: ${sociosLinks}</p>` : ""}
+    <p>Objeto social: ${e.objetoSocial ? escapeHtml(e.objetoSocial) : "—"}</p>
+  `;
+}
+
+function entidadesFideicomisosHtml(): string {
+  return ENTIDADES_FIDEICOMISOS.map(entidadFideicomisosHtml).join("");
+}
+
 function siteUrl(): string {
   return (process.env.SITE_URL ?? "http://localhost:5050").replace(/\/$/, "");
 }
@@ -753,6 +783,7 @@ seoRouter.get(
         <li><a href="/informes/nicho-cafe">Café de Especialidad en Mendoza</a></li>
         <li><a href="/informes/nicho-cerveza">Cerveza Artesanal en Mendoza</a></li>
         <li><a href="/informes/nicho-reciclaje">Reciclaje y Economía Circular en Mendoza</a></li>
+        <li><a href="/informes/nicho-fideicomisos">Servicios de Fideicomisos en Mendoza</a></li>
       </ul>
       ${anios.length > 0 ? `<h2>Anuarios</h2><ul>${anuarioLinksHtml}</ul>` : ""}
       ${fuenteDatosHtml()}
@@ -1871,6 +1902,108 @@ seoRouter.get(
   }),
 );
 
+// Informe de nicho sectorial, duodécimo de la serie: mismo criterio que los
+// anteriores — contenido estático duplicado a mano desde
+// frontend/src/data/nichoFideicomisos.ts.
+seoRouter.get(
+  "/informes/nicho-fideicomisos",
+  asyncHandler(async (_req: Request, res: Response, next) => {
+    const base = leerIndexHtml();
+    if (!base) return next();
+
+    const title =
+      "Servicios de fideicomisos en Mendoza: el vehículo financiero del boom inmobiliario | INGcome";
+    const description =
+      "63 sociedades de servicios de fideicomisos en Mendoza (2017–2026): el 79% declara actividad inmobiliaria o constructora, es el único nicho sin una sola S.R.L. ni fundadores repetidos.";
+    const canonical = `${siteUrl()}/informes/nicho-fideicomisos`;
+
+    const contentHtml = `
+    <main>
+      <h1>Servicios de fideicomisos en Mendoza</h1>
+      <p>El vehículo financiero del boom inmobiliario, no un servicio patrimonial genérico</p>
+      <p>63 sociedades identificadas vía el código CLAE "Servicios de fideicomisos" — el universo más chico de la serie, pero el más nítido en su identidad real: pese al nombre oficial, en Mendoza esta figura es casi por completo el vehículo legal del "fideicomiso al costo" inmobiliario.</p>
+      <h2>Resumen ejecutivo</h2>
+      <ul>
+        <li>63 sociedades de servicios de fideicomisos identificadas vía el código CLAE 643001, declarado como actividad principal — el universo más chico de los tres nichos basados en CLAE de esta serie, y el único sin ningún año en cero desde que arranca el relevamiento.</li>
+        <li>No es un servicio patrimonial genérico: es el vehículo del "fideicomiso al costo" inmobiliario. El 79% (50 de 63) declara explícitamente actividad inmobiliaria, constructora o de desarrollo urbano en su objeto social — un fiduciario administra los aportes de inversores particulares para construir y luego distribuir unidades o rentabilidad, no la administración de fideicomisos financieros o testamentarios en sentido amplio.</li>
+        <li>Arranca fuerte desde el primer año con datos (10 sociedades en 2018) y 2025 es el pico de toda la serie (13) — sin la curva de despegue gradual que muestran otros nichos de esta tanda.</li>
+        <li>Ningún fundador se repite entre las 63 sociedades — el único de los tres nichos CLAE de esta serie sin una sola cadena de socios compartidos. Cada proyecto fiduciario parece constituirse con un equipo propio.</li>
+        <li>100% S.A.S. o S.A.: es el único nicho de la serie sin una sola S.R.L. — coherente con que administrar fideicomisos de terceros exige una estructura de responsabilidad limitada por acciones, no de cuotas.</li>
+      </ul>
+      <h2>Una curva sin rampa de despegue</h2>
+      <table>
+        <thead><tr><th>Año</th><th>Sociedades constituidas</th></tr></thead>
+        <tbody>${EVOLUCION_ANUAL_FIDEICOMISOS.map((d) => `<tr><td>${d.etiqueta}</td><td>${d.valor}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>* 2026 es parcial: el relevamiento llega hasta julio. No hay sociedades del nicho con fecha de Constitución en 2017 — 2018 es el primer año con datos, y ya arranca como el segundo año más alto de la serie.</p>
+      <p>A diferencia de los demás nichos —que muestran una rampa de crecimiento gradual desde 2017— este arranca fuerte en 2018 (10 sociedades) y se mantiene en una banda de 4 a 8 por año durante seis años, sin un patrón de boom ni de colapso, hasta el salto de 2025 (13, el año más alto de toda la serie). No hay un evento de origen visible en los datos: para 2018 la figura del fideicomiso inmobiliario ya estaba consolidada como vehículo de inversión en Mendoza, y este relevamiento —que arranca en 2017— la encuentra ya en régimen, no naciendo.</p>
+      <h2>No es "gestión patrimonial": es financiamiento de obra</h2>
+      <p>El objeto social de las 63 sociedades deja poca ambigüedad sobre a qué se dedica realmente este código CLAE en Mendoza:</p>
+      <table>
+        <thead><tr><th>Actividad declarada (además de "fiduciaria")</th><th>Sociedades</th></tr></thead>
+        <tbody>
+          <tr><td>Inmobiliaria / constructora / desarrollo urbano</td><td>50 (79%)</td></tr>
+          <tr><td>Financiera / inversora</td><td>31 (49%)</td></tr>
+        </tbody>
+      </table>
+      <p>La combinación típica —fiduciaria + inmobiliaria/constructora— es la firma textual del fideicomiso al costo: la figura donde un grupo de inversores ("fiduciantes") aporta capital a una sociedad ("fiduciaria") que administra la construcción de un edificio o loteo y distribuye unidades o rentabilidad al terminar la obra, sin que el desarrollador ponga capital propio de riesgo.</p>
+      <p>"Fiduciaria: ejercer el carácter de fiduciaria en todo tipo de fideicomiso con excepción de los financieros y aquellos sujetos a la normativa de la ley de entidades financieras." — Fontalba S.A.</p>
+      <p>"Operaciones inmobiliarias: compraventa, locación, leasing, fideicomiso de inmuebles. Actos jurídicos, inversiones y aportes de capitales, actuación como fiduciario..." — Furmich S.A.S.</p>
+      <p>Casi ninguna sociedad del nicho declara fideicomisos testamentarios, de garantía o de administración patrimonial familiar como actividad — el uso mendocino de esta figura societaria es, de manera abrumadora, financiamiento de desarrollo inmobiliario.</p>
+      <h2>Perfil societario</h2>
+      <table>
+        <thead><tr><th>Tipo</th><th>Cantidad</th></tr></thead>
+        <tbody>${TIPO_ENTIDAD_FIDEICOMISOS.map((d) => `<tr><td>${d.tipo}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>Es el único nicho de toda la serie sin una sola S.R.L. — coherente con que actuar como fiduciario de terceros es una actividad que exige una estructura de responsabilidad limitada por acciones (S.A.S. o S.A.), no la forma de cuotas sociales típica de un negocio familiar chico. Capital declarado: mediana de $292.000, rango de $20.000 a $20.000.000 (Grupo Magoviva S.A.S., 2025).</p>
+      <table>
+        <thead><tr><th>Sociedad</th><th>Capital</th><th>Departamento</th></tr></thead>
+        <tbody>
+          <tr><td>Grupo Magoviva S.A.S.</td><td>$20.000.000</td><td>Capital</td></tr>
+          <tr><td>Fundamenta Pilares Desarrollos S.A.S.</td><td>$10.000.000</td><td>Capital</td></tr>
+          <tr><td>Utopía Desarrollos S.A.S.</td><td>$8.000.000</td><td>San Rafael</td></tr>
+          <tr><td>Betania S.A.S.</td><td>$4.000.000</td><td>Luján de Cuyo</td></tr>
+          <tr><td>Poldena Moon Sas</td><td>$2.000.000</td><td>Las Heras</td></tr>
+          <tr><td>Flogulu S.A.S.</td><td>$2.000.000</td><td>Capital</td></tr>
+          <tr><td>Grupo Gestión Urbana S.A.S.</td><td>$1.500.000</td><td>San Rafael</td></tr>
+          <tr><td>Jolmogori S.A.S.</td><td>$1.500.000</td><td>Guaymallén</td></tr>
+        </tbody>
+      </table>
+      <p>Los nombres mismos del top del ranking ("Fundamenta Pilares Desarrollos", "Utopía Desarrollos", "Grupo Gestión Urbana") refuerzan la lectura: son firmas de desarrollo inmobiliario que adoptaron la figura fiduciaria como estructura legal, no administradoras de fideicomisos como servicio abstracto.</p>
+      <h2>Sin cadenas de fundadores repetidos</h2>
+      <p>A diferencia de otros nichos de esta serie basados en CLAE, ningún socio se repite entre las 63 sociedades de este nicho. Cada proyecto fiduciario parece armarse con un equipo de inversores propio, sin que aparezca en los datos ningún desarrollador serial constituyendo múltiples vehículos fiduciarios sucesivos — al menos no bajo los mismos nombres de socios captados en el Boletín. No se puede descartar que un mismo grupo económico use apoderados o sociedades intermedias distintas en cada proyecto, algo que este relevamiento (basado en personas físicas nombradas como socios) no puede ver.</p>
+      <h2>Dónde están</h2>
+      <table>
+        <thead><tr><th>Departamento</th><th>Sociedades</th></tr></thead>
+        <tbody>${DEPARTAMENTOS_FIDEICOMISOS.map((d) => `<tr><td>${escapeHtml(d.departamento)}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>Capital, Luján de Cuyo y Godoy Cruz concentran el 69% del nicho — los tres departamentos del Gran Mendoza con más desarrollo inmobiliario de edificios y countries en la última década, consistente con la lectura de que este es, ante todo, un vehículo de financiamiento de obra urbana.</p>
+      ${ENTIDADES_FIDEICOMISOS.length > 0 ? `<h2>Directorio completo: las 63 sociedades de servicios de fideicomisos</h2>${entidadesFideicomisosHtml()}` : ""}
+      <h2>Metodología y límites</h2>
+      <p>Búsqueda por CLAE, mismo método que otros nichos de esta serie. Se usó el código 643001 ("Servicios de fideicomisos") como actividad principal (orden 1, estado activo) declarada ante ARCA. Este método solo alcanza al 61,7% del corpus con cruce ARCA — una sociedad fiduciaria real sin ese cruce queda invisible, sin forma de estimar cuántas son.</p>
+      <p>71 candidatas → 63 sociedades únicas: el cruce dio 71 filas, pero 8 nombres normalizados aparecían dos veces por el mismo patrón de republicación en el Boletín — se deduplicó por nombre normalizado, conservando la primera publicación cronológica.</p>
+      <p>Cobertura ARCA: 37 de 63 (58,7%) cruzan contra el padrón de AFIP — la más baja de los tres nichos CLAE de esta serie, aunque todas las que cruzan están activas salvo un caso "No Inscripto" en IVA.</p>
+      <p>Límite del método de socios: la ausencia de socios repetidos entre estas 63 sociedades no significa necesariamente ausencia de desarrolladores seriales — este relevamiento identifica personas físicas nombradas como "Socio" en el Boletín, y una misma firma desarrolladora podría usar apoderados distintos o estructuras societarias intermedias en cada proyecto fiduciario sin que eso se refleje en los datos disponibles.</p>
+      ${fuenteDatosHtml()}
+    </main>
+  `.trim();
+
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      name: title,
+      description,
+      url: canonical,
+      creator: { "@type": "Organization", name: "INGcome" },
+      temporalCoverage: "2017/2026",
+      dateModified: "2026-08-12",
+    };
+
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.send(renderHtml(base, { title, description, canonical, noindex: false, jsonLd, contentHtml }));
+  }),
+);
+
 // Informe de corte transversal (no es un nicho sectorial, ver nota en
 // frontend/src/data/mujeresFundadoras.ts): mismo criterio de duplicado a
 // mano que el resto de /informes. Sin ENTIDADES: no hay sociedades/personas
@@ -2274,6 +2407,7 @@ seoRouter.get(
       `  <url><loc>${siteUrl()}/informes/nicho-cafe</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/nicho-cerveza</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/nicho-reciclaje</loc><lastmod>${hoy}</lastmod></url>`,
+      `  <url><loc>${siteUrl()}/informes/nicho-fideicomisos</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/mujeres-fundadoras</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/actividades-clae</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/analisis-redes</loc><lastmod>${hoy}</lastmod></url>`,

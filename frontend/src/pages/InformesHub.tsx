@@ -68,6 +68,11 @@ const NICHOS = [
     descripcion:
       'De la chatarrería al "impacto ambiental" como marca, 2017–2026.',
   },
+  {
+    slug: "fideicomisos",
+    nombre: "Servicios de Fideicomisos en Mendoza",
+    descripcion: "El vehículo financiero del boom inmobiliario, 2017–2026.",
+  },
 ];
 
 export default function InformesHub() {

@@ -18,6 +18,7 @@ export type TipoDescarga =
   | "informe_nicho_cafe"
   | "informe_nicho_cerveza"
   | "informe_nicho_reciclaje"
+  | "informe_nicho_fideicomisos"
   | "informe_mujeres_fundadoras"
   | "informe_actividades_clae"
   | "informe_analisis_redes";
