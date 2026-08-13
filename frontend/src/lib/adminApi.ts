@@ -254,6 +254,15 @@ export function recalcularInformesAdmin(): Promise<{
   return post("/api/admin/informes/recalcular");
 }
 
+// Dispara el job diario a mano (repo separado "job-diario-boletin-oficial",
+// corre nativo en el host vía systemd) -- fire-and-forget: el backend solo
+// confirma que dejó el archivo trigger, no espera a que el job termine (ver
+// backend/src/admin.ts). Para ver el resultado real hay que mirar los logs
+// por SSH o esperar el mail que manda el job al terminar.
+export function lanzarJobDiarioAdmin(): Promise<{ ok: boolean }> {
+  return post("/api/admin/job-diario/lanzar");
+}
+
 export function obtenerSociosJuridicosAdmin(): Promise<{
   grupos: SocioJuridicoGrupo[];
 }> {

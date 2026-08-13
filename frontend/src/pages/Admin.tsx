@@ -7,6 +7,7 @@ import {
   alternarOcultaPersona,
   alternarOcultaSociedad,
   enviarMailPersonalizadoAdmin,
+  lanzarJobDiarioAdmin,
   obtenerConfiguracionAdmin,
   obtenerEstadisticasAdmin,
   obtenerGastoAnthropicAdmin,
@@ -288,6 +289,8 @@ function TabConfiguracion() {
   const [resultadoRecalculo, setResultadoRecalculo] = useState<string | null>(
     null,
   );
+  const [lanzandoJob, setLanzandoJob] = useState(false);
+  const [resultadoJob, setResultadoJob] = useState<string | null>(null);
 
   useEffect(() => {
     obtenerConfiguracionAdmin()
@@ -316,6 +319,19 @@ function TabConfiguracion() {
       )
       .catch(() => setResultadoRecalculo("Hubo un error, probá de nuevo."))
       .finally(() => setRecalculando(false));
+  }
+
+  function alLanzarJob() {
+    setLanzandoJob(true);
+    setResultadoJob(null);
+    lanzarJobDiarioAdmin()
+      .then(() =>
+        setResultadoJob(
+          "Disparado. Tarda unos minutos -- revisá los logs por SSH o esperá el mail de resultado.",
+        ),
+      )
+      .catch(() => setResultadoJob("Hubo un error, probá de nuevo."))
+      .finally(() => setLanzandoJob(false));
   }
 
   return (
@@ -360,6 +376,32 @@ function TabConfiguracion() {
             className="shrink-0 cursor-pointer rounded-full bg-vino px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-vino-oscuro disabled:cursor-not-allowed disabled:opacity-60"
           >
             {recalculando ? "Recalculando…" : "Recalcular ahora"}
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-3xl bg-white p-7">
+        <div className="flex items-center justify-between gap-6">
+          <div>
+            <p className="font-bold">Job diario</p>
+            <p className="mt-1.5 max-w-xl text-sm text-carbon/60">
+              Descarga y procesa el boletín del día (repo aparte, corre en el
+              servidor). Se dispara solo de lunes a viernes a las 12:30. Usá
+              esto para lanzarlo a mano ahora (ej. si se perdió una corrida).
+            </p>
+            {resultadoJob && (
+              <p className="mt-2 text-sm font-bold text-vino">
+                {resultadoJob}
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={alLanzarJob}
+            disabled={lanzandoJob}
+            className="shrink-0 cursor-pointer rounded-full bg-vino px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-vino-oscuro disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {lanzandoJob ? "Lanzando…" : "Lanzar ahora"}
           </button>
         </div>
       </div>
