@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { DescargarIcon } from "../components/DescargarIcon";
 import { FuenteDatos } from "../components/FuenteDatos";
@@ -6,19 +6,27 @@ import { GraficoBarras } from "../components/GraficoBarras";
 import { MapaMendoza } from "../components/MapaMendoza";
 import { Reveal } from "../components/Reveal";
 import { ModalRegistro } from "../components/auth/ModalRegistro";
-import { DEPARTAMENTOS_SOFTWARE, ENTIDADES, EVOLUCION_ANUAL, TIPO_ENTIDAD } from "../data/nichoSoftware";
+import { DEPARTAMENTOS_SOFTWARE, EVOLUCION_ANUAL, TIPO_ENTIDAD } from "../data/nichoSoftware";
 import { registrarDescarga } from "../lib/descargasApi";
+import { cuit as formatCuit, fecha, moneda } from "../lib/format";
+import { type EntidadesNicho, obtenerEntidadesNicho } from "../lib/informesApi";
 import { useAccionConSesion } from "../lib/useAccionConSesion";
 
 export default function InformeNichoSoftware() {
   const [generando, setGenerando] = useState(false);
   const { modalAbierto, ejecutar, alExito, cerrar } = useAccionConSesion();
+  const [datos, setDatos] = useState<EntidadesNicho | null>(null);
+
+  useEffect(() => {
+    obtenerEntidadesNicho("software").then(setDatos);
+  }, []);
 
   async function descargar() {
+    if (!datos) return;
     setGenerando(true);
     try {
       const { exportarNichoSoftwarePDF } = await import("../lib/exportarInforme");
-      await exportarNichoSoftwarePDF();
+      await exportarNichoSoftwarePDF(datos.entidades);
       registrarDescarga("informe_nicho_software", "pdf", null, "Desarrollo de Software en Mendoza");
     } finally {
       setGenerando(false);
@@ -50,7 +58,7 @@ export default function InformeNichoSoftware() {
             <button
               type="button"
               onClick={() => ejecutar(descargar)}
-              disabled={generando}
+              disabled={generando || !datos}
               className="flex shrink-0 cursor-pointer items-center gap-2 rounded-full bg-vino px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-vino-oscuro disabled:cursor-not-allowed disabled:opacity-60"
             >
               {generando ? (
@@ -224,7 +232,7 @@ export default function InformeNichoSoftware() {
           </div>
         </Reveal>
 
-        {ENTIDADES.length > 0 && (
+        {datos && datos.entidades.length > 0 && (
           <Reveal delay={0.4}>
             <div className="mt-10 rounded-3xl bg-white p-6 shadow-sm sm:p-8">
               <h2 className="text-lg font-bold">Directorio completo: las 103 sociedades</h2>
@@ -234,12 +242,14 @@ export default function InformeNichoSoftware() {
                 va al final).
               </p>
               <div className="mt-6 space-y-6">
-                {ENTIDADES.map((e) => (
-                  <div key={e.nombre} className="border-t border-carbon/10 pt-6 first:border-t-0 first:pt-0">
+                {datos.entidades.map((e) => (
+                  <div key={e.sociedadId} className="border-t border-carbon/10 pt-6 first:border-t-0 first:pt-0">
                     <p className="text-base font-bold text-carbon">
-                      <span className="mr-2 rounded-full bg-humo px-2.5 py-0.5 text-xs font-bold tracking-wider text-carbon/60 uppercase">
-                        {e.tipo}
-                      </span>
+                      {e.tipo && (
+                        <span className="mr-2 rounded-full bg-humo px-2.5 py-0.5 text-xs font-bold tracking-wider text-carbon/60 uppercase">
+                          {e.tipo}
+                        </span>
+                      )}
                       <Link to={`/sociedad/${e.sociedadId}`} className="text-vino hover:underline">
                         {e.nombre}
                       </Link>
@@ -247,15 +257,15 @@ export default function InformeNichoSoftware() {
                     <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-4">
                       <div>
                         <p className="text-xs font-bold tracking-wider text-carbon/50 uppercase">CUIT</p>
-                        <p className="text-carbon/80">{e.cuit ?? "—"}</p>
+                        <p className="text-carbon/80">{formatCuit(e.cuit)}</p>
                       </div>
                       <div>
                         <p className="text-xs font-bold tracking-wider text-carbon/50 uppercase">Capital</p>
-                        <p className="text-carbon/80">{e.capital ?? "—"}</p>
+                        <p className="text-carbon/80">{moneda(e.capital?.toString())}</p>
                       </div>
                       <div>
                         <p className="text-xs font-bold tracking-wider text-carbon/50 uppercase">Publicación</p>
-                        <p className="text-carbon/80">{e.publicacion ?? "—"}</p>
+                        <p className="text-carbon/80">{fecha(e.publicacion)}</p>
                       </div>
                       <div>
                         <p className="text-xs font-bold tracking-wider text-carbon/50 uppercase">Departamento</p>
@@ -284,7 +294,7 @@ export default function InformeNichoSoftware() {
                       </p>
                     )}
                     <p className="mt-1.5 text-sm text-carbon/70">
-                      <span className="font-bold">Objeto social:</span> {e.objetoSocial}
+                      <span className="font-bold">Objeto social:</span> {e.objetoSocial ?? "—"}
                     </p>
                   </div>
                 ))}

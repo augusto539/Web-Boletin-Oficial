@@ -1,0 +1,17 @@
+# /etc/systemd/system/reboot-semanal.service
+#
+# Reinicio preventivo semanal de la VM (Oracle Cloud E2.1.Micro, 956Mi RAM).
+# Mitigación de infra, no arregla nada de fondo: la sospecha es fragmentación
+# de memoria acumulada en runs largos sin reiniciar (ver incidente del
+# 10-12/08/2026 -- la VM llevaba 22 días arriba, y un paso del job diario que
+# venía andando bien en 15s empezó a colgarse hasta tumbar todo el host, sin
+# que cambiara ni el código ni el tamaño del archivo que procesaba). Reiniciar
+# cada semana resetea esa fragmentación antes de que vuelva a acumularse tanto.
+#
+# Corre disparado por reboot-semanal.timer, no se activa (WantedBy) directo.
+[Unit]
+Description=Reinicio semanal preventivo de la VM
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/reboot

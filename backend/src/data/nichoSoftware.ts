@@ -6,24 +6,6 @@
 // quedaron sin sociedadId/personaId (entidades ajenas a la base, nombres
 // ambiguos) -- ver la nota completa en el archivo del frontend.
 
-export interface SocioSoftware {
-  nombre: string;
-  personaId?: number;
-  sociedadId?: number;
-}
-
-export interface EntidadSoftware {
-  tipo: string;
-  nombre: string;
-  sociedadId: number;
-  cuit: string | null;
-  capital: string | null;
-  publicacion: string | null;
-  departamento: string | null;
-  socios: SocioSoftware[];
-  objetoSocial: string;
-}
-
 export const EVOLUCION_ANUAL = [
   { etiqueta: "2017", valor: 7 },
   { etiqueta: "2018", valor: 21 },
@@ -57,1138 +39,1455 @@ export const DEPARTAMENTOS_SOFTWARE = [
   { departamento: "Tunuyán", cantidad: 1 },
 ];
 
-export const ENTIDADES: EntidadSoftware[] = [
-  {
-    tipo: "S.A.",
-    nombre: "Olp Solutions S.A.",
-    sociedadId: 14,
-    cuit: null,
-    capital: "$100.000",
-    publicacion: "01/02/2017",
-    departamento: "Capital",
-    socios: [{ nombre: "Araujo Aristiaran Roberto Adriel", personaId: 27 }, { nombre: "Gimenez German", personaId: 26 }],
-    objetoSocial: "Desarrollo web, sitios web, desarrollo informático (software factory), servicios, comercial, importación y exportación.",
-  },
-  {
-    tipo: "S.A.",
-    nombre: "Digimark S.A.",
-    sociedadId: 72,
-    cuit: "30-71555161-2",
-    capital: "$250.000",
-    publicacion: "09/03/2017",
-    departamento: "Capital",
-    socios: [{ nombre: "Eduardo José Noello", personaId: 178 }, { nombre: "Estela Ines Gallardo", personaId: 364 }, { nombre: "Mónica Elizabeth Cerdan", personaId: 179 }],
-    objetoSocial: "Actividades comerciales, exportación e importación, inmobiliarias y de servicios tecnológicos e informáticos, incluyendo desarrollo de software y comercio electrónico.",
-  },
-  {
-    tipo: "S.R.L.",
-    nombre: "International Sciences And Technologies S.R.L.",
-    sociedadId: 290,
-    cuit: null,
-    capital: "$100.000",
-    publicacion: "15/06/2017",
-    departamento: "Guaymallén",
-    socios: [{ nombre: "Antonio Alvarez Abril", personaId: 669 }, { nombre: "Gabriel Federico Alvarez Juri", personaId: 670 }, { nombre: "Higinio Alberto Facchini", personaId: 668 }, { nombre: "Santiago Cristobal Perez", personaId: 667 }],
-    objetoSocial: "Actividades en el área de la computación y la neuroingeniería: computación, redes de datos, comunicaciones, programación, bioingeniería y neurociencia. Servicios de consultoría y asesoramiento informático; mantenimiento de equipos. Compra-venta de sistemas, insumos y componentes. Importación y exportación. Educación: armado y dictado de contenidos educativos, cursos de capacitación y formación profesional en ingeniería y salud humanas, mediante modalidad virtual y a distancia.",
-  },
-  {
-    tipo: "S.A.",
-    nombre: "Freemoni Sociedad Anónima",
-    sociedadId: 470,
-    cuit: null,
-    capital: "$100.000",
-    publicacion: "30/08/2017",
-    departamento: "Capital",
-    socios: [{ nombre: "Gerónimo Guevara March", personaId: 1122 }, { nombre: "Sebastián Enrique Torres Gomez Omil", personaId: 1121 }],
-    objetoSocial: "Desarrollo Web, sitios web, desarrollo informático, servicios y actividades comerciales.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "El Dato Justo Sas",
-    sociedadId: 820,
-    cuit: "30-71592152-5",
-    capital: "$17.720",
-    publicacion: "22/12/2017",
-    departamento: "Capital",
-    socios: [{ nombre: "Gerónimo Guevara March", personaId: 1122 }, { nombre: "Gustavo Martin Nudo", personaId: 1889 }],
-    objetoSocial: "Diseño, administración y explotación de sitios web, aplicaciones móviles, portales de internet, servicios de comercio electrónico, publicidad digital, desarrollo de software y tecnologías informáticas, con capacidad de realizar operaciones de importación, exportación e inversiones financieras conexas.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "El Choco S.A.S.",
-    sociedadId: 838,
-    cuit: null,
-    capital: "$20.000",
-    publicacion: "27/12/2017",
-    departamento: "Capital",
-    socios: [{ nombre: "Guillermo Alejandro Willink Moyano", personaId: 1940 }, { nombre: "Pedro Cubillos", personaId: 1941 }],
-    objetoSocial: "Comercial, turismo, servicios informáticos, desarrollo de software, comercio electrónico, marketing, asesoramiento, comunicación y publicidad, mandatos, proveedor del estado, franquicias, fiduciaria, importación y exportación.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Uxina Urbana S.A.S.",
-    sociedadId: 845,
-    cuit: null,
-    capital: "$20.000",
-    publicacion: "27/12/2017",
-    departamento: "Capital",
-    socios: [{ nombre: "Agustín César Ruiz", personaId: 1960 }, { nombre: "Diego Gabriel César", personaId: 1959 }, { nombre: "Juan Sebastian Arbona", personaId: 1961 }, { nombre: "Pablo Enrique Bicego", personaId: 1958 }],
-    objetoSocial: "Servicios informáticos, desarrollo de tecnologías cívicas, desarrollo de software, comercio electrónico, call center, web hosting, marketing, asesoramiento y capacitación, actividades de investigación y desarrollo, comunicación y publicidad, patentes y marcas, telecomunicaciones, servicios de distribución, ventas, pagos y cobranzas, financiera de inversión, mandatos, proveedor del estado, franquicias, fiduciaria, importación y exportación.",
-  },
-  {
-    tipo: "S.A.",
-    nombre: "Octopia S.A.",
-    sociedadId: 887,
-    cuit: "30-71584230-7",
-    capital: "$100.000",
-    publicacion: "12/01/2018",
-    departamento: "Capital",
-    socios: [{ nombre: "Jorge Rafael Lanzani", personaId: 2061 }, { nombre: "Nicolás Rafael Anitori", personaId: 2062 }],
-    objetoSocial: "Análisis, programación, preparación y aplicación de sistemas informáticos; diseño y programación de software, aplicaciones móviles, páginas web, diseño gráfico; servicios de asesoramiento, consultoría y mentoría a emprendedores y Pyme; administración de equipos, redes y servidores; compra venta de dominios y certificados de autenticidad; actividades publicitarias y generación de contenidos.",
-  },
-  {
-    tipo: "S.A.",
-    nombre: "Faro Comercial S.A.",
-    sociedadId: 977,
-    cuit: "30-71614325-9",
-    capital: "$100.000",
-    publicacion: "15/02/2018",
-    departamento: "San Rafael",
-    socios: [{ nombre: "Daniel Derli Copado Perez", personaId: 2240 }, { nombre: "Domingo Arístides Parisot", personaId: 2241 }],
-    objetoSocial: "Prestación de servicios de marketing, desarrollo web, venta de tangibles e intangibles, participación en licitaciones públicas y privadas, y ejercicio de mandatos y comisiones.",
-  },
-  {
-    tipo: "S.A.",
-    nombre: "Guafo Tecnología S.A.",
-    sociedadId: 1123,
-    cuit: "30-71606828-1",
-    capital: "$100.000",
-    publicacion: "23/03/2018",
-    departamento: "Godoy Cruz",
-    socios: [{ nombre: "Debora Analia Carricondo", personaId: 2450 }, { nombre: "Estela Ines Gallardo", personaId: 364 }, { nombre: "Maria Ines Otero", personaId: 2584 }],
-    objetoSocial: "Tecnología e informática: diseño e implementación de sistemas informáticos, desarrollo de aplicaciones, consultorías tecnológicas. Comercial: compra, venta, arriendo y comercialización de bienes, equipos informáticos, software, automotores, patentes y sistemas de telefonía. Importadora y exportadora de productos y maquinarias relacionadas.",
-  },
-  {
-    tipo: "S.A.",
-    nombre: "Red De Servicios Sociedad Anonima",
-    sociedadId: 1211,
-    cuit: null,
-    capital: "$120.000",
-    publicacion: "18/04/2018",
-    departamento: "Guaymallén",
-    socios: [{ nombre: "Andres Diego Manresa", personaId: 2782 }, { nombre: "Arturo Agustin Yaciofano Chesi", personaId: 2781 }, { nombre: "Gonzalo Moya", personaId: 241 }],
-    objetoSocial: "Servicios de instalación y mantenimiento de redes de comunicación y eléctricas; provisión y comercialización de insumos de informática, electricidad y comunicaciones; desarrollo de software; comercialización de tecnología de seguridad electrónica; telecomunicaciones y procesamiento de datos; obra civil y mantenimiento de redes de agua, gas, pavimentación y riego.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Interbrain S.A.S.",
-    sociedadId: 1289,
-    cuit: "30-71607313-7",
-    capital: "$20.000",
-    publicacion: "09/05/2018",
-    departamento: "Godoy Cruz",
-    socios: [{ nombre: "Jaime Alberto Aguiló Iztueta", personaId: 2962 }, { nombre: "Rodolfo Alejandro Giro", personaId: 2963 }],
-    objetoSocial: "Servicios informáticos, desarrollo de software, comercio electrónico, investigación y desarrollo, patentes y marcas, telecomunicaciones, mandatos, franquicias, fiduciaria, importación y exportación, asistencia técnica, consultoría, intermediación de inversiones, asesoramiento.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Predictive Lab S.A.S.",
-    sociedadId: 1518,
-    cuit: "30-71610650-7",
-    capital: "$20.000",
-    publicacion: "25/06/2018",
-    departamento: "Godoy Cruz",
-    socios: [{ nombre: "Diego Raúl Saso", personaId: 3450 }, { nombre: "Héctor Alberto Ocaranza", personaId: 3451 }, { nombre: "Jaime Alberto Aguiló Iztueta", personaId: 2962 }, { nombre: "Sebastián Ricardo Simondi", personaId: 3449 }],
-    objetoSocial: "Asesoramiento y consultoría, servicios informáticos, desarrollo de software, actividades de investigación y desarrollo, mandatos, proveedor del estado, fiduciaria, importación y exportación.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Wan Developments S.A.S.",
-    sociedadId: 1519,
-    cuit: "30-71609852-0",
-    capital: "$30.000",
-    publicacion: "25/06/2018",
-    departamento: "Capital",
-    socios: [{ nombre: "Agustín Fernandez Iuvaro", personaId: 3454 }, { nombre: "Alejandro Rose", personaId: 3453 }, { nombre: "Víctor Juan Fernandez", personaId: 3455 }],
-    objetoSocial: "Actividades comerciales, servicios informáticos, desarrollo de software, comercio electrónico, marketing, asesoramiento, investigación y desarrollo, comunicación y publicidad, patentes y marcas, telecomunicaciones, mandatos, proveedor del Estado, franquicias, fiduciaria, importación y exportación.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Vamos Juntos S.A.S.",
-    sociedadId: 1528,
-    cuit: "30-71654924-7",
-    capital: "$21.000",
-    publicacion: "26/06/2018",
-    departamento: null,
-    socios: [{ nombre: "Alex Waisman", personaId: 3476 }, { nombre: "Esteban Eduardo Castellanos", personaId: 3478 }, { nombre: "Julio Argentino Irrazabal", personaId: 3477 }],
-    objetoSocial: "Publicidad 360, cartelería, marketing, desarrollo web, actividades comerciales; informática, diseño y desarrollo de sistemas; comercialización de insumos y productos; importación y exportación; participación en licitaciones públicas y privadas.",
-  },
-  {
-    tipo: "S.R.L.",
-    nombre: "Digital Creativ S.R.L.",
-    sociedadId: 1533,
-    cuit: null,
-    capital: "$120.000",
-    publicacion: "27/06/2018",
-    departamento: "Capital",
-    socios: [{ nombre: "Marcos Gabriel Trentacoste", personaId: 3485 }, { nombre: "Romina Vanesa Arena", personaId: 3486 }],
-    objetoSocial: "Venta insumos y equipos informáticos. Desarrollo y programación de sistemas informáticos, cableados estructurado.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Casoto S.A.S.",
-    sociedadId: 1578,
-    cuit: "30-71612132-8",
-    capital: "$20.000",
-    publicacion: "10/07/2018",
-    departamento: "Godoy Cruz",
-    socios: [{ nombre: "Diego Raúl Saso", personaId: 3450 }, { nombre: "Elisa Luciana Toujas", personaId: 3569 }],
-    objetoSocial: "Asesoramiento y consultoría, desarrollo de software, agropecuaria, proveedor del estado, exportación e importación.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Simple Black Sociedad Por Acciones Simplificada",
-    sociedadId: 1624,
-    cuit: null,
-    capital: "$100.000",
-    publicacion: "20/07/2018",
-    departamento: "Godoy Cruz",
-    socios: [{ nombre: "Claudio Adrián Marrero", personaId: 3659 }, { nombre: "Juan Francisco Ciullini Iaccarino", personaId: 3658 }],
-    objetoSocial: "Informática, tecnologías de información, comerciales, representaciones, importación y exportación de hardware y software, consultoría informática.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Fibercon S.A.S.",
-    sociedadId: 1640,
-    cuit: null,
-    capital: "$20.000",
-    publicacion: "24/07/2018",
-    departamento: "Godoy Cruz",
-    socios: [{ nombre: "Mariano Jesús Tassi", personaId: 3692 }, { nombre: "Maximiliano Elian Neza", personaId: 3693 }],
-    objetoSocial: "Desarrollo, creación, implementación, comercialización y venta de sistemas operativos, software, páginas web y aplicaciones móviles. Compra y venta de insumos tecnológicos e informáticos, redes y sistemas de telecomunicaciones. Venta, instalación y mantenimiento de servicio de internet. Representación de marcas y fabricantes de hardware o software. Exportación, importación, asesoramiento, comercialización, venta, instalación y mantenimiento de equipos de telecomunicaciones e informáticos. Análisis, programación, venta y aplicación de sistemas informáticos. Consultoría e ingeniería tecnológica. Prestación de servicios informáticos, telecomunicaciones y consultoría. Elaboración, edición, producción y publicación de productos audiovisuales o contenido multimedia. Integración de sistemas y servicios de diseño e implementación para Banda Ancha y Networking. Externalización de operaciones de sistemas y comunicaciones. Consultoría estratégica, tecnológica, organizativa y formativa. Prestación de servicios de reparación, mantenimiento y transporte. Compra y venta, distribución, importación y exportación de mercaderías, maquinaria y repuestos. Representaciones, comisiones, consignaciones y mandatos. Constitución de fideicomisos. Registración, adquisición, venta y explotación de patentes y marcas. Mandatos comerciales. Compraventa y locación de cosas muebles e inmuebles. Exportación e importación de sistemas informáticos y software.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Cuarenta Y Dos S.A.S.",
-    sociedadId: 1954,
-    cuit: null,
-    capital: "$80.000",
-    publicacion: "21/09/2018",
-    departamento: "Capital",
-    socios: [{ nombre: "Domenico Cirasino", personaId: 4370 }, { nombre: "Nicolás Guerra", personaId: 4369 }],
-    objetoSocial: "Desarrollo de software, aplicaciones móviles, gráfica digital, animaciones 3D, motion graphics, realidad aumentada, realidad virtual, impresiones 3D; diseño web, programación; producción y comercialización de hardware, software y objetos de diseño y arte; compra, venta, alquiler de mercaderías, maquinarias y rodados; participación en sociedades; compra y venta de títulos y valores mobiliarios; servicios de tecnología de información, ingeniería, energía renovable; arriendo de vehículos y",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Aconcagua Repuestos S.A.S.",
-    sociedadId: 1980,
-    cuit: "30-71625515-4",
-    capital: "$20.000",
-    publicacion: "27/09/2018",
-    departamento: "Maipú",
-    socios: [{ nombre: "Alejandro Hernan Navarro", personaId: 4420 }, { nombre: "Cristian Edgardo Navarro Manresa", personaId: 4421 }],
-    objetoSocial: "Comercialización de productos; turismo; servicios informáticos; desarrollo de software; comercio electrónico; marketing; asesoramiento; comunicación y publicidad; mandatos; proveeduría del estado; franquicias; fiduciaria; importación y exportación.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Uber Eats S.A.S.",
-    sociedadId: 2103,
-    cuit: "30-71624426-8",
-    capital: "$100.000",
-    publicacion: "24/10/2018",
-    departamento: "Capital",
-    socios: [{ nombre: "Besitz B.V." }, { nombre: "Mieten B.V." }],
-    objetoSocial: "Desarrollo de aplicaciones y plataformas informáticas, servicios de publicidad, marketing, administración de recursos humanos, operaciones inmobiliarias, operaciones financieras, importación y exportación, operaciones sobre bienes tecnológicos, servicios tecnológicos y consultoría relacionada con las actividades anteriormente señaladas.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "L.V. S.A.S.",
-    sociedadId: 2147,
-    cuit: null,
-    capital: "$50.000",
-    publicacion: "02/11/2018",
-    departamento: "San Rafael",
-    socios: [{ nombre: "José Miguel Rodríguez", personaId: 4739 }],
-    objetoSocial: "Servicios de marketing, desarrollo web, venta de tangibles e intangibles, participación en licitaciones públicas y privadas, mandataria, operaciones fiduciarias y financieras (excluidas las reguladas por Ley de Entidades Financieras).",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Grupo Negoza S.A.S.",
-    sociedadId: 2283,
-    cuit: "30-71632923-9",
-    capital: "$330.000",
-    publicacion: "30/11/2018",
-    departamento: "Maipú",
-    socios: [{ nombre: "Jose Luis Bustos Lopez", personaId: 5018 }, { nombre: "Sergio Exequiel Mansilla", personaId: 5017 }],
-    objetoSocial: "Actividades comerciales, de turismo, servicios informáticos, desarrollo de software, comercio electrónico, marketing, asesoramiento, comunicación y publicidad, mandatos, proveedor del estado, franquicias, fiduciaria, importación y exportación.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Cuyo Digital S.A.S.",
-    sociedadId: 2382,
-    cuit: null,
-    capital: "$25.000",
-    publicacion: "21/12/2018",
-    departamento: "Capital",
-    socios: [{ nombre: "Cristian David Rossi", personaId: 5229 }, { nombre: "Ricardo José Agüero", personaId: 5230 }],
-    objetoSocial: "Servicios informáticos, desarrollo de software, investigación y desarrollo, web hosting, logística y distribución, proveedor del estado, lengua de señas argentina, seguridad electrónica, telecomunicaciones, agropecuaria, turísticas, importación y exportación.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Linka Space S.A.S.",
-    sociedadId: 2389,
-    cuit: null,
-    capital: "$25.000",
-    publicacion: "21/12/2018",
-    departamento: "Capital",
-    socios: [{ nombre: "Martín Salassa", personaId: 2266 }, { nombre: "Matías Demián Benegas", personaId: 788 }, { nombre: "Víctor Abel Quiroga" }],
-    objetoSocial: "Construcción, administración de inmuebles, desarrollo de software, franquicias, asistencia técnica, apoyo, fomento, capacitación y consultoría, intermediación y canalización de inversiones, asesoramiento, organización de eventos, mandatos y proveedor del Estado.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Scala S.A.S.",
-    sociedadId: 2394,
-    cuit: null,
-    capital: "$800.000",
-    publicacion: "21/12/2018",
-    departamento: "Capital",
-    socios: [{ nombre: "Gustavo Maximiliano Molina Lema", personaId: 5247 }, { nombre: "Ruben Dario Luna Ferrer", personaId: 5246 }],
-    objetoSocial: "Actividades comerciales, turismo, servicios informáticos, desarrollo de software, comercio electrónico, marketing, asesoramiento, comunicación, publicidad, mandatos, provisión al Estado, franquicias, servicios fiduciarios, importación y exportación.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Tarsio S.A.S.",
-    sociedadId: 2410,
-    cuit: "30-71641907-6",
-    capital: "$25.000",
-    publicacion: "27/12/2018",
-    departamento: "Guaymallén",
-    socios: [{ nombre: "Carlos Alberto García", personaId: 5273 }, { nombre: "Francisco José Guillermet Velazquez", personaId: 5275 }, { nombre: "Valeria Alejandra Avellaneda", personaId: 5274 }],
-    objetoSocial: "Servicios informáticos, desarrollo de software y hardware, comercio electrónico, call center, web hosting, marketing, comunicación y publicidad, telecomunicaciones, servicios de distribución y ventas, proveedor del estado, importación y exportación.",
-  },
-  {
-    tipo: "S.A.",
-    nombre: "Mendoza Net S.A.",
-    sociedadId: 2604,
-    cuit: "30-65937901-1",
-    capital: "$100.000",
-    publicacion: "14/02/2019",
-    departamento: "Capital",
-    socios: [{ nombre: "Walter Roberto Grenon", personaId: 5700 }],
-    objetoSocial: "Administración y gestión de carteras de créditos, cobranza de cuentas, procesamiento de pagos y desarrollo de software, aplicaciones informáticas y herramientas tecnológicas.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Edutechnology Global S.A.S.",
-    sociedadId: 2608,
-    cuit: "30-71641229-2",
-    capital: "$25.000",
-    publicacion: "15/02/2019",
-    departamento: null,
-    socios: [{ nombre: "Ignacio Alejandro Boulin Victoria", personaId: 5709 }, { nombre: "Lucas Emmanuel Gómez", personaId: 5708 }],
-    objetoSocial: "Desarrollo de aplicaciones y plataformas informáticas, servicios de publicidad, marketing, administración de recursos humanos, operaciones inmobiliarias, operaciones financieras, y servicios de consultoría en finanzas, seguridad, soporte administrativo y diseño.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "It Mendoza Group Sas",
-    sociedadId: 2648,
-    cuit: null,
-    capital: "$100.000",
-    publicacion: "27/02/2019",
-    departamento: "Luján de Cuyo",
-    socios: [{ nombre: "Jorge Dario Segura", personaId: 5801 }, { nombre: "Mario Centeno", personaId: 5799 }, { nombre: "Pablo Sebastián Castellarín", personaId: 5800 }, { nombre: "Raul Adrian Lopez", personaId: 5802 }],
-    objetoSocial: "Desarrollo, comercialización y venta de sistemas operativos, software, páginas web, aplicaciones móviles, insumos tecnológicos e informáticos. Representación de marcas y fabricantes de hardware/software. Exportación e importación de equipos de telecomunicaciones e informática. Análisis, programación y venta de sistemas informáticos. Diseño de marca, publicidad, social media, marketing digital. Consultoría tecnológica y servicios de telecomunicaciones. Servicios de externalización de operaciones de sistemas. Mandatos lícitos, fideicomisos y representación de franquicias y concesiones.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Imprimirya S.A.S.",
-    sociedadId: 2759,
-    cuit: "30-71642323-5",
-    capital: "$500.000",
-    publicacion: "26/03/2019",
-    departamento: "Capital",
-    socios: [{ nombre: "Antero Norberto Lloret Zalazar", personaId: 6035 }, { nombre: "Marisabel Yanina Vazquez", personaId: 6036 }],
-    objetoSocial: "Electrónica, informática, servicio técnico, reparación de equipos, instalación y mantenimiento de equipos informáticos e de impresión; diseño y desarrollo de software; consultoría y procesos de ingeniería; comercialización por internet; servicios de comercio exterior; comercialización de equipos, impresoras, insumos para impresión y soporte técnico.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Paysur S.A.S.",
-    sociedadId: 3080,
-    cuit: "30-71656894-2",
-    capital: "$26.000",
-    publicacion: "28/05/2019",
-    departamento: "Godoy Cruz",
-    socios: [{ nombre: "Diego Andres Correa Tello", personaId: 6734 }, { nombre: "Di Sparti Román", personaId: 6736 }, { nombre: "Gabriel Darío Galdeano", personaId: 6733 }, { nombre: "Norberto Daniel Martinez Coll", personaId: 6735 }],
-    objetoSocial: "Consultoría, capacitaciones y asistencia técnica; desarrollo de software; financiera de inversión; comercio electrónico; franquicias; fiduciaria; importación y exportación; proveedor del estado-licitaciones; mandatos.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Brainstorm Lab S.A.S.",
-    sociedadId: 3134,
-    cuit: "30-71657597-3",
-    capital: "$25.000",
-    publicacion: "06/06/2019",
-    departamento: "Godoy Cruz",
-    socios: [{ nombre: "Germán Alejandro Limina", personaId: 6838 }, { nombre: "Pablo Daniel Palma", personaId: 6836 }, { nombre: "Pedro Lisandro Brest", personaId: 6837 }],
-    objetoSocial: "Desarrollo de software.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Tech Market S.A.S.",
-    sociedadId: 3233,
-    cuit: "30-71654174-2",
-    capital: "$26.000",
-    publicacion: "26/06/2019",
-    departamento: "Capital",
-    socios: [{ nombre: "Adrian Amadeo Cesar Tagarot", personaId: 7041 }, { nombre: "Manuel Francisco Marco", personaId: 7040 }],
-    objetoSocial: "Comercial, servicio técnico, desarrollo de software, constructora-inmobiliaria, financiera de inversión, comercio electrónico, franquicias, fiduciaria, importación y exportación, proveedor del estado-licitaciones.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Tonight Sociedad Por Acciones Simplificada",
-    sociedadId: 3234,
-    cuit: null,
-    capital: "$30.000",
-    publicacion: "26/06/2019",
-    departamento: "Capital",
-    socios: [{ nombre: "Alec Manuel Juliao Kobylanski", personaId: 7042 }, { nombre: "Francisco Voena Bernal", personaId: 7044 }, { nombre: "Jan Victor Juliao Kobylanski", personaId: 7045 }, { nombre: "Joaquín Berardi", personaId: 7046 }, { nombre: "Manuel Shi", personaId: 7043 }],
-    objetoSocial: "Servicios de desarrollo y provisión de tecnología de ventas de entradas a eventos, importación-exportación y comercial, mandataria, desarrollo de software y soluciones tecnológicas.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Puluwat S.A.S.",
-    sociedadId: 3251,
-    cuit: null,
-    capital: "$30.000",
-    publicacion: "28/06/2019",
-    departamento: "Godoy Cruz",
-    socios: [{ nombre: "Rodolfo Alejandro Giro", personaId: 2963 }],
-    objetoSocial: "Investigación y desarrollo, desarrollo de software, patentes y marcas, franquicias, fiduciaria, importación y exportación, proveedor del estado - licitaciones.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Waybate S.A.S.",
-    sociedadId: 3313,
-    cuit: "30-71656198-0",
-    capital: "$30.000",
-    publicacion: "12/07/2019",
-    departamento: "Capital",
-    socios: [{ nombre: "Sebastián Gabriel Carrillo", personaId: 7212 }],
-    objetoSocial: "Consultoría, capacitaciones y asistencia técnica; desarrollo de software; financiera de inversión; comercio electrónico; franquicias; fiduciaria; constructora-inmobiliaria; gastronómica; agropecuaria; importación y exportación; proveedor del estado - licitaciones.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Market In Pull S.A.S.",
-    sociedadId: 3528,
-    cuit: "30-71664096-1",
-    capital: "$30.000",
-    publicacion: "21/08/2019",
-    departamento: "Las Heras",
-    socios: [{ nombre: "Adriana Paola Sánchez", personaId: 7623 }, { nombre: "Sergio Daniel Battalemi", personaId: 7624 }],
-    objetoSocial: "Actividades comerciales, desarrollo de software, constructora e inmobiliaria, comercio electrónico, servicios de consultoría y tercerización, docencia y capacitación, mandatos, importación y exportación, proveedor del estado.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Moondesk S.A.S.",
-    sociedadId: 3538,
-    cuit: "30-71665887-9",
-    capital: "$100.000",
-    publicacion: "22/08/2019",
-    departamento: "Luján de Cuyo",
-    socios: [{ nombre: "Gonzalo Yañez", personaId: 3468 }, { nombre: "Mariano Gabriel Gioia", personaId: 7642 }, { nombre: "Sebastián Yañez", personaId: 7641 }, { nombre: "Stefan Bernhard Riedmann", personaId: 7643 }],
-    objetoSocial: "Servicios informáticos, desarrollo de software, comercio electrónico y actividades de investigación y desarrollo tecnológico, incluyendo prestación de servicios informáticos remotos, desarrollo de sistemas de software, administración de plataformas digitales y comercialización de hardware.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Lindo Software S.A.S.",
-    sociedadId: 3658,
-    cuit: "30-71668879-4",
-    capital: "$25.000",
-    publicacion: "13/09/2019",
-    departamento: "Capital",
-    socios: [{ nombre: "Ariel Emilio Saenz", personaId: 7881 }, { nombre: "Nestor Diego Marin", personaId: 7880 }],
-    objetoSocial: "Creación, producción, intercambio, fabricación, transformación, comercialización, intermediación, representación, importación y exportación de bienes materiales e inmateriales y prestación de servicios relacionados con desarrollo y mantenimiento de software, servicios fiduciarios, licitaciones, servicios electrónicos de cobranzas y/o pagos, exportaciones e importaciones y servicios mandatarios.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Summar Fintech S.A.S.",
-    sociedadId: 3773,
-    cuit: null,
-    capital: "$40.000",
-    publicacion: "04/10/2019",
-    departamento: "Capital",
-    socios: [{ nombre: "Alejandro Cavallero", personaId: 8121 }, { nombre: "Carlos Mariano Soler", personaId: 7305 }, { nombre: "Diego Navarro", personaId: 8123 }, { nombre: "Montemar Compañía Financiera S.A.", sociedadId: 16117 }, { nombre: "Ramiro José Soler", personaId: 8122 }],
-    objetoSocial: "Prestar servicios de desarrollo de software, comercialización de licencias y soluciones tecnológicas, equipamiento de computación, desarrollo de inteligencia de negocios, publicidad digital. Elaboración, compra, venta, importación y exportación de productos relacionados. Participación en licitaciones y contratos públicos y privados.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Phinics S.A.S.",
-    sociedadId: 4271,
-    cuit: null,
-    capital: "$50.000",
-    publicacion: "07/01/2020",
-    departamento: "Luján de Cuyo",
-    socios: [{ nombre: "Franco Agustín Ingrassia Carretero", personaId: 9164 }, { nombre: "Juan Pablo Ingrassia Carretero", personaId: 9162 }, { nombre: "Marco Javier Ingrassia Carretero", personaId: 9163 }, { nombre: "Miguel Ángel Ingrassia", personaId: 9160 }, { nombre: "Mirta Gabriela Carretero", personaId: 9161 }],
-    objetoSocial: "Prestación de servicios de salud, servicios de tecnología, servicios informáticos, desarrollo de software, actividad constructora-inmobiliaria, importación y exportación, proveedor del estado y licitaciones.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "U7 Devs Sas",
-    sociedadId: 4427,
-    cuit: "33-71685743-9",
-    capital: "$600.000",
-    publicacion: "19/02/2020",
-    departamento: "Capital",
-    socios: [{ nombre: "Francisco Luis Innocenti", personaId: 9489 }],
-    objetoSocial: "Servicios informáticos, desarrollo de software, mandatos y servicios, consultoría y mentoreo, comercial, comercio electrónico, comunicación, publicidad y marketing digital, fiduciaria, importación y exportación.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Asat Consulting Sas",
-    sociedadId: 4465,
-    cuit: "30-71686974-8",
-    capital: "$100.000",
-    publicacion: "02/03/2020",
-    departamento: "Capital",
-    socios: [{ nombre: "Adrián Miguel Cammarota", personaId: 9568 }, { nombre: "David Hernández Catala", personaId: 9567 }, { nombre: "Facundo Matías Rodríguez Quintana", personaId: 9569 }, { nombre: "María Laura Jalaf", personaId: 9570 }],
-    objetoSocial: "Creación, diseño, desarrollo, producción, implementación, adaptación y documentación de productos tecnológicos, software, servicios informáticos y digitales; desarrollo de software (SAAS); servicios de provisión de aplicaciones, edición y publicación electrónica; desarrollo de software a medida; servicios informáticos y consultoría; videojuegos; servicios de cómputo y hosting en la nube; diseño audiovisual digital; y actividades agropecuarias, comunicaciones, culturales, inmobiliarias, inversoras, energéticas, salud y transporte.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Alquilar Online Software",
-    sociedadId: 4480,
-    cuit: null,
-    capital: "$36.000",
-    publicacion: "04/03/2020",
-    departamento: "Capital",
-    socios: [{ nombre: "Emiliano Luis Verdu Marty", personaId: 9603 }, { nombre: "Nelson Gastón Pérez", personaId: 9602 }],
-    objetoSocial: "Servicios de tecnología, desarrollo de software, comercio electrónico, comercial, mandatos, constructora inmobiliaria, fiduciaria, importación y exportación, proveedor del estado y licitaciones.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Galaca Software Factory S.A.S.",
-    sociedadId: 4786,
-    cuit: "30-71687118-1",
-    capital: "$100.000",
-    publicacion: "30/06/2020",
-    departamento: "Godoy Cruz",
-    socios: [{ nombre: "Alonso Rodrigo Marcelo", personaId: 10246 }],
-    objetoSocial: "Actividades gastronómicas, comerciales, exportación e importación, servicios y mandatos, fideicomiso y leasing, franquicias.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Cargo Logistica Y Construccion S.A.S.",
-    sociedadId: 4795,
-    cuit: "30-71686764-8",
-    capital: "$100.000",
-    publicacion: "01/07/2020",
-    departamento: "Guaymallén",
-    socios: [{ nombre: "Hernán Gabriel Denk", personaId: 10261 }],
-    objetoSocial: "Actividades comerciales, de construcción y desarrollo de software, por cuenta propia o de terceros, sean personas humanas o jurídicas, dentro del país o en el extranjero.",
-  },
-  {
-    tipo: "S.R.L.",
-    nombre: "Grupo Gigantech S.R.L.",
-    sociedadId: 4998,
-    cuit: "30-71691730-0",
-    capital: "$100.000",
-    publicacion: "31/07/2020",
-    departamento: "Godoy Cruz",
-    socios: [{ nombre: "Matias Nicolás Sansone", personaId: 9241 }, { nombre: "Rodrigo Daniel Persia", personaId: 10649 }],
-    objetoSocial: "Computación y sistemas: fabricación, importación, exportación, comercialización de software, equipos informáticos y servicios técnicos; desarrollo de software, multimedia, sitios web. Comercialización de productos vinculados. Mandataria para representaciones.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Claisi S.A.S.",
-    sociedadId: 5213,
-    cuit: null,
-    capital: "$50.000",
-    publicacion: "03/09/2020",
-    departamento: "Capital",
-    socios: [{ nombre: "Ezequiel Aloisi", personaId: 11066 }, { nombre: "Román Clavero", personaId: 11067 }],
-    objetoSocial: "Prestación de servicios de tecnología de la información aplicada a la salud, consultoría, desarrollo de software, actividades comerciales, industriales, de importación y exportación de bienes vinculados a tecnología de la información y salud.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Lavuro App S.A.S.",
-    sociedadId: 5312,
-    cuit: "30-71695204-1",
-    capital: "$39.000",
-    publicacion: "18/09/2020",
-    departamento: "Guaymallén",
-    socios: [{ nombre: "Bruno Calcagno", personaId: 11265 }],
-    objetoSocial: "Desarrollo de software y aplicaciones móviles, servicios informáticos, marketing digital, comercio electrónico, asesoramiento y consultoría.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Integrity Systems S.A.S.",
-    sociedadId: 5516,
-    cuit: "30-71695571-7",
-    capital: "$500.000",
-    publicacion: "20/10/2020",
-    departamento: "Guaymallén",
-    socios: [{ nombre: "Miguel Ernesto Ariel Gonzalez", personaId: 11667 }],
-    objetoSocial: "Actividades comerciales, servicios informáticos, desarrollo de software, reparación y mantenimiento de computadores, importación y exportación, construcción y mandatos lícitos.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Litt Ar S.A.S.",
-    sociedadId: 5681,
-    cuit: null,
-    capital: "$50.000",
-    publicacion: "13/11/2020",
-    departamento: "San Martín",
-    socios: [{ nombre: "Eugenio Sebastián Oliveri", personaId: 12016 }, { nombre: "Matías Demián Benegas", personaId: 788 }],
-    objetoSocial: "Desarrollo de software, aplicaciones móviles, servicios informáticos, marketing digital, comercio electrónico, asesoramiento y consultoría, compra venta alquiler reparación y diseño de indumentaria, organización de eventos, servicios de fotografía y comunicación.",
-  },
-  {
-    tipo: "S.A.",
-    nombre: "Craff S.A.",
-    sociedadId: 6160,
-    cuit: null,
-    capital: "$2.000.000",
-    publicacion: "11/02/2021",
-    departamento: "Rivadavia",
-    socios: [{ nombre: "Nilda Liliana Di Cesare", personaId: 12924 }, { nombre: "Pablo Javier Pereira", personaId: 12923 }],
-    objetoSocial: "Servicios de desarrollo de software, agropecuaria, industrial, comercial, mandataria, inmobiliaria, constructora, financieras y servicios tecnológicos.",
-  },
-  {
-    tipo: "S.A.",
-    nombre: "Biobox Sociedad Anonima",
-    sociedadId: 6217,
-    cuit: "30-71716466-7",
-    capital: "$150.000",
-    publicacion: "22/02/2021",
-    departamento: "Capital",
-    socios: [{ nombre: "Fernando Jose Perez", personaId: 13022 }, { nombre: "Jorge Emanuel Miguez", personaId: 13023 }],
-    objetoSocial: "Servicios de procesamiento de datos, análisis de sistemas, desarrollo de software, industria del software, creación y diseño de sistemas informáticos, servicios de programación y procesamiento electrónico de datos.",
-  },
-  {
-    tipo: "S.A.",
-    nombre: "Latam Craff S.A.",
-    sociedadId: 6292,
-    cuit: "33-71712651-9",
-    capital: "$2.000.000",
-    publicacion: "04/03/2021",
-    departamento: "Rivadavia",
-    socios: [{ nombre: "Nilda Liliana Di Cesare", personaId: 12924 }, { nombre: "Pablo Javier Pereira", personaId: 12923 }],
-    objetoSocial: "Servicios de desarrollo de software, agropecuaria, actividades industriales, comerciales, mandataria, inmobiliaria, constructora, financieras y servicios tecnológicos.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Flex Sales S.A.S.",
-    sociedadId: 6428,
-    cuit: "30-71727226-5",
-    capital: "$100.000",
-    publicacion: "31/03/2021",
-    departamento: "Guaymallén",
-    socios: [{ nombre: "Aldibs S.A.S." }, { nombre: "Dora Gimenez", personaId: 14174 }, { nombre: "Luciano Rafael Renna Muñoz", personaId: 7841 }, { nombre: "Matías Roberto Martínez", personaId: 13444 }, { nombre: "Matias Roberto Martínez Capó", personaId: 4033 }, { nombre: "Pablo Andres Martin Castañeda", personaId: 7842 }, { nombre: "Rafael Alejandro Renna", personaId: 13731 }],
-    objetoSocial: "Actividades comerciales, informáticas, software, comunicación y mandataria: compra venta al por mayor y menor, importación/exportación, desarrollo de software, servicios informáticos, diseño y producción de contenidos periodísticos y audiovisuales, representaciones y mandatos conexos.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Señales Software S.A.S.",
-    sociedadId: 6620,
-    cuit: "30-71718140-5",
-    capital: "$500.000",
-    publicacion: "07/05/2021",
-    departamento: "Godoy Cruz",
-    socios: [{ nombre: "Castillo Andrea Verónica", personaId: 13811 }, { nombre: "Morán Jose Ubaldo", personaId: 13810 }],
-    objetoSocial: "Diseño, desarrollo y tecnología, informática, comerciales, servicios, exportación e importación, contratos de leasing y alquiler, fiduciaria, licitaciones.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Itcommit Software Factory S.A.S.",
-    sociedadId: 6661,
-    cuit: "30-71728533-2",
-    capital: "$100.000",
-    publicacion: "13/05/2021",
-    departamento: "Luján de Cuyo",
-    socios: [{ nombre: "Hector Martín Maturano", personaId: 13874 }, { nombre: "José Manuel Perez Castillo", personaId: 13875 }, { nombre: "Matías Exequiel Navarrete", personaId: 13876 }, { nombre: "Mauricio Javier Tagua", personaId: 13877 }],
-    objetoSocial: "Servicios de informática, desarrollo de software, multimedia, sistemas de redes, gestión de cobranzas, operaciones financieras autorizadas, agente de valores y promoción de integración e intercambio de conocimiento.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Aldimir S.A.S.",
-    sociedadId: 6691,
-    cuit: "30-71721435-4",
-    capital: "$60.000",
-    publicacion: "18/05/2021",
-    departamento: "Luján de Cuyo",
-    socios: [{ nombre: "Eduardo Martin Difonso", personaId: 13945 }, { nombre: "Jose Ignacio Mirchak Baronian", personaId: 13944 }, { nombre: "Juan Ignacio Alvarez Lescano", personaId: 13943 }],
-    objetoSocial: "Prestación de servicios vinculados a informática y tecnología (desarrollo, asesoramiento, capacitación); programación de computación; comercialización de software y hardware; gestión de herramientas tecnológicas; promoción de desarrollo educativo, científico, cultural y económico.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Beacon S.A.S.",
-    sociedadId: 6692,
-    cuit: "30-71729171-5",
-    capital: "$60.000",
-    publicacion: "18/05/2021",
-    departamento: "Luján de Cuyo",
-    socios: [{ nombre: "Daniel Enrique Álvarez" }, { nombre: "Francisco Atilio Oga", personaId: 13947 }],
-    objetoSocial: "Prestación de servicios informáticos vinculados a procesos de negocios, servicios remotos e Internet; desarrollo de tecnologías cívicas para gobierno electrónico; desarrollo de software; comercio electrónico.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Origami Software Sas",
-    sociedadId: 6790,
-    cuit: "30-71726564-1",
-    capital: "$60.000",
-    publicacion: "07/06/2021",
-    departamento: "Capital",
-    socios: [{ nombre: "Eliana Hebe Lanzani", personaId: 6045 }, { nombre: "Jorge Rafael Lanzani", personaId: 2061 }, { nombre: "Nicolás Rafael Anitori", personaId: 2062 }],
-    objetoSocial: "Creación, producción, intercambio, fabricación, transformación, industrialización, comercialización, intermediación, representación, importación y exportación de bienes materiales e inmateriales y prestación de servicios relacionados con actividades agropecuarias, comunicaciones, manufactura, educación, tecnología, gastronomía, inmobiliarias, financieras, energéticas, salud y transporte.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Hexium Software Factory S.A.S.",
-    sociedadId: 6796,
-    cuit: "30-71723921-7",
-    capital: "$60.000",
-    publicacion: "08/06/2021",
-    departamento: "Capital",
-    socios: [{ nombre: "Cristian Ruppert", personaId: 14128 }, { nombre: "Gabriel Arias", personaId: 14127 }, { nombre: "Maria Emilce Villanueva", personaId: 14129 }],
-    objetoSocial: "Desarrollo de software, comercio, exportación e importación de mercaderías, actividades industriales de elaboración y fabricación de productos de limpieza y químicos, comercialización y alquiler de bienes inmuebles.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Austral It Sas",
-    sociedadId: 6824,
-    cuit: "30-71721295-5",
-    capital: "$100.000",
-    publicacion: "15/06/2021",
-    departamento: "Guaymallén",
-    socios: [{ nombre: "Santiago Jorge Bayeta", personaId: 14184 }],
-    objetoSocial: "Investigación, diseño, desarrollo, producción, comercialización, compra, venta, importación, exportación, distribución, alquiler, licenciamiento de sistemas y productos informáticos, telecomunicaciones, consultoría de sistemas, procesamiento de datos, desarrollo de software, cursos de capacitación, y operaciones comerciales vinculadas.",
-  },
-  {
-    tipo: "S.A.",
-    nombre: "Govcoin S.A.",
-    sociedadId: 6971,
-    cuit: "30-71726460-2",
-    capital: "$2.000.000",
-    publicacion: "13/07/2021",
-    departamento: "Godoy Cruz",
-    socios: [{ nombre: "Pablo Javier Pereira", personaId: 12923 }, { nombre: "Raúl Jerónimo Vargas", personaId: 14077 }],
-    objetoSocial: "Servicios de desarrollo de software, actividades agropecuarias, industriales, comerciales, inmobiliarias, constructoras, financieras y servicios tecnológicos.",
-  },
-  {
-    tipo: "S.R.L.",
-    nombre: "Soft Mobility S.R.L.",
-    sociedadId: 7071,
-    cuit: "30-71727574-4",
-    capital: "$2.000.000",
-    publicacion: "28/07/2021",
-    departamento: "Rivadavia",
-    socios: [{ nombre: "Laura Nahir Adid", personaId: 14642 }, { nombre: "María Florencia Fourcade", personaId: 14643 }],
-    objetoSocial: "Servicios de desarrollo de software, agropecuaria, industrial, comercial, actividades mandatarias, inmobiliaria, arrendamiento, financieras y servicios tecnológicos.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Viani Nogara S.A.S.",
-    sociedadId: 7588,
-    cuit: "30-71743681-0",
-    capital: "$70.000",
-    publicacion: "15/10/2021",
-    departamento: "Maipú",
-    socios: [{ nombre: "David Esteban Nogara", personaId: 15608 }, { nombre: "Jorge David Viani", personaId: 15609 }],
-    objetoSocial: "Asesoramiento, análisis y consultoría en software, sistemas de información y seguridad informática. Desarrollo, implementación y comercialización de sistemas y soluciones. Comercialización de insumos informáticos. Capacitación tecnológica y desarrollo de aplicaciones móviles.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Software Del Sur S.A.S.",
-    sociedadId: 7615,
-    cuit: "30-71744742-1",
-    capital: "$100.000",
-    publicacion: "19/10/2021",
-    departamento: "Capital",
-    socios: [{ nombre: "Alfredo Vicente Trentacoste", personaId: 8245 }, { nombre: "Sergio Gustavo García", personaId: 15654 }],
-    objetoSocial: "Creación, diseño, producción, implementación y puesta a punto de sistemas de software. Servicios de consultoría en equipos informáticos. Servicios de informática. Comercialización, exportación e importación de servicios relacionados.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Crea Tech S.A.S.",
-    sociedadId: 7884,
-    cuit: "30-71918562-9",
-    capital: "$64.000",
-    publicacion: "23/11/2021",
-    departamento: "Capital",
-    socios: [{ nombre: "Gino Manuel Cornejo", personaId: 16187 }, { nombre: "Santiago Mas Fuchs", personaId: 7391 }],
-    objetoSocial: "Servicios de asesoramiento, consultoría y desarrollo de software; análisis, diseño y desarrollo de sistemas de información; comercialización de bienes y servicios a través de plataformas digitales; suministro e implantación de soluciones informáticas; servicios de formación tecnológica; gestión externa de procesos informáticos; servicios de Internet, conectividad, alojamiento web y administración de sistemas.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Desarrollo Tecnologico Argentino (Detear) S.A.S.",
-    sociedadId: 8065,
-    cuit: null,
-    capital: "$50.000",
-    publicacion: "22/12/2021",
-    departamento: "Maipú",
-    socios: [{ nombre: "Pedro Luis Badosa", personaId: 16501 }],
-    objetoSocial: "Prestación de servicios de telecomunicaciones y radiodifusión, diseño y programación de software, servicios Multimedia, sistemas de redes, creación de espacios en Internet, gestiones de cobranzas y pagos.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Gower S.A.S.",
-    sociedadId: 8450,
-    cuit: "30-71765662-4",
-    capital: "$320.000",
-    publicacion: "10/03/2022",
-    departamento: "Capital",
-    socios: [{ nombre: "Andrés Francisco Puebla", personaId: 17231 }, { nombre: "Carlos Fabricio Portillo Pontoriero", personaId: 17230 }, { nombre: "Mariela Belén Rivas", personaId: 17229 }],
-    objetoSocial: "Proveedor de servicios de intermediación a través de plataforma digital para alquiler de vehículos, turismo y hotelería; desarrollo de software y aplicaciones informáticas.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Sga Soluciones Sas",
-    sociedadId: 8660,
-    cuit: null,
-    capital: "$102.000",
-    publicacion: "20/04/2022",
-    departamento: "Guaymallén",
-    socios: [{ nombre: "Daniel Enrique Álvarez" }, { nombre: "Dichiara Andrea Amalia", personaId: 17629 }, { nombre: "Luconi María Eugenia", personaId: 17630 }],
-    objetoSocial: "Servicios informáticos, desarrollo de tecnologías cívicas, desarrollo de software, comercio electrónico, call center, web hosting, marketing, asesoramiento y capacitación, actividades de investigación y desarrollo, comunicación y publicidad, patentes y marcas, telecomunicaciones, servicios de distribución, ventas, pagos y cobranzas, mandatos, proveedor del estado, franquicias, importación y exportación.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Tecnologia Financiera S.A.S.",
-    sociedadId: 8766,
-    cuit: "30-71761887-0",
-    capital: "$100.000",
-    publicacion: "04/05/2022",
-    departamento: null,
-    socios: [{ nombre: "Sebastian Emilio Rios", personaId: 17805 }],
-    objetoSocial: "Prestación de servicios de cobranzas, recaudación, procesamiento de pagos, generación de informes crediticios, administración de deudas, desarrollo de software y plataformas digitales, consultoría tecnológica y servicios como proveedor de pago.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "La Cantera Software Argentina Sas",
-    sociedadId: 9110,
-    cuit: "30-71778966-7",
-    capital: "$100.000",
-    publicacion: "30/06/2022",
-    departamento: "Guaymallén",
-    socios: [{ nombre: "Fernando Eliseo Nogara", personaId: 18463 }, { nombre: "Lucas Antonio Muñoz", personaId: 5516 }],
-    objetoSocial: "Creación, producción, intercambio, fabricación, transformación, industrialización, comercialización, intermediación, representación, importación y exportación de bienes y servicios relacionados con agropecuarias, comunicaciones, industrias, tecnologías, software, gastronomía, inmobiliarias, inversoras, transporte y salud.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Antn Sas",
-    sociedadId: 9117,
-    cuit: "30-71779005-3",
-    capital: "$1.500.000",
-    publicacion: "01/07/2022",
-    departamento: "Capital",
-    socios: [{ nombre: "Sabrina Constanza Noel Pacheco", personaId: 18480 }],
-    objetoSocial: "Comercialización de equipos de telefonía, informática y accesorios; desarrollo de software y servicios técnicos; importación y exportación de bienes y materias primas; mandatos y representaciones; contratación con el Estado.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Ciclo Soluciones Integrales S.A.S.",
-    sociedadId: 9545,
-    cuit: "30-71779091-6",
-    capital: "$2.000.000",
-    publicacion: "06/09/2022",
-    departamento: "Maipú",
-    socios: [{ nombre: "Leandro Bernardi", personaId: 19268 }, { nombre: "Ornella Bernardi", personaId: 19269 }],
-    objetoSocial: "Prestación de servicios informáticos y/o electrónicos, desarrollo de software y páginas web; gestión de cobranzas y pagos; servicios de intermediación y asesoramiento en construcción; construcción y ejecución de obras de ingeniería; compraventa y arrendamiento de inmuebles; actuar como fiduciaria en contratos de fideicomisos no financieros.",
-  },
-  {
-    tipo: "S.A.",
-    nombre: "Calcash S.A.",
-    sociedadId: 9559,
-    cuit: "30-71781950-7",
-    capital: "$200.000",
-    publicacion: "08/09/2022",
-    departamento: "Capital",
-    socios: [{ nombre: "Andrea Macarena Calise Villagran", personaId: 19303 }, { nombre: "Florencia Romina Calise Villagran", personaId: 19304 }],
-    objetoSocial: "Consultora, capacitación y asistencia técnica; desarrollo de software; exportación e importación; financiera e inversiones; comercio electrónico.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Eterlabs S.A.S.",
-    sociedadId: 9616,
-    cuit: null,
-    capital: "$150.000",
-    publicacion: "16/09/2022",
-    departamento: "Godoy Cruz",
-    socios: [{ nombre: "Roberto Fernando Bascuñan", personaId: 19423 }],
-    objetoSocial: "Desarrollo de sistemas y servicios de gestión, educación y negocios; comercial; franquicias; inversoras, financieras y fideicomisos; educación, formación, capacitación; proveedor del estado; importación y exportación.",
-  },
-  {
-    tipo: "S.A.",
-    nombre: "Efecinco S.A.",
-    sociedadId: 10055,
-    cuit: null,
-    capital: "$200.000",
-    publicacion: "16/11/2022",
-    departamento: "Junín",
-    socios: [{ nombre: "Joel Antonio Martin", personaId: 20189 }, { nombre: "Jorge Fernando Pesce", personaId: 20190 }],
-    objetoSocial: "Servicios de desarrollo de software, agropecuaria, industrial, comercial, mandataria, inmobiliaria, constructora, financieras y servicios tecnológicos.",
-  },
-  {
-    tipo: "S.A.",
-    nombre: "Chapi Solutions Argentina S.A.",
-    sociedadId: 11454,
-    cuit: "33-71818520-9",
-    capital: "$150.000",
-    publicacion: "09/06/2023",
-    departamento: "Godoy Cruz",
-    socios: [{ nombre: "Agustín Ramón Freixas Fillol", personaId: 22272 }, { nombre: "Juan Martin Molinari", personaId: 20625 }],
-    objetoSocial: "Creación, diseño, programación, mantenimiento, integración, gestión, desarrollo e implementación de software, sistemas de información, aplicaciones; compra, venta, importación, exportación de bienes informáticos; asesoramiento en comunicación, marketing, publicidad; diseño de imagen corporativa; asesoramiento para puesta en marcha de software y sitios web; actividades agropecuarias; inversiones y aportes de capitales.",
-  },
-  {
-    tipo: "S.A.",
-    nombre: "Kiabo S.A.",
-    sociedadId: 11733,
-    cuit: "30-71822222-9",
-    capital: "$1.000.000",
-    publicacion: "17/07/2023",
-    departamento: "Godoy Cruz",
-    socios: [{ nombre: "Miriam Elizabeth Terraza", personaId: 22654 }, { nombre: "Orlando Francisco Aguero", personaId: 22653 }],
-    objetoSocial: "Desarrollo de software y tecnologia.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Habitapp Argentina S.A.S.",
-    sociedadId: 11799,
-    cuit: null,
-    capital: "$500.000",
-    publicacion: "28/07/2023",
-    departamento: "Capital",
-    socios: [{ nombre: "Magdalena Egües", personaId: 22775 }, { nombre: "Martina Del Carmen Such", personaId: 22776 }, { nombre: "Nicolás Guerra", personaId: 4369 }],
-    objetoSocial: "Desarrollo de software y aplicaciones móviles, gráfica digital, animaciones 3D, motion graphics, realidad aumentada, realidad virtual, impresiones 3D y tecnología; desarrollos de programación digital, servicios web; desarrollo de diseño web; producción, comercialización y venta de hardware y software; actividades comerciales vinculadas al arte y diseño; compra, venta, permuta de mercaderías vinculadas al objeto social; participación en fundación y constitución de sociedades; servicios de arquitectura, ingeniería, construcción, energías renovables.",
-  },
-  {
-    tipo: "S.A.",
-    nombre: "Rrcap S.A.",
-    sociedadId: 12286,
-    cuit: null,
-    capital: "$120.000",
-    publicacion: "04/10/2023",
-    departamento: "Tunuyán",
-    socios: [{ nombre: "Carlos Antonio Pedrosa", personaId: 23544 }, { nombre: "Rodrigo Javier Rodriguez", personaId: 23545 }],
-    objetoSocial: "Servicios de programación y consultoría informática, telecomunicaciones, estudio de mercado, asesoramiento empresarial, tercerización de mano de obra, importación y exportación, logística y transporte, servicios de salud, industriales, inmobiliarios y comerciales.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "740.Dev S.A.S.",
-    sociedadId: 12302,
-    cuit: null,
-    capital: "$400.000",
-    publicacion: "06/10/2023",
-    departamento: "Luján de Cuyo",
-    socios: [{ nombre: "Agustín Gutiérrez", personaId: 23585 }],
-    objetoSocial: "Actividades culturales y educativas; comercial; franquicias; inversoras, financieras y fideicomisos; desarrollo de software y desarrollo tecnológico; consultoría tecnológica; proveedor del estado; importación y exportación.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Sbs Company S.A.S.",
-    sociedadId: 12769,
-    cuit: "30-71844795-6",
-    capital: "$500.000",
-    publicacion: "04/12/2023",
-    departamento: "Capital",
-    socios: [{ nombre: "Lucas Mariano Dominguez Grassetto", personaId: 24203 }, { nombre: "Mauricio Nicolas Moncada", personaId: 24202 }],
-    objetoSocial: "Creación y desarrollo de software, criptominería, videojuegos, servicios tecnológicos, compra-venta de equipos electrónicos, software y servicios relacionados, Internet, asesoramiento empresarial, importación-exportación, participación en licitaciones, mandatos y fideicomisos conforme Ley 24.441.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Bathouse S.A.S.",
-    sociedadId: 12845,
-    cuit: "33-71843532-9",
-    capital: "$2.000.000",
-    publicacion: "15/12/2023",
-    departamento: "Capital",
-    socios: [{ nombre: "Flavio Máximo Sanfilippo", personaId: 21769 }, { nombre: "Georgina Natalia Riveros", personaId: 24314 }, { nombre: "Hernan Fontana Baccarelli", personaId: 1091 }, { nombre: "Ornella Bernardi", personaId: 19269 }],
-    objetoSocial: "Servicios informáticos, desarrollo de software y aplicaciones web; gestión de cobranzas y pagos; servicios de intermediación y asesoramiento en construcción; construcción e ingeniería; operaciones inmobiliarias; actuación como fiduciaria en contratos de fideicomisos no financieros.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Andex Tech S.A.S.",
-    sociedadId: 13029,
-    cuit: "30-71897244-9",
-    capital: "$1.600.000",
-    publicacion: "29/12/2023",
-    departamento: "San Rafael",
-    socios: [{ nombre: "Andrés Abel Pravata", personaId: 23987 }, { nombre: "Juan Cruz Luffi", personaId: 24572 }],
-    objetoSocial: "Exportación, importación, asesoramiento, comercialización, instalación, soporte y mantenimiento de equipos de telecomunicaciones e informáticos. Análisis, programación y aplicación de sistemas informáticos. Consultoría e ingeniería tecnológica. Servicios informáticos y de telecomunicaciones. Elaboración y comercialización de productos audiovisuales. Diseño e implementación de sistemas de Banda Ancha y Networking. Fabricación y distribución de maquinarias e instrumentos de medición.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Bigsys Web S.A.S.",
-    sociedadId: 13565,
-    cuit: "33-71860458-9",
-    capital: "$500.000",
-    publicacion: "12/04/2024",
-    departamento: "Capital",
-    socios: [{ nombre: "Juan Andrés Rodríguez", personaId: 25334 }, { nombre: "Juan Carlos Rodríguez" }, { nombre: "Juan Fernando Rodríguez", personaId: 25335 }, { nombre: "Juan Pablo Rodríguez" }],
-    objetoSocial: "Desarrollos informáticos: diseño, desarrollo, producción, implementación y puesta a punto de productos de software propios. Desarrollo de software embebido. Servicios informáticos de valor agregado, e-learning, e-commerce. Actuar como importadora y exportadora de productos informáticos. Fiduciaria.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Zcuatro S.A.S.",
-    sociedadId: 13619,
-    cuit: "30-71865971-6",
-    capital: "$410.000",
-    publicacion: "18/04/2024",
-    departamento: "Capital",
-    socios: [{ nombre: "Andres Hernan Rayes", personaId: 25409 }, { nombre: "Emilio Ramón Clavero", personaId: 25410 }],
-    objetoSocial: "Informática, desarrollo de software, redes y telecomunicaciones, comercialización de equipamiento informático; electromecanica, instalación de equipos; industrialización de productos; construcción de obras privadas; comercial, compraventa de bienes y patentes.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Anticipadas S.A.S.",
-    sociedadId: 14452,
-    cuit: null,
-    capital: "$600.000",
-    publicacion: "16/08/2024",
-    departamento: "Godoy Cruz",
-    socios: [{ nombre: "Marcos Gabriel Trentacoste", personaId: 3485 }, { nombre: "Victor Manuel Belaunde", personaId: 26615 }],
-    objetoSocial: "Desarrollo de sistemas, hosting, soporte IT, servidores, venta de equipamiento, venta de entradas, organización de eventos musicales, teatrales, billetera virtual. Creación, producción, intercambio, fabricación, transformación, comercialización, intermediación, representación, importación y exportación de actividades agropecuarias, comunicaciones, espectáculos, editoriales, gráficas, culturales, educativas, tecnológicas, software, gastronómicas, hoteleras, turísticas, inmobiliarias, constructoras, inversoras, financieras, fideicomisos, petroleras, gasíferas, forestales, mineras, energéticas, salud y transporte privado.",
-  },
-  {
-    tipo: "S.A.",
-    nombre: "Underc0de S.A.",
-    sociedadId: 16647,
-    cuit: "30-71708105-2",
-    capital: null,
-    publicacion: "26/06/2025",
-    departamento: null,
-    socios: [],
-    objetoSocial: "Realizar actividades comerciales de consultoría en informática, suministros de programas informáticos, análisis de sistemas, diseño web, reparación de hardware, desarrollo de software; exportación e importación de bienes relacionados; mandatos y gestiones de negocios; prestaciones de servicios en nuevas tecnologías incluyendo webs, aplicaciones móviles, ciberseguridad, IA, gaming, diseño UX/UI, criptomonedas, NFT, metaverso y realidades extendidas; educación mediante capacitaciones, cursos, becas estudiantiles y desarrollo de material educativo; realización de inversiones y aportes de capitales.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Allprocar S.A.S.",
-    sociedadId: 16661,
-    cuit: "30-71919162-9",
-    capital: "$10.000.000",
-    publicacion: "01/07/2025",
-    departamento: "Capital",
-    socios: [{ nombre: "Harvey José Barreto Hernández", personaId: 29752 }, { nombre: "José Alejandro Barreto Barrios", personaId: 29751 }],
-    objetoSocial: "Desarrollo, explotación y administración de plataformas digitales y aplicaciones móviles destinadas a facilitar, intermediar y gestionar la contratación de servicios automotrices tales como mecánica general, venta de repuestos, neumáticos, accesorios, limpieza, detailing, seguros, pintura, carrocería, auxilio mecánico. Administración de bases de datos, desarrollo de software, servicios tecnológicos, promocionales y publicitarios, asesoría y capacitación técnica. Actuación como franquiciante bajo la marca Allprocar.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Aihost S.A.S.",
-    sociedadId: 16938,
-    cuit: "30-71912080-2",
-    capital: "$1.000.000",
-    publicacion: "05/08/2025",
-    departamento: "Capital",
-    socios: [{ nombre: "Andrés Eduardo González Vera", personaId: 30125 }, { nombre: "Huentala Ventures S.A.S.", sociedadId: 14849 }, { nombre: "Leonel David Camsen", personaId: 2175 }, { nombre: "Santiago Javier Ponte", personaId: 30126 }],
-    objetoSocial: "Actividades comerciales, licitaciones, servicios informáticos, programación y asesoramiento.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Tolvia Core S.A.S.",
-    sociedadId: 17144,
-    cuit: "33-71918066-9",
-    capital: "$250.000",
-    publicacion: "29/08/2025",
-    departamento: "Luján de Cuyo",
-    socios: [{ nombre: "Daniel Fino Villamil", personaId: 30414 }, { nombre: "Iván Ignacio Boroni", personaId: 30415 }, { nombre: "Martín Ignacio Lana Bengut", personaId: 30413 }, { nombre: "Walter Washington Camus", personaId: 30416 }],
-    objetoSocial: "Desarrollo, diseño, programación, implementación, comercialización, distribución, licenciamiento y mantenimiento de software y soluciones tecnológicas destinadas a la gestión de inventarios, equipos médicos y gestión de clientes. Servicios de consultoría, asistencia técnica, soporte de postventa y capacitación. Alojamiento, procesamiento y resguardo de datos en servidores propios o de terceros.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Trivonka Sistems Software Sas",
-    sociedadId: 17145,
-    cuit: "30-71915915-6",
-    capital: "$2.000.000",
-    publicacion: "29/08/2025",
-    departamento: "Godoy Cruz",
-    socios: [{ nombre: "Osvaldo Luis Campodónico", personaId: 21005 }],
-    objetoSocial: "Creación, producción, intercambio, fabricación, transformación, industrialización, comercialización, intermediación, representación, importación y exportación de bienes materiales e inmateriales y prestación de servicios relacionados con actividades agropecuarias, comunicaciones, industrias manufactureras, culturales, tecnología y software, comerciales, inmobiliarias, inversoras, financieras, petroleras, gasíferas, forestales, mineras, energéticas, salud y transporte.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Lobo Software S.A.S.",
-    sociedadId: 17195,
-    cuit: "30-71917329-9",
-    capital: "$800.000",
-    publicacion: "08/09/2025",
-    departamento: "Capital",
-    socios: [{ nombre: "Deborah Eliana Diaz Valverde", personaId: 10534 }, { nombre: "Ivan Vicente Diaz", personaId: 10532 }],
-    objetoSocial: "Creación, producción, intercambio, fabricación, transformación, industrialización, comercialización, intermediación, representación, importación y exportación de bienes y servicios en actividades agropecuarias, comunicaciones, industrias manufactureras, culturales, tecnológicas, comerciales, inmobiliarias, inversoras, petroleras, salud y transporte privado.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Vision Studio S.A.S.",
-    sociedadId: 17240,
-    cuit: null,
-    capital: "$1.000.000",
-    publicacion: "12/09/2025",
-    departamento: "Godoy Cruz",
-    socios: [{ nombre: "Guillermina Velazquez García", personaId: 30552 }, { nombre: "Luis Emilio Gonzalez Zárate", personaId: 30551 }],
-    objetoSocial: "Desarrollo de software, realidad virtual y aumentada, diseño UX/UI, diseño gráfico, diseño 3D, producción audiovisual, comercialización y consultoría tecnológica, propiedad intelectual e inversiones.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Cfl Solutions S.A.S.",
-    sociedadId: 17429,
-    cuit: null,
-    capital: "$800.000",
-    publicacion: "03/10/2025",
-    departamento: "Luján de Cuyo",
-    socios: [{ nombre: "María Belén Giunchi", personaId: 30806 }, { nombre: "Paola Alicia Zambudio", personaId: 30805 }],
-    objetoSocial: "Comunicaciones, espectáculos, editoriales y gráficas en cualquier soporte; actividades culturales y educativas; desarrollo, diseño, programación, implementación, mantenimiento de tecnologías, investigación, innovación, software y aplicaciones informáticas, incluyendo consultorías en TIC, análisis, diseño e implementación de sistemas informáticos, servicios de soporte técnico y capacitación, compraventa, importación, exportación y distribución de equipos informáticos, hardware, software y tecnología, comercialización de licencias, venta de productos tecnológicos y accesorios, representación y distribución de marcas del sector tecnológico, consultoría empresarial en transformación digital, servicios de hosting, cloud computing y soluciones en la nube, desarrollo de sitios web, aplicaciones móviles y comercio electrónico, capacitación en tecnologías de la información, investigación y desarrollo de nuevas tecnologías, servicios de outsourcing tecnológico y actividades conexas.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Rexoft S.A.S.",
-    sociedadId: 17699,
-    cuit: null,
-    capital: "$1.000.000",
-    publicacion: "06/11/2025",
-    departamento: "San Rafael",
-    socios: [{ nombre: "Francisco Merenda Strologo", personaId: 31187 }],
-    objetoSocial: "Desarrollo, creación, programación, producción, edición, publicación, distribución, comercialización, explotación y mantenimiento de software en todas sus formas, incluyendo aplicaciones móviles, aplicaciones web, videojuegos, software de entretenimiento, motores de videojuegos, sistemas operativos, software de escritorio, SaaS, IaaS, PaaS y soluciones tecnológicas en la nube.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Sisu Venture Partners Participaciones Argentina S.A.S.",
-    sociedadId: 18487,
-    cuit: "30-71941675-2",
-    capital: "$693.600",
-    publicacion: "05/03/2026",
-    departamento: "Capital",
-    socios: [{ nombre: "Sisu Venture Partners Participaciones Ltda." }],
-    objetoSocial: "Servicios de programación informática a medida. Procesamiento de datos, hospedaje y servicios relacionados. Publicación y difusión en Internet y portales de búsqueda web; Diseño de sistemas informáticos y servicios relacionados.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Dl Software S.A.S.",
-    sociedadId: 18855,
-    cuit: "30-71942790-8",
-    capital: "$1.000.000",
-    publicacion: "28/04/2026",
-    departamento: "Godoy Cruz",
-    socios: [{ nombre: "Dario Javier Videla", personaId: 32407 }, { nombre: "Lucas Mariano Dominguez Grassetto", personaId: 24203 }],
-    objetoSocial: "Agropecuarias, avícolas, ganaderas, pesqueras, tamberas y vitivinícolas; comunicaciones, espectáculos, editoriales y gráficas; industrias manufactureras; culturales y educativas; desarrollo de tecnologías, investigación e innovación y software; comerciales, gastronómicas, hoteleras y turísticas; inmobiliarias y constructoras; inversoras, financieras y fideicomisos; petroleras, gasíferas, forestales, mineras y energéticas; salud; transporte privado.",
-  },
-  {
-    tipo: "S.A.S.",
-    nombre: "Aimus Software Labs S.A.S.",
-    sociedadId: 19213,
-    cuit: null,
-    capital: "$800.000",
-    publicacion: "08/06/2026",
-    departamento: "Las Heras",
-    socios: [{ nombre: "Santiago Irigoyen", personaId: 33118 }],
-    objetoSocial: "Actividades agropecuarias, comunicaciones, industrias manufactureras, culturales, desarrollo de tecnologías, comerciales, inmobiliarias, inversoras, energéticas, salud y transporte.",
-  },
-  {
-    tipo: "S.A.",
-    nombre: "Agile Software S.A.",
-    sociedadId: 11766,
-    cuit: "30-71823020-5",
-    capital: "$300.000",
-    publicacion: null,
-    departamento: "Capital",
-    socios: [],
-    objetoSocial: "Comerciales, Importación y Exportación, Servicio de consultoría empresaria, Servicio de consultoría en ingeniería, De Mandato.",
-  },
+import type { EntidadCuradaBase, SocioCurado } from "../informesNicho.js";
+
+export interface EntidadSoftwareCurada extends EntidadCuradaBase {
+  socios: SocioCurado[];
+}
+
+export const ENTIDADES: EntidadSoftwareCurada[] = [
+  {
+    "sociedadId": 14,
+    "socios": [
+      {
+        "nombre": "Araujo Aristiaran Roberto Adriel",
+        "personaId": 27
+      },
+      {
+        "nombre": "Gimenez German",
+        "personaId": 26
+      }
+    ]
+  },
+  {
+    "sociedadId": 72,
+    "socios": [
+      {
+        "nombre": "Eduardo José Noello",
+        "personaId": 178
+      },
+      {
+        "nombre": "Estela Ines Gallardo",
+        "personaId": 364
+      },
+      {
+        "nombre": "Mónica Elizabeth Cerdan",
+        "personaId": 179
+      }
+    ]
+  },
+  {
+    "sociedadId": 290,
+    "socios": [
+      {
+        "nombre": "Antonio Alvarez Abril",
+        "personaId": 669
+      },
+      {
+        "nombre": "Gabriel Federico Alvarez Juri",
+        "personaId": 670
+      },
+      {
+        "nombre": "Higinio Alberto Facchini",
+        "personaId": 668
+      },
+      {
+        "nombre": "Santiago Cristobal Perez",
+        "personaId": 667
+      }
+    ]
+  },
+  {
+    "sociedadId": 470,
+    "socios": [
+      {
+        "nombre": "Gerónimo Guevara March",
+        "personaId": 1122
+      },
+      {
+        "nombre": "Sebastián Enrique Torres Gomez Omil",
+        "personaId": 1121
+      }
+    ]
+  },
+  {
+    "sociedadId": 820,
+    "socios": [
+      {
+        "nombre": "Gerónimo Guevara March",
+        "personaId": 1122
+      },
+      {
+        "nombre": "Gustavo Martin Nudo",
+        "personaId": 1889
+      }
+    ]
+  },
+  {
+    "sociedadId": 838,
+    "socios": [
+      {
+        "nombre": "Guillermo Alejandro Willink Moyano",
+        "personaId": 1940
+      },
+      {
+        "nombre": "Pedro Cubillos",
+        "personaId": 1941
+      }
+    ]
+  },
+  {
+    "sociedadId": 845,
+    "socios": [
+      {
+        "nombre": "Agustín César Ruiz",
+        "personaId": 1960
+      },
+      {
+        "nombre": "Diego Gabriel César",
+        "personaId": 1959
+      },
+      {
+        "nombre": "Juan Sebastian Arbona",
+        "personaId": 1961
+      },
+      {
+        "nombre": "Pablo Enrique Bicego",
+        "personaId": 1958
+      }
+    ]
+  },
+  {
+    "sociedadId": 887,
+    "socios": [
+      {
+        "nombre": "Jorge Rafael Lanzani",
+        "personaId": 2061
+      },
+      {
+        "nombre": "Nicolás Rafael Anitori",
+        "personaId": 2062
+      }
+    ]
+  },
+  {
+    "sociedadId": 977,
+    "socios": [
+      {
+        "nombre": "Daniel Derli Copado Perez",
+        "personaId": 2240
+      },
+      {
+        "nombre": "Domingo Arístides Parisot",
+        "personaId": 2241
+      }
+    ]
+  },
+  {
+    "sociedadId": 1123,
+    "socios": [
+      {
+        "nombre": "Debora Analia Carricondo",
+        "personaId": 2450
+      },
+      {
+        "nombre": "Estela Ines Gallardo",
+        "personaId": 364
+      },
+      {
+        "nombre": "Maria Ines Otero",
+        "personaId": 2584
+      }
+    ]
+  },
+  {
+    "sociedadId": 1211,
+    "socios": [
+      {
+        "nombre": "Andres Diego Manresa",
+        "personaId": 2782
+      },
+      {
+        "nombre": "Arturo Agustin Yaciofano Chesi",
+        "personaId": 2781
+      },
+      {
+        "nombre": "Gonzalo Moya",
+        "personaId": 241
+      }
+    ]
+  },
+  {
+    "sociedadId": 1289,
+    "socios": [
+      {
+        "nombre": "Jaime Alberto Aguiló Iztueta",
+        "personaId": 2962
+      },
+      {
+        "nombre": "Rodolfo Alejandro Giro",
+        "personaId": 2963
+      }
+    ]
+  },
+  {
+    "sociedadId": 1518,
+    "socios": [
+      {
+        "nombre": "Diego Raúl Saso",
+        "personaId": 3450
+      },
+      {
+        "nombre": "Héctor Alberto Ocaranza",
+        "personaId": 3451
+      },
+      {
+        "nombre": "Jaime Alberto Aguiló Iztueta",
+        "personaId": 2962
+      },
+      {
+        "nombre": "Sebastián Ricardo Simondi",
+        "personaId": 3449
+      }
+    ]
+  },
+  {
+    "sociedadId": 1519,
+    "socios": [
+      {
+        "nombre": "Agustín Fernandez Iuvaro",
+        "personaId": 3454
+      },
+      {
+        "nombre": "Alejandro Rose",
+        "personaId": 3453
+      },
+      {
+        "nombre": "Víctor Juan Fernandez",
+        "personaId": 3455
+      }
+    ]
+  },
+  {
+    "sociedadId": 1528,
+    "socios": [
+      {
+        "nombre": "Alex Waisman",
+        "personaId": 3476
+      },
+      {
+        "nombre": "Esteban Eduardo Castellanos",
+        "personaId": 3478
+      },
+      {
+        "nombre": "Julio Argentino Irrazabal",
+        "personaId": 3477
+      }
+    ]
+  },
+  {
+    "sociedadId": 1533,
+    "socios": [
+      {
+        "nombre": "Marcos Gabriel Trentacoste",
+        "personaId": 3485
+      },
+      {
+        "nombre": "Romina Vanesa Arena",
+        "personaId": 3486
+      }
+    ]
+  },
+  {
+    "sociedadId": 1578,
+    "socios": [
+      {
+        "nombre": "Diego Raúl Saso",
+        "personaId": 3450
+      },
+      {
+        "nombre": "Elisa Luciana Toujas",
+        "personaId": 3569
+      }
+    ]
+  },
+  {
+    "sociedadId": 1624,
+    "socios": [
+      {
+        "nombre": "Claudio Adrián Marrero",
+        "personaId": 3659
+      },
+      {
+        "nombre": "Juan Francisco Ciullini Iaccarino",
+        "personaId": 3658
+      }
+    ]
+  },
+  {
+    "sociedadId": 1640,
+    "socios": [
+      {
+        "nombre": "Mariano Jesús Tassi",
+        "personaId": 3692
+      },
+      {
+        "nombre": "Maximiliano Elian Neza",
+        "personaId": 3693
+      }
+    ]
+  },
+  {
+    "sociedadId": 1954,
+    "socios": [
+      {
+        "nombre": "Domenico Cirasino",
+        "personaId": 4370
+      },
+      {
+        "nombre": "Nicolás Guerra",
+        "personaId": 4369
+      }
+    ]
+  },
+  {
+    "sociedadId": 1980,
+    "socios": [
+      {
+        "nombre": "Alejandro Hernan Navarro",
+        "personaId": 4420
+      },
+      {
+        "nombre": "Cristian Edgardo Navarro Manresa",
+        "personaId": 4421
+      }
+    ]
+  },
+  {
+    "sociedadId": 2103,
+    "socios": [
+      {
+        "nombre": "Besitz B.V."
+      },
+      {
+        "nombre": "Mieten B.V."
+      }
+    ]
+  },
+  {
+    "sociedadId": 2147,
+    "socios": [
+      {
+        "nombre": "José Miguel Rodríguez",
+        "personaId": 4739
+      }
+    ]
+  },
+  {
+    "sociedadId": 2283,
+    "socios": [
+      {
+        "nombre": "Jose Luis Bustos Lopez",
+        "personaId": 5018
+      },
+      {
+        "nombre": "Sergio Exequiel Mansilla",
+        "personaId": 5017
+      }
+    ]
+  },
+  {
+    "sociedadId": 2382,
+    "socios": [
+      {
+        "nombre": "Cristian David Rossi",
+        "personaId": 5229
+      },
+      {
+        "nombre": "Ricardo José Agüero",
+        "personaId": 5230
+      }
+    ]
+  },
+  {
+    "sociedadId": 2389,
+    "socios": [
+      {
+        "nombre": "Martín Salassa",
+        "personaId": 2266
+      },
+      {
+        "nombre": "Matías Demián Benegas",
+        "personaId": 788
+      },
+      {
+        "nombre": "Víctor Abel Quiroga"
+      }
+    ]
+  },
+  {
+    "sociedadId": 2394,
+    "socios": [
+      {
+        "nombre": "Gustavo Maximiliano Molina Lema",
+        "personaId": 5247
+      },
+      {
+        "nombre": "Ruben Dario Luna Ferrer",
+        "personaId": 5246
+      }
+    ]
+  },
+  {
+    "sociedadId": 2410,
+    "socios": [
+      {
+        "nombre": "Carlos Alberto García",
+        "personaId": 5273
+      },
+      {
+        "nombre": "Francisco José Guillermet Velazquez",
+        "personaId": 5275
+      },
+      {
+        "nombre": "Valeria Alejandra Avellaneda",
+        "personaId": 5274
+      }
+    ]
+  },
+  {
+    "sociedadId": 2604,
+    "socios": [
+      {
+        "nombre": "Walter Roberto Grenon",
+        "personaId": 5700
+      }
+    ]
+  },
+  {
+    "sociedadId": 2608,
+    "socios": [
+      {
+        "nombre": "Ignacio Alejandro Boulin Victoria",
+        "personaId": 5709
+      },
+      {
+        "nombre": "Lucas Emmanuel Gómez",
+        "personaId": 5708
+      }
+    ]
+  },
+  {
+    "sociedadId": 2648,
+    "socios": [
+      {
+        "nombre": "Jorge Dario Segura",
+        "personaId": 5801
+      },
+      {
+        "nombre": "Mario Centeno",
+        "personaId": 5799
+      },
+      {
+        "nombre": "Pablo Sebastián Castellarín",
+        "personaId": 5800
+      },
+      {
+        "nombre": "Raul Adrian Lopez",
+        "personaId": 5802
+      }
+    ]
+  },
+  {
+    "sociedadId": 2759,
+    "socios": [
+      {
+        "nombre": "Antero Norberto Lloret Zalazar",
+        "personaId": 6035
+      },
+      {
+        "nombre": "Marisabel Yanina Vazquez",
+        "personaId": 6036
+      }
+    ]
+  },
+  {
+    "sociedadId": 3080,
+    "socios": [
+      {
+        "nombre": "Diego Andres Correa Tello",
+        "personaId": 6734
+      },
+      {
+        "nombre": "Di Sparti Román",
+        "personaId": 6736
+      },
+      {
+        "nombre": "Gabriel Darío Galdeano",
+        "personaId": 6733
+      },
+      {
+        "nombre": "Norberto Daniel Martinez Coll",
+        "personaId": 6735
+      }
+    ]
+  },
+  {
+    "sociedadId": 3134,
+    "socios": [
+      {
+        "nombre": "Germán Alejandro Limina",
+        "personaId": 6838
+      },
+      {
+        "nombre": "Pablo Daniel Palma",
+        "personaId": 6836
+      },
+      {
+        "nombre": "Pedro Lisandro Brest",
+        "personaId": 6837
+      }
+    ]
+  },
+  {
+    "sociedadId": 3233,
+    "socios": [
+      {
+        "nombre": "Adrian Amadeo Cesar Tagarot",
+        "personaId": 7041
+      },
+      {
+        "nombre": "Manuel Francisco Marco",
+        "personaId": 7040
+      }
+    ]
+  },
+  {
+    "sociedadId": 3234,
+    "socios": [
+      {
+        "nombre": "Alec Manuel Juliao Kobylanski",
+        "personaId": 7042
+      },
+      {
+        "nombre": "Francisco Voena Bernal",
+        "personaId": 7044
+      },
+      {
+        "nombre": "Jan Victor Juliao Kobylanski",
+        "personaId": 7045
+      },
+      {
+        "nombre": "Joaquín Berardi",
+        "personaId": 7046
+      },
+      {
+        "nombre": "Manuel Shi",
+        "personaId": 7043
+      }
+    ]
+  },
+  {
+    "sociedadId": 3251,
+    "socios": [
+      {
+        "nombre": "Rodolfo Alejandro Giro",
+        "personaId": 2963
+      }
+    ]
+  },
+  {
+    "sociedadId": 3313,
+    "socios": [
+      {
+        "nombre": "Sebastián Gabriel Carrillo",
+        "personaId": 7212
+      }
+    ]
+  },
+  {
+    "sociedadId": 3528,
+    "socios": [
+      {
+        "nombre": "Adriana Paola Sánchez",
+        "personaId": 7623
+      },
+      {
+        "nombre": "Sergio Daniel Battalemi",
+        "personaId": 7624
+      }
+    ]
+  },
+  {
+    "sociedadId": 3538,
+    "socios": [
+      {
+        "nombre": "Gonzalo Yañez",
+        "personaId": 3468
+      },
+      {
+        "nombre": "Mariano Gabriel Gioia",
+        "personaId": 7642
+      },
+      {
+        "nombre": "Sebastián Yañez",
+        "personaId": 7641
+      },
+      {
+        "nombre": "Stefan Bernhard Riedmann",
+        "personaId": 7643
+      }
+    ]
+  },
+  {
+    "sociedadId": 3658,
+    "socios": [
+      {
+        "nombre": "Ariel Emilio Saenz",
+        "personaId": 7881
+      },
+      {
+        "nombre": "Nestor Diego Marin",
+        "personaId": 7880
+      }
+    ]
+  },
+  {
+    "sociedadId": 3773,
+    "socios": [
+      {
+        "nombre": "Alejandro Cavallero",
+        "personaId": 8121
+      },
+      {
+        "nombre": "Carlos Mariano Soler",
+        "personaId": 7305
+      },
+      {
+        "nombre": "Diego Navarro",
+        "personaId": 8123
+      },
+      {
+        "nombre": "Montemar Compañía Financiera S.A.",
+        "sociedadId": 16117
+      },
+      {
+        "nombre": "Ramiro José Soler",
+        "personaId": 8122
+      }
+    ]
+  },
+  {
+    "sociedadId": 4271,
+    "socios": [
+      {
+        "nombre": "Franco Agustín Ingrassia Carretero",
+        "personaId": 9164
+      },
+      {
+        "nombre": "Juan Pablo Ingrassia Carretero",
+        "personaId": 9162
+      },
+      {
+        "nombre": "Marco Javier Ingrassia Carretero",
+        "personaId": 9163
+      },
+      {
+        "nombre": "Miguel Ángel Ingrassia",
+        "personaId": 9160
+      },
+      {
+        "nombre": "Mirta Gabriela Carretero",
+        "personaId": 9161
+      }
+    ]
+  },
+  {
+    "sociedadId": 4427,
+    "socios": [
+      {
+        "nombre": "Francisco Luis Innocenti",
+        "personaId": 9489
+      }
+    ]
+  },
+  {
+    "sociedadId": 4465,
+    "socios": [
+      {
+        "nombre": "Adrián Miguel Cammarota",
+        "personaId": 9568
+      },
+      {
+        "nombre": "David Hernández Catala",
+        "personaId": 9567
+      },
+      {
+        "nombre": "Facundo Matías Rodríguez Quintana",
+        "personaId": 9569
+      },
+      {
+        "nombre": "María Laura Jalaf",
+        "personaId": 9570
+      }
+    ]
+  },
+  {
+    "sociedadId": 4480,
+    "socios": [
+      {
+        "nombre": "Emiliano Luis Verdu Marty",
+        "personaId": 9603
+      },
+      {
+        "nombre": "Nelson Gastón Pérez",
+        "personaId": 9602
+      }
+    ]
+  },
+  {
+    "sociedadId": 4786,
+    "socios": [
+      {
+        "nombre": "Alonso Rodrigo Marcelo",
+        "personaId": 10246
+      }
+    ]
+  },
+  {
+    "sociedadId": 4795,
+    "socios": [
+      {
+        "nombre": "Hernán Gabriel Denk",
+        "personaId": 10261
+      }
+    ]
+  },
+  {
+    "sociedadId": 4998,
+    "socios": [
+      {
+        "nombre": "Matias Nicolás Sansone",
+        "personaId": 9241
+      },
+      {
+        "nombre": "Rodrigo Daniel Persia",
+        "personaId": 10649
+      }
+    ]
+  },
+  {
+    "sociedadId": 5213,
+    "socios": [
+      {
+        "nombre": "Ezequiel Aloisi",
+        "personaId": 11066
+      },
+      {
+        "nombre": "Román Clavero",
+        "personaId": 11067
+      }
+    ]
+  },
+  {
+    "sociedadId": 5312,
+    "socios": [
+      {
+        "nombre": "Bruno Calcagno",
+        "personaId": 11265
+      }
+    ]
+  },
+  {
+    "sociedadId": 5516,
+    "socios": [
+      {
+        "nombre": "Miguel Ernesto Ariel Gonzalez",
+        "personaId": 11667
+      }
+    ]
+  },
+  {
+    "sociedadId": 5681,
+    "socios": [
+      {
+        "nombre": "Eugenio Sebastián Oliveri",
+        "personaId": 12016
+      },
+      {
+        "nombre": "Matías Demián Benegas",
+        "personaId": 788
+      }
+    ]
+  },
+  {
+    "sociedadId": 6160,
+    "socios": [
+      {
+        "nombre": "Nilda Liliana Di Cesare",
+        "personaId": 12924
+      },
+      {
+        "nombre": "Pablo Javier Pereira",
+        "personaId": 12923
+      }
+    ]
+  },
+  {
+    "sociedadId": 6217,
+    "socios": [
+      {
+        "nombre": "Fernando Jose Perez",
+        "personaId": 13022
+      },
+      {
+        "nombre": "Jorge Emanuel Miguez",
+        "personaId": 13023
+      }
+    ]
+  },
+  {
+    "sociedadId": 6292,
+    "socios": [
+      {
+        "nombre": "Nilda Liliana Di Cesare",
+        "personaId": 12924
+      },
+      {
+        "nombre": "Pablo Javier Pereira",
+        "personaId": 12923
+      }
+    ]
+  },
+  {
+    "sociedadId": 6428,
+    "socios": [
+      {
+        "nombre": "Aldibs S.A.S."
+      },
+      {
+        "nombre": "Dora Gimenez",
+        "personaId": 14174
+      },
+      {
+        "nombre": "Luciano Rafael Renna Muñoz",
+        "personaId": 7841
+      },
+      {
+        "nombre": "Matías Roberto Martínez",
+        "personaId": 13444
+      },
+      {
+        "nombre": "Matias Roberto Martínez Capó",
+        "personaId": 4033
+      },
+      {
+        "nombre": "Pablo Andres Martin Castañeda",
+        "personaId": 7842
+      },
+      {
+        "nombre": "Rafael Alejandro Renna",
+        "personaId": 13731
+      }
+    ]
+  },
+  {
+    "sociedadId": 6620,
+    "socios": [
+      {
+        "nombre": "Castillo Andrea Verónica",
+        "personaId": 13811
+      },
+      {
+        "nombre": "Morán Jose Ubaldo",
+        "personaId": 13810
+      }
+    ]
+  },
+  {
+    "sociedadId": 6661,
+    "socios": [
+      {
+        "nombre": "Hector Martín Maturano",
+        "personaId": 13874
+      },
+      {
+        "nombre": "José Manuel Perez Castillo",
+        "personaId": 13875
+      },
+      {
+        "nombre": "Matías Exequiel Navarrete",
+        "personaId": 13876
+      },
+      {
+        "nombre": "Mauricio Javier Tagua",
+        "personaId": 13877
+      }
+    ]
+  },
+  {
+    "sociedadId": 6691,
+    "socios": [
+      {
+        "nombre": "Eduardo Martin Difonso",
+        "personaId": 13945
+      },
+      {
+        "nombre": "Jose Ignacio Mirchak Baronian",
+        "personaId": 13944
+      },
+      {
+        "nombre": "Juan Ignacio Alvarez Lescano",
+        "personaId": 13943
+      }
+    ]
+  },
+  {
+    "sociedadId": 6692,
+    "socios": [
+      {
+        "nombre": "Daniel Enrique Álvarez"
+      },
+      {
+        "nombre": "Francisco Atilio Oga",
+        "personaId": 13947
+      }
+    ]
+  },
+  {
+    "sociedadId": 6790,
+    "socios": [
+      {
+        "nombre": "Eliana Hebe Lanzani",
+        "personaId": 6045
+      },
+      {
+        "nombre": "Jorge Rafael Lanzani",
+        "personaId": 2061
+      },
+      {
+        "nombre": "Nicolás Rafael Anitori",
+        "personaId": 2062
+      }
+    ]
+  },
+  {
+    "sociedadId": 6796,
+    "socios": [
+      {
+        "nombre": "Cristian Ruppert",
+        "personaId": 14128
+      },
+      {
+        "nombre": "Gabriel Arias",
+        "personaId": 14127
+      },
+      {
+        "nombre": "Maria Emilce Villanueva",
+        "personaId": 14129
+      }
+    ]
+  },
+  {
+    "sociedadId": 6824,
+    "socios": [
+      {
+        "nombre": "Santiago Jorge Bayeta",
+        "personaId": 14184
+      }
+    ]
+  },
+  {
+    "sociedadId": 6971,
+    "socios": [
+      {
+        "nombre": "Pablo Javier Pereira",
+        "personaId": 12923
+      },
+      {
+        "nombre": "Raúl Jerónimo Vargas",
+        "personaId": 14077
+      }
+    ]
+  },
+  {
+    "sociedadId": 7071,
+    "socios": [
+      {
+        "nombre": "Laura Nahir Adid",
+        "personaId": 14642
+      },
+      {
+        "nombre": "María Florencia Fourcade",
+        "personaId": 14643
+      }
+    ]
+  },
+  {
+    "sociedadId": 7588,
+    "socios": [
+      {
+        "nombre": "David Esteban Nogara",
+        "personaId": 15608
+      },
+      {
+        "nombre": "Jorge David Viani",
+        "personaId": 15609
+      }
+    ]
+  },
+  {
+    "sociedadId": 7615,
+    "socios": [
+      {
+        "nombre": "Alfredo Vicente Trentacoste",
+        "personaId": 8245
+      },
+      {
+        "nombre": "Sergio Gustavo García",
+        "personaId": 15654
+      }
+    ]
+  },
+  {
+    "sociedadId": 7884,
+    "socios": [
+      {
+        "nombre": "Gino Manuel Cornejo",
+        "personaId": 16187
+      },
+      {
+        "nombre": "Santiago Mas Fuchs",
+        "personaId": 7391
+      }
+    ]
+  },
+  {
+    "sociedadId": 8065,
+    "socios": [
+      {
+        "nombre": "Pedro Luis Badosa",
+        "personaId": 16501
+      }
+    ]
+  },
+  {
+    "sociedadId": 8450,
+    "socios": [
+      {
+        "nombre": "Andrés Francisco Puebla",
+        "personaId": 17231
+      },
+      {
+        "nombre": "Carlos Fabricio Portillo Pontoriero",
+        "personaId": 17230
+      },
+      {
+        "nombre": "Mariela Belén Rivas",
+        "personaId": 17229
+      }
+    ]
+  },
+  {
+    "sociedadId": 8660,
+    "socios": [
+      {
+        "nombre": "Daniel Enrique Álvarez"
+      },
+      {
+        "nombre": "Dichiara Andrea Amalia",
+        "personaId": 17629
+      },
+      {
+        "nombre": "Luconi María Eugenia",
+        "personaId": 17630
+      }
+    ]
+  },
+  {
+    "sociedadId": 8766,
+    "socios": [
+      {
+        "nombre": "Sebastian Emilio Rios",
+        "personaId": 17805
+      }
+    ]
+  },
+  {
+    "sociedadId": 9110,
+    "socios": [
+      {
+        "nombre": "Fernando Eliseo Nogara",
+        "personaId": 18463
+      },
+      {
+        "nombre": "Lucas Antonio Muñoz",
+        "personaId": 5516
+      }
+    ]
+  },
+  {
+    "sociedadId": 9117,
+    "socios": [
+      {
+        "nombre": "Sabrina Constanza Noel Pacheco",
+        "personaId": 18480
+      }
+    ]
+  },
+  {
+    "sociedadId": 9545,
+    "socios": [
+      {
+        "nombre": "Leandro Bernardi",
+        "personaId": 19268
+      },
+      {
+        "nombre": "Ornella Bernardi",
+        "personaId": 19269
+      }
+    ]
+  },
+  {
+    "sociedadId": 9559,
+    "socios": [
+      {
+        "nombre": "Andrea Macarena Calise Villagran",
+        "personaId": 19303
+      },
+      {
+        "nombre": "Florencia Romina Calise Villagran",
+        "personaId": 19304
+      }
+    ]
+  },
+  {
+    "sociedadId": 9616,
+    "socios": [
+      {
+        "nombre": "Roberto Fernando Bascuñan",
+        "personaId": 19423
+      }
+    ]
+  },
+  {
+    "sociedadId": 10055,
+    "socios": [
+      {
+        "nombre": "Joel Antonio Martin",
+        "personaId": 20189
+      },
+      {
+        "nombre": "Jorge Fernando Pesce",
+        "personaId": 20190
+      }
+    ]
+  },
+  {
+    "sociedadId": 11454,
+    "socios": [
+      {
+        "nombre": "Agustín Ramón Freixas Fillol",
+        "personaId": 22272
+      },
+      {
+        "nombre": "Juan Martin Molinari",
+        "personaId": 20625
+      }
+    ]
+  },
+  {
+    "sociedadId": 11733,
+    "socios": [
+      {
+        "nombre": "Miriam Elizabeth Terraza",
+        "personaId": 22654
+      },
+      {
+        "nombre": "Orlando Francisco Aguero",
+        "personaId": 22653
+      }
+    ]
+  },
+  {
+    "sociedadId": 11799,
+    "socios": [
+      {
+        "nombre": "Magdalena Egües",
+        "personaId": 22775
+      },
+      {
+        "nombre": "Martina Del Carmen Such",
+        "personaId": 22776
+      },
+      {
+        "nombre": "Nicolás Guerra",
+        "personaId": 4369
+      }
+    ]
+  },
+  {
+    "sociedadId": 12286,
+    "socios": [
+      {
+        "nombre": "Carlos Antonio Pedrosa",
+        "personaId": 23544
+      },
+      {
+        "nombre": "Rodrigo Javier Rodriguez",
+        "personaId": 23545
+      }
+    ]
+  },
+  {
+    "sociedadId": 12302,
+    "socios": [
+      {
+        "nombre": "Agustín Gutiérrez",
+        "personaId": 23585
+      }
+    ]
+  },
+  {
+    "sociedadId": 12769,
+    "socios": [
+      {
+        "nombre": "Lucas Mariano Dominguez Grassetto",
+        "personaId": 24203
+      },
+      {
+        "nombre": "Mauricio Nicolas Moncada",
+        "personaId": 24202
+      }
+    ]
+  },
+  {
+    "sociedadId": 12845,
+    "socios": [
+      {
+        "nombre": "Flavio Máximo Sanfilippo",
+        "personaId": 21769
+      },
+      {
+        "nombre": "Georgina Natalia Riveros",
+        "personaId": 24314
+      },
+      {
+        "nombre": "Hernan Fontana Baccarelli",
+        "personaId": 1091
+      },
+      {
+        "nombre": "Ornella Bernardi",
+        "personaId": 19269
+      }
+    ]
+  },
+  {
+    "sociedadId": 13029,
+    "socios": [
+      {
+        "nombre": "Andrés Abel Pravata",
+        "personaId": 23987
+      },
+      {
+        "nombre": "Juan Cruz Luffi",
+        "personaId": 24572
+      }
+    ]
+  },
+  {
+    "sociedadId": 13565,
+    "socios": [
+      {
+        "nombre": "Juan Andrés Rodríguez",
+        "personaId": 25334
+      },
+      {
+        "nombre": "Juan Carlos Rodríguez"
+      },
+      {
+        "nombre": "Juan Fernando Rodríguez",
+        "personaId": 25335
+      },
+      {
+        "nombre": "Juan Pablo Rodríguez"
+      }
+    ]
+  },
+  {
+    "sociedadId": 13619,
+    "socios": [
+      {
+        "nombre": "Andres Hernan Rayes",
+        "personaId": 25409
+      },
+      {
+        "nombre": "Emilio Ramón Clavero",
+        "personaId": 25410
+      }
+    ]
+  },
+  {
+    "sociedadId": 14452,
+    "socios": [
+      {
+        "nombre": "Marcos Gabriel Trentacoste",
+        "personaId": 3485
+      },
+      {
+        "nombre": "Victor Manuel Belaunde",
+        "personaId": 26615
+      }
+    ]
+  },
+  {
+    "sociedadId": 16647,
+    "socios": []
+  },
+  {
+    "sociedadId": 16661,
+    "socios": [
+      {
+        "nombre": "Harvey José Barreto Hernández",
+        "personaId": 29752
+      },
+      {
+        "nombre": "José Alejandro Barreto Barrios",
+        "personaId": 29751
+      }
+    ]
+  },
+  {
+    "sociedadId": 16938,
+    "socios": [
+      {
+        "nombre": "Andrés Eduardo González Vera",
+        "personaId": 30125
+      },
+      {
+        "nombre": "Huentala Ventures S.A.S.",
+        "sociedadId": 14849
+      },
+      {
+        "nombre": "Leonel David Camsen",
+        "personaId": 2175
+      },
+      {
+        "nombre": "Santiago Javier Ponte",
+        "personaId": 30126
+      }
+    ]
+  },
+  {
+    "sociedadId": 17144,
+    "socios": [
+      {
+        "nombre": "Daniel Fino Villamil",
+        "personaId": 30414
+      },
+      {
+        "nombre": "Iván Ignacio Boroni",
+        "personaId": 30415
+      },
+      {
+        "nombre": "Martín Ignacio Lana Bengut",
+        "personaId": 30413
+      },
+      {
+        "nombre": "Walter Washington Camus",
+        "personaId": 30416
+      }
+    ]
+  },
+  {
+    "sociedadId": 17145,
+    "socios": [
+      {
+        "nombre": "Osvaldo Luis Campodónico",
+        "personaId": 21005
+      }
+    ]
+  },
+  {
+    "sociedadId": 17195,
+    "socios": [
+      {
+        "nombre": "Deborah Eliana Diaz Valverde",
+        "personaId": 10534
+      },
+      {
+        "nombre": "Ivan Vicente Diaz",
+        "personaId": 10532
+      }
+    ]
+  },
+  {
+    "sociedadId": 17240,
+    "socios": [
+      {
+        "nombre": "Guillermina Velazquez García",
+        "personaId": 30552
+      },
+      {
+        "nombre": "Luis Emilio Gonzalez Zárate",
+        "personaId": 30551
+      }
+    ]
+  },
+  {
+    "sociedadId": 17429,
+    "socios": [
+      {
+        "nombre": "María Belén Giunchi",
+        "personaId": 30806
+      },
+      {
+        "nombre": "Paola Alicia Zambudio",
+        "personaId": 30805
+      }
+    ]
+  },
+  {
+    "sociedadId": 17699,
+    "socios": [
+      {
+        "nombre": "Francisco Merenda Strologo",
+        "personaId": 31187
+      }
+    ]
+  },
+  {
+    "sociedadId": 18487,
+    "socios": [
+      {
+        "nombre": "Sisu Venture Partners Participaciones Ltda."
+      }
+    ]
+  },
+  {
+    "sociedadId": 18855,
+    "socios": [
+      {
+        "nombre": "Dario Javier Videla",
+        "personaId": 32407
+      },
+      {
+        "nombre": "Lucas Mariano Dominguez Grassetto",
+        "personaId": 24203
+      }
+    ]
+  },
+  {
+    "sociedadId": 19213,
+    "socios": [
+      {
+        "nombre": "Santiago Irigoyen",
+        "personaId": 33118
+      }
+    ]
+  },
+  {
+    "sociedadId": 11766,
+    "socios": []
+  }
 ];

@@ -66,3 +66,40 @@ export function obtenerAnuario(anio: number): Promise<Anuario> {
 export function obtenerAniosDisponibles(): Promise<{ anios: number[] }> {
   return get("/api/informes/anuarios");
 }
+
+// --- Informes de nicho sectorial: directorio de entidades resuelto en vivo
+// contra la base (ver backend/src/informesNicho.ts). Solo esto -- el resto
+// del contenido de cada informe (texto, evolución anual, tipo de entidad,
+// mapa por departamento) sigue viniendo de frontend/src/data/nicho*.ts, sin
+// llamada a la API: son agregados curados a mano, sin sociedadId/personaId,
+// sin riesgo de habeas data. Ver docs/plan_centralizar_habeas_data.md.
+
+export interface SocioNicho {
+  nombre: string;
+  personaId?: number;
+  sociedadId?: number;
+}
+
+export interface EntidadNicho {
+  sociedadId: number;
+  nombre: string;
+  cuit: string | null;
+  capital: number | null;
+  tipo: string | null;
+  publicacion: string | null;
+  departamento: string | null;
+  objetoSocial: string | null;
+  socios: SocioNicho[];
+  // Extras curados por informe -- opcionales porque no todos los usan.
+  nombreGenerico?: boolean;
+  categoria?: string;
+}
+
+export interface EntidadesNicho {
+  entidades: EntidadNicho[];
+  sociosRepetidos: { nombre: string; veces: number }[];
+}
+
+export function obtenerEntidadesNicho(slug: string): Promise<EntidadesNicho> {
+  return get(`/api/informes/nicho/${slug}`);
+}

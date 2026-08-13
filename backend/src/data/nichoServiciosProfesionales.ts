@@ -5,25 +5,6 @@
 // SEO -- ver seo.ts). Ver la nota completa (incluyendo los 2 socios sin
 // personaId por nombre ambiguo) en el archivo del frontend.
 
-export interface SocioServiciosProfesionales {
-  nombre: string;
-  personaId?: number;
-  sociedadId?: number;
-}
-
-export interface EntidadServiciosProfesionales {
-  categoria: "Jurídico" | "Jurídico-contable" | "Contable" | "Gestoría y trámites";
-  tipo: string;
-  nombre: string;
-  sociedadId: number;
-  cuit: string | null;
-  capital: string | null;
-  publicacion: string | null;
-  departamento: string | null;
-  socios: SocioServiciosProfesionales[];
-  objetoSocial: string;
-}
-
 export const ESPECIALIDAD_ESTUDIOS = [
   { etiqueta: "Jurídico", valor: 25 },
   { etiqueta: "Contable", valor: 11 },
@@ -86,51 +67,730 @@ export const ESCRIBANOS_TOP = [
   { etiqueta: "Emanuel Sebastián Paz", valor: 17 },
 ];
 
-export const ENTIDADES: EntidadServiciosProfesionales[] = [
-  { categoria: "Jurídico", tipo: "S.A.S.", nombre: "Cnng Consulting S.A.S.", sociedadId: 1414, cuit: null, capital: "$50.000", publicacion: "01/06/2018", departamento: "Capital", socios: [{ nombre: "Enrique Daniel Gross", personaId: 3214 }, { nombre: "Guillermo Enzo Neyra", personaId: 3215 }, { nombre: "Pablo Marcelo Corvalan Nanclares", personaId: 3213 }], objetoSocial: "Actividad profesional propia de la abogacía, mandatos y actividad fiduciaria." },
-  { categoria: "Jurídico", tipo: "S.A.S.", nombre: "Vazquez Caceres Y Asociados S.A.S.", sociedadId: 1429, cuit: "30-71612388-6", capital: "$50.000", publicacion: "06/06/2018", departamento: "Capital", socios: [{ nombre: "Cesar Augusto Vazquez", personaId: 3255 }, { nombre: "Juan Manuel Cáceres", personaId: 3254 }], objetoSocial: "Asesoramiento jurídico, mandatos y fiducia, tanto por cuenta propia, de terceros o asociada a terceros, ya sean personas humanas o jurídicas en el país o extranjero." },
-  { categoria: "Jurídico", tipo: "S.A.S.", nombre: "Talfa S.A.S.", sociedadId: 2238, cuit: "30-71706457-3", capital: "$50.000", publicacion: "22/11/2018", departamento: "Capital", socios: [{ nombre: "María Florencia Abaurre", personaId: 4931 }, { nombre: "Oscar Gustavo Martinez", personaId: 4932 }], objetoSocial: "Servicios jurídicos profesionales." },
-  { categoria: "Jurídico", tipo: "S.A.S.", nombre: "Cnnd Asesores Juridicos S.A.S.", sociedadId: 2495, cuit: "30-71635906-5", capital: "$50.000", publicacion: "16/01/2019", departamento: "Capital", socios: [{ nombre: "Guillermo Enzo Neyra", personaId: 3215 }, { nombre: "Marcelo Gustavo Dupetit", personaId: 5457 }, { nombre: "Pablo Marcelo Corvalan Nanclares", personaId: 3213 }], objetoSocial: "Realizar actividades profesionales de abogacía, mandatos y funciones fiduciarias, por cuenta propia o de terceros, tanto en el país como en el extranjero." },
-  { categoria: "Jurídico", tipo: "S.A.", nombre: "Niseko S.A.", sociedadId: 2661, cuit: "30-71654937-9", capital: "$100.000", publicacion: "01/03/2019", departamento: "Capital", socios: [{ nombre: "Antonio Eduardo Logrippo", personaId: 5836 }, { nombre: "Juan Pablo Vallone", personaId: 5835 }], objetoSocial: "Prestación de servicios de asesoría legal, asesoría en administración de empresas y ejercicio de la abogacía; actividades comerciales de adquisición, venta y construcción de bienes inmuebles; actuación como fiduciario." },
-  { categoria: "Jurídico", tipo: "S.R.L.", nombre: "Lima Abogados S.R.L.", sociedadId: 2820, cuit: null, capital: "$100.000", publicacion: "05/04/2019", departamento: "San Martín", socios: [{ nombre: "María Leonor Etchelouz", personaId: 6172 }, { nombre: "María Veronica Lima", personaId: 6173 }], objetoSocial: "Prestación de servicios jurídicos y asesoramientos legales, organización de actividades relacionadas a servicios de abogacía. La sociedad sólo podrá estar integrada por profesionales matriculados con título habilitante vigente para ejercer abogacía." },
-  { categoria: "Jurídico", tipo: "S.A.S.", nombre: "Coll Abogados S.A.S.", sociedadId: 2879, cuit: "30-71659071-9", capital: "$100.000", publicacion: "16/04/2019", departamento: "Capital", socios: [{ nombre: "Ignacio Osvaldo Coll", personaId: 6299 }, { nombre: "María Belén Coll", personaId: 6300 }, { nombre: "Osvaldo Walter Coll", personaId: 6298 }], objetoSocial: "Servicios de asesoramiento jurídico, operaciones financieras, inmobiliarias, de comercio interior y exterior. Servicios en propiedad intelectual: asesoramiento y tramitación de marcas, patentes, modelos industriales. Contratación de profesionales legales, contables y financieros. Actuación como mandataria ante administración pública. Participación en sociedades y fideicomisos. Operaciones inmobiliarias diversas." },
-  { categoria: "Jurídico", tipo: "S.A.S.", nombre: "J.P.Chesi & Asociados S.A.S.", sociedadId: 3298, cuit: null, capital: "$40.000", publicacion: "10/07/2019", departamento: "Capital", socios: [{ nombre: "Cintia Patricia Modolo", personaId: 7176 }, { nombre: "Pablo Jorge Chesi", personaId: 6462 }], objetoSocial: "Organización, administración, gerenciamiento y comercialización de servicios jurídicos en todas sus especialidades; ejercicio de representaciones, comisiones y mandatos vinculados con servicios jurídicos; proveer estructura material y empresarial para que los socios profesionales habilitados puedan ejercer actividades autorizadas." },
-  { categoria: "Jurídico", tipo: "S.A.S.", nombre: "Servicios Jurídicos S.A.S.", sociedadId: 3360, cuit: null, capital: "$80.000", publicacion: "19/07/2019", departamento: "Capital", socios: [{ nombre: "Diego Boulin", personaId: 7293 }, { nombre: "Juan Boulin", personaId: 7299 }, { nombre: "Juan Pablo Vallone", personaId: 5835 }, { nombre: "Leandro Ismael Vallone", personaId: 7296 }, { nombre: "Luis Benegas", personaId: 7295 }, { nombre: "Marcos Sebastian Vallone", personaId: 7297 }, { nombre: "Maria Elina Benegas", personaId: 7294 }, { nombre: "Santiago Boulin", personaId: 7298 }], objetoSocial: "Prestación de servicios jurídicos de asesoramiento empresario o individual; atención de juicios; celebración de contratos; representación societaria; ejercicio de actividades en el ámbito del Derecho." },
-  { categoria: "Jurídico", tipo: "S.A.S.", nombre: "H&J Sociedad Por Acciones Simplificada", sociedadId: 3603, cuit: null, capital: "$100.000", publicacion: "04/09/2019", departamento: "Capital", socios: [{ nombre: "Federico Martín Pagano", personaId: 7558 }, { nombre: "María José Sánchez Baca", personaId: 7780 }], objetoSocial: "Servicios de asesoramiento y consultoría integral a personas físicas y jurídicas en áreas jurídica, económica, gestión, financiera y administración. Asesoramiento jurídico, económico, de gestión y administración; análisis de sistemas operativos; gestión de trámites previsional; comisiones, consignaciones, representaciones, intermediación y mandatos." },
-  { categoria: "Jurídico", tipo: "S.A.S.", nombre: "Varas-Ibañez S.A.S.", sociedadId: 3605, cuit: null, capital: "$40.000", publicacion: "04/09/2019", departamento: "Capital", socios: [{ nombre: "Ezequiel Ibañez", personaId: 7783 }, { nombre: "María Pilar Varas", personaId: 7784 }], objetoSocial: "Servicios de abogacía, mandataria, importación y exportación." },
-  { categoria: "Jurídico", tipo: "S.A.S.", nombre: "Rogelio Servicios Juridicos Y Gastronomicos S.A.S.", sociedadId: 5754, cuit: "30-71704539-0", capital: "$100.000", publicacion: "24/11/2020", departamento: "Godoy Cruz", socios: [{ nombre: "Marcela Beatriz Bravo", personaId: 12137 }, { nombre: "María Del Pilar Figueroa", personaId: 12138 }, { nombre: "Rogelio Eduardo Javier Figueroa", personaId: 12136 }], objetoSocial: "Consultoría, representación de empresas, gastronomía, organización y realización de eventos, administración." },
-  { categoria: "Jurídico", tipo: "S.A.S.", nombre: "Petra Cremaschi Abogados & Consultores Sas", sociedadId: 6730, cuit: "30-71721584-9", capital: "$300.000", publicacion: "21/05/2021", departamento: "Capital", socios: [{ nombre: "Juan Ignacio Petra", personaId: 10032 }, { nombre: "Mathias Emiliano Molina", personaId: 7351 }], objetoSocial: "Prestación de servicios de asesoramiento integral y consultoría empresaria en materia jurídica; proyectos y asesoramiento de emprendimientos; mandatos lícitos y representación de franquicias, concesiones y sucursales." },
-  { categoria: "Jurídico", tipo: "S.A.", nombre: "Ingenieria Juridica S.A.", sociedadId: 7528, cuit: "30-71743890-2", capital: "$300.000", publicacion: "05/10/2021", departamento: "San Rafael", socios: [{ nombre: "Jorge Ramiro Leal", personaId: 15502 }, { nombre: "Marina Benita Picallo", personaId: 4693 }], objetoSocial: "Realizar por cuenta propia o asociada con terceros actividades comerciales y de servicios en general." },
-  { categoria: "Jurídico", tipo: "S.A.S.", nombre: "Vsp Abogados S.A.S.", sociedadId: 7732, cuit: null, capital: "$60.000", publicacion: "02/11/2021", departamento: "Capital", socios: [{ nombre: "Carlos Federico Vinassa", personaId: 15899 }, { nombre: "Leonardo Martín Saumell", personaId: 15900 }, { nombre: "Sebastián Parisi", personaId: 15901 }], objetoSocial: "Prestación de servicios jurídicos mediante asesoramiento, consultoría, patrocinio o representación en ámbito judicial o extrajudicial y ejercicio de representaciones y mandatos vinculados con aquellos." },
-  { categoria: "Jurídico", tipo: "S.A.S.", nombre: "Pemol S.A.S.", sociedadId: 8691, cuit: "30-71779120-3", capital: "$100.000", publicacion: "25/04/2022", departamento: "Capital", socios: [{ nombre: "Antonio Eduardo Logrippo", personaId: 5836 }, { nombre: "Julio Cesar Tarquini", personaId: 17678 }], objetoSocial: "Prestación de servicios de asesoría legal, asesoría en administración de empresas y ejercicio de la abogacía; adquisición, venta y construcción de bienes inmuebles; ejercer representaciones y actuar como fiduciario." },
-  { categoria: "Jurídico", tipo: "S.A.", nombre: "Inversiones Integrales S.A.", sociedadId: 8985, cuit: null, capital: "$100.000", publicacion: "06/06/2022", departamento: "Capital", socios: [{ nombre: "Diego Julián Fernandez Azzolina", personaId: 16245 }, { nombre: "Mauro Andrés Pozzebon", personaId: 16246 }], objetoSocial: "Servicios de asesoramiento legal y comercial mediante plataformas virtuales, explotación de investigación financiera, inversión financiera e inmobiliaria, publicidad, comercialización de servicios y bienes digitales, compra y venta de moneda extranjera." },
-  { categoria: "Jurídico", tipo: "S.A.S.", nombre: "Justicia Divina S.A.S.", sociedadId: 9647, cuit: "30-71790541-1", capital: "$100.000", publicacion: "20/09/2022", departamento: "Capital", socios: [{ nombre: "Leandro Ismael Vallone", personaId: 7296 }, { nombre: "Marcos Sebastian Vallone", personaId: 7297 }], objetoSocial: "Prestación de servicios jurídicos de asesoramiento empresario o individual; atención de juicios; celebración de contratos con entidades públicas y privadas; ejercer tareas de representación; construcción de edificaciones, diseño, dirección y ejecución de obras de ingeniería y arquitectura; instalación y explotación comercial de negocios gastronómicos." },
-  { categoria: "Jurídico", tipo: "S.A.S.", nombre: "Estudio Cicilotto Y Asociados S.A.S.", sociedadId: 10126, cuit: "30-71815947-0", capital: "$120.000", publicacion: "28/11/2022", departamento: "Luján de Cuyo", socios: [{ nombre: "Lorena Paola Cicilotto", personaId: 20311 }, { nombre: "María Virginia Gatica", personaId: 20312 }], objetoSocial: "Prestación de servicios jurídicos, asesoramiento y consultoría a empresas, particulares y organizaciones. Alquiler, arrendamiento o venta de inmuebles. Exportación e importación de servicios y productos. Operaciones de representación, comisiones y mandatos. Licitaciones y contrataciones nacionales e internacionales." },
-  { categoria: "Jurídico", tipo: "S.A.S.", nombre: "Estudio Egeaabogados & Consultores S.A.S.", sociedadId: 10526, cuit: "30-71800615-1", capital: "$800.000", publicacion: "31/01/2023", departamento: "Capital", socios: [{ nombre: "Carina Fedra Egea", personaId: 21027 }], objetoSocial: "Prestación de servicios de asesoramiento integral y consultoría empresaria, estudio, asistencia y orientación en actividad jurídica, mercado de capitales, sustentabilidad y legaltech; proyectos y asesoramiento de emprendimientos; ejercicio de mandatos lícitos, gestiones de negocios, administraciones y representación; actuación como agente fiduciaria." },
-  { categoria: "Jurídico", tipo: "S.A.S.", nombre: "Pro-Legal S.A.S.", sociedadId: 10967, cuit: null, capital: "$600.000", publicacion: "10/04/2023", departamento: "Capital", socios: [{ nombre: "Octavio Nicolás Billi", personaId: 21622 }], objetoSocial: "Prestación de servicios de asesoramiento integral y consultoría empresaria, estudio, asistencia y orientación en todo lo relacionado a la actividad jurídica, mercado de capitales, sustentabilidad, legaltech, Fintech; proyectos y asesoramiento de emprendimientos; ejercicio de mandatos lícitos; actuación como agente fiduciaria; actividades financieras e inversoras." },
-  { categoria: "Jurídico", tipo: "S.A.S.", nombre: "Meidé S.A.S.", sociedadId: 12563, cuit: null, capital: "$350.000", publicacion: "10/11/2023", departamento: "Capital", socios: [{ nombre: "Raúl Javier Rodríguez", personaId: 22840 }], objetoSocial: "Prestación de servicios de asesoramiento legal en general y en especial relacionado a la industria minera, petrolera, energética y de la construcción, desarrollo de recursos naturales y medio ambiente, asesoramiento y análisis de inversiones y proyectos mineros, auditorías, y toda clase de servicios legales." },
-  { categoria: "Jurídico", tipo: "S.A.S.", nombre: "Aguinaga S.A.S.", sociedadId: 13425, cuit: "30-71853119-1", capital: "$500.000", publicacion: "22/03/2024", departamento: "Capital", socios: [{ nombre: "Carlos Alfredo Aguinaga", personaId: 25141 }], objetoSocial: "Creación, producción, intercambio, fabricación, transformación, comercialización, intermediación, representación, importación y exportación de bienes materiales e inmateriales y prestación de servicios, especialmente de asesoría integral y asesoramiento jurídico relacionados con actividades agropecuarias, comunicaciones, culturales, tecnológicas, gastronómicas, inmobiliarias e inversoras." },
-  { categoria: "Jurídico", tipo: "S.A.S.", nombre: "Grb Sociedad Por Acciones Simplificada", sociedadId: 15355, cuit: null, capital: "$700.000", publicacion: "06/12/2024", departamento: "Capital", socios: [{ nombre: "María Evangelina Barroso", personaId: 27934 }, { nombre: "María Julia Bertinatto", personaId: 27935 }, { nombre: "Mariano Germán Gimenez", personaId: 2457 }, { nombre: "Pamela Carolina Ramiro", personaId: 27936 }], objetoSocial: "Desarrollar actividades profesionales vinculadas a la abogacía mediante la prestación de servicios jurídicos: consultoría jurídica, asesoramiento legal integral, patrocinio, representación, mandato, elaboración de pericias, auditorías, planeamiento jurídico. Servicios en ámbitos jurídico, comercial, empresarial, financiero, técnico y contable a personas físicas y jurídicas. Administración de contratos, asesoramiento en proyectos, sistemas de control, estudios de mercado, capacitación, tercerización de personal, asesoramiento en recursos humanos. Proyectos como fiduciaria, talleres, conferencias, capacitaciones educativas. Ejercer mandatos lícitos, representación de franquicias, concesiones, sucursales. Creación, producción, comercialización de bienes e inmateriales en áreas culturales, educativas, tecnológicas, inmobiliarias, inversoras, energéticas." },
-  { categoria: "Jurídico", tipo: "S.A.S.", nombre: "Garcia Sarmiento & Asociados S.A.S.", sociedadId: 16267, cuit: null, capital: "$600.000", publicacion: "05/05/2025", departamento: "Capital", socios: [{ nombre: "María Lourdes Garcia Sarmiento", personaId: 29191 }, { nombre: "Pablo Nicolás Garcia Sarmiento", personaId: 29189 }, { nombre: "Rafael Eduardo Garcia Sarmiento", personaId: 29190 }], objetoSocial: "Creación, producción, intercambio, fabricación, transformación, industrialización, comercialización, intermediación, representación, importación y exportación de toda clase de bienes materiales e inmateriales y prestación de servicios de asesoramiento integral y consultoría jurídica." },
-  { categoria: "Jurídico-contable", tipo: "S.A.S.", nombre: "Sas S.A.S.", sociedadId: 1191, cuit: null, capital: "$20.000", publicacion: "13/04/2018", departamento: "Capital", socios: [{ nombre: "Embarca Aceleradora De Startups Sas", sociedadId: 656 }, { nombre: "Matías Alejandro Díaz Telli", personaId: 2727 }, { nombre: "Matías Germán Rodriguez", personaId: 2730 }, { nombre: "Pablo Antonio Saitta" }, { nombre: "Sebastián Andrés Echevarría", personaId: 2729 }], objetoSocial: "Prestación de servicios jurídicos y contables, representación de organizaciones nacionales o internacionales, afiliaciones, asociaciones y participaciones; formación de agrupaciones ad-hoc de colaboración empresarial." },
-  { categoria: "Jurídico-contable", tipo: "S.A.S.", nombre: "Departamento Legal 3.9 S.A.S.", sociedadId: 5086, cuit: "30-71691278-3", capital: "$35.000", publicacion: "14/08/2020", departamento: "Capital", socios: [{ nombre: "Leandro Gabriel Sánchez Ariza", personaId: 10841 }, { nombre: "Matías Alejandro Díaz Telli", personaId: 2727 }], objetoSocial: "Prestación de servicios jurídicos y contables, consultoría integral en materia jurídica, comercial, financiera y técnica, y actividades financieras e inversoras." },
-  { categoria: "Jurídico-contable", tipo: "S.R.L.", nombre: "Estudio Jurídico Contable L. Y L.R. S.R.L.", sociedadId: 5397, cuit: null, capital: "$120.000", publicacion: "02/10/2020", departamento: "Capital", socios: [{ nombre: "Juan Nicolás López Romera", personaId: 11430 }, { nombre: "Marcelo Javier López Romera", personaId: 11431 }], objetoSocial: "Servicios profesionales y comercial." },
-  { categoria: "Jurídico-contable", tipo: "S.A.S.", nombre: "Beraten S.A.S.", sociedadId: 8490, cuit: "30-71756544-0", capital: "$100.000", publicacion: "17/03/2022", departamento: "Capital", socios: [{ nombre: "Martín José Sleiman", personaId: 17299 }, { nombre: "Maximiliano Adrián Clerici", personaId: 17298 }], objetoSocial: "Prestación de servicios jurídicos y contables; consultoría; actividades financiera e inversora." },
-  { categoria: "Jurídico-contable", tipo: "S.A.S.", nombre: "Doce 22 S.A.S.", sociedadId: 12175, cuit: "30-71828843-2", capital: "$500.000", publicacion: "21/09/2023", departamento: "Luján de Cuyo", socios: [{ nombre: "Carlos Edgardo Delú", personaId: 4518 }, { nombre: "Mercau Jorge Rodrigo", personaId: 23368 }], objetoSocial: "Prestación de servicios jurídicos y contables. Asesoramiento integral, consultoría y gestión empresarial en materia jurídica, comercial, financiera, técnica, contable. Ejercer mandatos, comisiones, representaciones. Realizar actividades financieras y contratos financieros o de fideicomisos." },
-  { categoria: "Jurídico-contable", tipo: "S.A.S.", nombre: "Knowledge S.A.S.", sociedadId: 12444, cuit: "30-71834076-0", capital: "$750.000", publicacion: "25/10/2023", departamento: "Capital", socios: [{ nombre: "Gimenez Tamara Alejandra", personaId: 23749 }, { nombre: "Luciano Jesus Basilici", personaId: 23750 }], objetoSocial: "Servicios jurídicos y contables, importación y exportación de bienes y servicios, comercio exterior y transporte de cargas, comercialización de automotores y repuestos, marketing, patentes y marcas, franquicias, desarrollo de software, comercio electrónico, asesoramiento y capacitación, comunicación y publicidad, fabricación y comercialización de indumentaria, servicios de distribución, ventas, pagos y cobranzas, mandatos, proveedor del estado." },
-  { categoria: "Jurídico-contable", tipo: "S.R.L.", nombre: "Estudio Contable Y Juridico Capella S.R.L.", sociedadId: 13447, cuit: "30-71851203-0", capital: "$120.000", publicacion: "25/03/2024", departamento: "General Alvear", socios: [{ nombre: "Iriarte David", personaId: 15290 }, { nombre: "Pablo Agustín Capella", personaId: 17290 }], objetoSocial: "Prestación de servicios de asesoramiento legal, comercial, administrativo, financiero, técnico, contable, impositivo y tributario. Comercialización, alquiler y administración de bienes inmuebles. Actividades agrícola y ganadera. Desarrollo de procesos de elaboración y fabricación. Comercialización de producciones. Transporte de cargas generales. Representaciones y mandatos vinculados al objeto social." },
-  { categoria: "Jurídico-contable", tipo: "S.A.S.", nombre: "Betun Sociedad Por Acciones Simplificada", sociedadId: 15541, cuit: null, capital: "$3.000.000", publicacion: "31/12/2024", departamento: "Capital", socios: [{ nombre: "Gianinetto Barón, Emiliano Ruben", personaId: 28205 }, { nombre: "Sleiman, Samira Alejandra", personaId: 28206 }], objetoSocial: "Prestación de Servicios Jurídicos y Contables; Consultoría; Investigación de Mercado; Importación y Exportación; Mandataria; Financiera e inversora." },
-  { categoria: "Jurídico-contable", tipo: "S.A.S.", nombre: "Villarreal Granata & Asoc. S.A.S.", sociedadId: 17841, cuit: null, capital: "$1.000.000", publicacion: "25/11/2025", departamento: "Capital", socios: [{ nombre: "Federico Villarreal Granata", personaId: 31346 }, { nombre: "Rodrigo Villarreal Granata", personaId: 28850 }], objetoSocial: "Ejercicio de actividades jurídicas y de asesoramiento integral en materia legal, prestación de servicios profesionales de abogacía y consultoría jurídica, patrocinio, representación y defensa de derechos, fusiones y adquisiciones, servicios de contabilidad, elaboración de manuales operativos y documentos normativos, representación y comercialización de marcas y franquicias, organización de proyectos jurídicos y empresariales, capacitación y publicación de materiales de formación." },
-  { categoria: "Contable", tipo: "S.A.S.", nombre: "Pura Vida S.A.S.", sociedadId: 2136, cuit: "30-71625614-2", capital: "$300.000", publicacion: "31/10/2018", departamento: "Capital", socios: [{ nombre: "Gabriel Edgardo Torre", personaId: 4296 }, { nombre: "Maria Fernanda Flores", personaId: 4297 }], objetoSocial: "Comercialización de productos agrícolas, ganaderos, pecuarios, forestales y agroindustriales; importación y exportación; asesoramiento contable, impositivo y financiero." },
-  { categoria: "Contable", tipo: "S.A.S.", nombre: "Malbec Hostels Sas", sociedadId: 2848, cuit: null, capital: "$120.000", publicacion: "10/04/2019", departamento: "Capital", socios: [{ nombre: "Horacio Ernesto Susso", personaId: 6227 }, { nombre: "Jorge Enrique Susso", personaId: 6228 }, { nombre: "Maria Florencia Susso", personaId: 6229 }], objetoSocial: "Tratamiento y revestimiento de metales, servicios de mecanizados y arenado, explotación de hoteles, hospedajes y similares, servicios profesionales de auditoría y asesoría contable." },
-  { categoria: "Contable", tipo: "S.A.S.", nombre: "A&F S.A.S.", sociedadId: 3984, cuit: null, capital: "$35.000", publicacion: "19/11/2019", departamento: "Capital", socios: [{ nombre: "Carlos Alejandro Aznar", personaId: 8572 }, { nombre: "Gonzalo Foix", personaId: 8570 }, { nombre: "Graciela Betina Aznar", personaId: 8571 }], objetoSocial: "Consultoría, asesoramiento y auditoría en materia contable, tributaria, laboral, societaria y concursal. Actividades financieras, compra-venta de títulos y valores. Operaciones inmobiliarias, alquileres y arrendamientos." },
-  { categoria: "Contable", tipo: "S.A.S.", nombre: "AA & F Group S.A.S.", sociedadId: 4485, cuit: "30-71683804-4", capital: "$35.000", publicacion: "05/03/2020", departamento: "Capital", socios: [{ nombre: "Carlos Alejandro Aznar", personaId: 8572 }, { nombre: "Gonzalo Foix", personaId: 8570 }, { nombre: "Graciela Betina Aznar", personaId: 8571 }], objetoSocial: "Consultoría: prestación de servicios de consultoría, asesoramiento y auditoría en materia contable, tributario, laboral y societario. Financiera: actividades financieras, préstamos, compra-venta de títulos y valores. Inmobiliaria: compra, venta, alquiler y operaciones inmobiliarias." },
-  { categoria: "Contable", tipo: "S.R.L.", nombre: "Estudio Castro & Asociados S.R.L.", sociedadId: 5471, cuit: "30-71706649-5", capital: "$102.000", publicacion: "13/10/2020", departamento: "Godoy Cruz", socios: [{ nombre: "Laura Beatriz Odorico", personaId: 11576 }, { nombre: "María Laura Castro", personaId: 11571 }, { nombre: "Patricia Soledad Araujo", personaId: 11575 }], objetoSocial: "Asesoramiento integral en materia contable, tributaria, financiera, económica, laboral y previsional; servicios profesionales de consultoría, auditoría y análisis; representación de empresas; operaciones inmobiliarias, comerciales, de importación/exportación, fiduciarias y participación en licitaciones." },
-  { categoria: "Contable", tipo: "S.A.S.", nombre: "Impositivo, Contable Y Comercial S.A.S.", sociedadId: 7047, cuit: "30-71735744-9", capital: "$100.000", publicacion: "26/07/2021", departamento: "San Martín", socios: [{ nombre: "Carina Alicia Molina" }, { nombre: "Sergio Andrés Pérez", personaId: 6259 }], objetoSocial: "Actividades comerciales y financieras, por cuenta propia, ajena o asociada a terceros, personas físicas o jurídicas, en el país o extranjero." },
-  { categoria: "Contable", tipo: "S.A.S.", nombre: "Molina Blotta Y Asociados S.A.S.", sociedadId: 8714, cuit: "30-71764466-9", capital: "$80.000", publicacion: "27/04/2022", departamento: "Guaymallén", socios: [{ nombre: "Franco Gabriel Molina", personaId: 14526 }, { nombre: "Juan Manuel Molina", personaId: 14525 }, { nombre: "Julio Abelardo Blotta", personaId: 17711 }, { nombre: "Rosana Vanina Cruciani", personaId: 17710 }], objetoSocial: "Servicios de asesoría contable, impositiva y financiera; exportación e importación de bienes; comercialización de mercaderías; transporte de cargas; actuación como fiduciario; contratación con el Estado; capacitación y estudios en áreas científicas, técnicas y artísticas." },
-  { categoria: "Contable", tipo: "S.R.L.", nombre: "Estudio Codina S.R.L.", sociedadId: 10984, cuit: "33-67982190-9", capital: "$200.000", publicacion: "12/04/2023", departamento: "Capital", socios: [{ nombre: "Alejandro Miguel Codina", personaId: 21643 }, { nombre: "Miguel Codina", personaId: 21644 }], objetoSocial: "Prestación de servicios de asesoramiento integral y consultoría en materia contable, laboral, impositiva, societaria, comercial, financiera y de implementación de sistemas informáticos; Representación de empresas / Mandataria; Administración de contratos, de bienes muebles y/o inmuebles; Fiduciaria; intervención en licitaciones de entes públicos y privados." },
-  { categoria: "Contable", tipo: "S.A.", nombre: "Bagsi Sociedad Anónima", sociedadId: 11645, cuit: null, capital: "$200.000", publicacion: "06/07/2023", departamento: null, socios: [{ nombre: "Laura Del Carmen Barroso", personaId: 22549 }, { nombre: "Martín Darío Malmod", personaId: 22548 }], objetoSocial: "Actividades inmobiliarias, constructora, servicios contables y auditoría, servicios de limpieza y mantenimiento, comercialización y publicidad." },
-  { categoria: "Contable", tipo: "S.A.S.", nombre: "Bemol S.A.S.", sociedadId: 13000, cuit: "33-71852621-9", capital: "$300.000", publicacion: "28/12/2023", departamento: "Maipú", socios: [{ nombre: "Ivan David Menacho", personaId: 2802 }], objetoSocial: "Servicios turísticos: explotación integral de la industria turística, organización de viajes, venta de pasajes, transporte privado de pasajeros. Comerciales: ventas de productos de construcción, pinturas, revestimientos e indumentaria. Servicios de asesoramiento contable, impositivo, laboral, previsional y notarial." },
-  { categoria: "Contable", tipo: "S.A.S.", nombre: "S.A.R.A S.A.S", sociedadId: 16226, cuit: "30-71895807-1", capital: "$600.000", publicacion: "24/04/2025", departamento: "Luján de Cuyo", socios: [{ nombre: "Macarena Alonso", personaId: 14671 }, { nombre: "Matías Agustín Szymanski", personaId: 9436 }], objetoSocial: "Marketing y comercialización, consultoría empresarial, recursos humanos, servicios contables y administrativos, desarrollo de software y tecnología, importación y exportación, inversiones inmobiliarias y gestión de activos intangibles." },
-  { categoria: "Gestoría y trámites", tipo: "S.R.L.", nombre: "Liliana Orsi & Asociados S.R.L.", sociedadId: 3745, cuit: "33-71738523-9", capital: "$500.000", publicacion: "01/10/2019", departamento: "Capital", socios: [{ nombre: "Emmanuel Miguel Orsi Bertolo", personaId: 8059 }, { nombre: "Liliana Amelia Bertolo", personaId: 8057 }, { nombre: "Miguel Antonio Orsi", personaId: 8058 }], objetoSocial: "Prestación de servicios de despachante de aduana, comercial, distribución, proveedor del estado, intervención en licitaciones públicas y/o privadas nacionales e internacionales, y mandatos." },
+import type { EntidadCuradaBase, SocioCurado } from "../informesNicho.js";
+
+export interface EntidadServiciosProfesionalesCurada extends EntidadCuradaBase {
+  socios: SocioCurado[];
+  categoria?: "Jurídico" | "Jurídico-contable" | "Contable" | "Gestoría y trámites";
+}
+
+export const ENTIDADES: EntidadServiciosProfesionalesCurada[] = [
+  {
+    "sociedadId": 1414,
+    "socios": [
+      {
+        "nombre": "Enrique Daniel Gross",
+        "personaId": 3214
+      },
+      {
+        "nombre": "Guillermo Enzo Neyra",
+        "personaId": 3215
+      },
+      {
+        "nombre": "Pablo Marcelo Corvalan Nanclares",
+        "personaId": 3213
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 1429,
+    "socios": [
+      {
+        "nombre": "Cesar Augusto Vazquez",
+        "personaId": 3255
+      },
+      {
+        "nombre": "Juan Manuel Cáceres",
+        "personaId": 3254
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 2238,
+    "socios": [
+      {
+        "nombre": "María Florencia Abaurre",
+        "personaId": 4931
+      },
+      {
+        "nombre": "Oscar Gustavo Martinez",
+        "personaId": 4932
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 2495,
+    "socios": [
+      {
+        "nombre": "Guillermo Enzo Neyra",
+        "personaId": 3215
+      },
+      {
+        "nombre": "Marcelo Gustavo Dupetit",
+        "personaId": 5457
+      },
+      {
+        "nombre": "Pablo Marcelo Corvalan Nanclares",
+        "personaId": 3213
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 2661,
+    "socios": [
+      {
+        "nombre": "Antonio Eduardo Logrippo",
+        "personaId": 5836
+      },
+      {
+        "nombre": "Juan Pablo Vallone",
+        "personaId": 5835
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 2820,
+    "socios": [
+      {
+        "nombre": "María Leonor Etchelouz",
+        "personaId": 6172
+      },
+      {
+        "nombre": "María Veronica Lima",
+        "personaId": 6173
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 2879,
+    "socios": [
+      {
+        "nombre": "Ignacio Osvaldo Coll",
+        "personaId": 6299
+      },
+      {
+        "nombre": "María Belén Coll",
+        "personaId": 6300
+      },
+      {
+        "nombre": "Osvaldo Walter Coll",
+        "personaId": 6298
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 3298,
+    "socios": [
+      {
+        "nombre": "Cintia Patricia Modolo",
+        "personaId": 7176
+      },
+      {
+        "nombre": "Pablo Jorge Chesi",
+        "personaId": 6462
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 3360,
+    "socios": [
+      {
+        "nombre": "Diego Boulin",
+        "personaId": 7293
+      },
+      {
+        "nombre": "Juan Boulin",
+        "personaId": 7299
+      },
+      {
+        "nombre": "Juan Pablo Vallone",
+        "personaId": 5835
+      },
+      {
+        "nombre": "Leandro Ismael Vallone",
+        "personaId": 7296
+      },
+      {
+        "nombre": "Luis Benegas",
+        "personaId": 7295
+      },
+      {
+        "nombre": "Marcos Sebastian Vallone",
+        "personaId": 7297
+      },
+      {
+        "nombre": "Maria Elina Benegas",
+        "personaId": 7294
+      },
+      {
+        "nombre": "Santiago Boulin",
+        "personaId": 7298
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 3603,
+    "socios": [
+      {
+        "nombre": "Federico Martín Pagano",
+        "personaId": 7558
+      },
+      {
+        "nombre": "María José Sánchez Baca",
+        "personaId": 7780
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 3605,
+    "socios": [
+      {
+        "nombre": "Ezequiel Ibañez",
+        "personaId": 7783
+      },
+      {
+        "nombre": "María Pilar Varas",
+        "personaId": 7784
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 5754,
+    "socios": [
+      {
+        "nombre": "Marcela Beatriz Bravo",
+        "personaId": 12137
+      },
+      {
+        "nombre": "María Del Pilar Figueroa",
+        "personaId": 12138
+      },
+      {
+        "nombre": "Rogelio Eduardo Javier Figueroa",
+        "personaId": 12136
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 6730,
+    "socios": [
+      {
+        "nombre": "Juan Ignacio Petra",
+        "personaId": 10032
+      },
+      {
+        "nombre": "Mathias Emiliano Molina",
+        "personaId": 7351
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 7528,
+    "socios": [
+      {
+        "nombre": "Jorge Ramiro Leal",
+        "personaId": 15502
+      },
+      {
+        "nombre": "Marina Benita Picallo",
+        "personaId": 4693
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 7732,
+    "socios": [
+      {
+        "nombre": "Carlos Federico Vinassa",
+        "personaId": 15899
+      },
+      {
+        "nombre": "Leonardo Martín Saumell",
+        "personaId": 15900
+      },
+      {
+        "nombre": "Sebastián Parisi",
+        "personaId": 15901
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 8691,
+    "socios": [
+      {
+        "nombre": "Antonio Eduardo Logrippo",
+        "personaId": 5836
+      },
+      {
+        "nombre": "Julio Cesar Tarquini",
+        "personaId": 17678
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 8985,
+    "socios": [
+      {
+        "nombre": "Diego Julián Fernandez Azzolina",
+        "personaId": 16245
+      },
+      {
+        "nombre": "Mauro Andrés Pozzebon",
+        "personaId": 16246
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 9647,
+    "socios": [
+      {
+        "nombre": "Leandro Ismael Vallone",
+        "personaId": 7296
+      },
+      {
+        "nombre": "Marcos Sebastian Vallone",
+        "personaId": 7297
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 10126,
+    "socios": [
+      {
+        "nombre": "Lorena Paola Cicilotto",
+        "personaId": 20311
+      },
+      {
+        "nombre": "María Virginia Gatica",
+        "personaId": 20312
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 10526,
+    "socios": [
+      {
+        "nombre": "Carina Fedra Egea",
+        "personaId": 21027
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 10967,
+    "socios": [
+      {
+        "nombre": "Octavio Nicolás Billi",
+        "personaId": 21622
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 12563,
+    "socios": [
+      {
+        "nombre": "Raúl Javier Rodríguez",
+        "personaId": 22840
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 13425,
+    "socios": [
+      {
+        "nombre": "Carlos Alfredo Aguinaga",
+        "personaId": 25141
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 15355,
+    "socios": [
+      {
+        "nombre": "María Evangelina Barroso",
+        "personaId": 27934
+      },
+      {
+        "nombre": "María Julia Bertinatto",
+        "personaId": 27935
+      },
+      {
+        "nombre": "Mariano Germán Gimenez",
+        "personaId": 2457
+      },
+      {
+        "nombre": "Pamela Carolina Ramiro",
+        "personaId": 27936
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 16267,
+    "socios": [
+      {
+        "nombre": "María Lourdes Garcia Sarmiento",
+        "personaId": 29191
+      },
+      {
+        "nombre": "Pablo Nicolás Garcia Sarmiento",
+        "personaId": 29189
+      },
+      {
+        "nombre": "Rafael Eduardo Garcia Sarmiento",
+        "personaId": 29190
+      }
+    ],
+    "categoria": "Jurídico"
+  },
+  {
+    "sociedadId": 1191,
+    "socios": [
+      {
+        "nombre": "Embarca Aceleradora De Startups Sas",
+        "sociedadId": 656
+      },
+      {
+        "nombre": "Matías Alejandro Díaz Telli",
+        "personaId": 2727
+      },
+      {
+        "nombre": "Matías Germán Rodriguez",
+        "personaId": 2730
+      },
+      {
+        "nombre": "Pablo Antonio Saitta"
+      },
+      {
+        "nombre": "Sebastián Andrés Echevarría",
+        "personaId": 2729
+      }
+    ],
+    "categoria": "Jurídico-contable"
+  },
+  {
+    "sociedadId": 5086,
+    "socios": [
+      {
+        "nombre": "Leandro Gabriel Sánchez Ariza",
+        "personaId": 10841
+      },
+      {
+        "nombre": "Matías Alejandro Díaz Telli",
+        "personaId": 2727
+      }
+    ],
+    "categoria": "Jurídico-contable"
+  },
+  {
+    "sociedadId": 5397,
+    "socios": [
+      {
+        "nombre": "Juan Nicolás López Romera",
+        "personaId": 11430
+      },
+      {
+        "nombre": "Marcelo Javier López Romera",
+        "personaId": 11431
+      }
+    ],
+    "categoria": "Jurídico-contable"
+  },
+  {
+    "sociedadId": 8490,
+    "socios": [
+      {
+        "nombre": "Martín José Sleiman",
+        "personaId": 17299
+      },
+      {
+        "nombre": "Maximiliano Adrián Clerici",
+        "personaId": 17298
+      }
+    ],
+    "categoria": "Jurídico-contable"
+  },
+  {
+    "sociedadId": 12175,
+    "socios": [
+      {
+        "nombre": "Carlos Edgardo Delú",
+        "personaId": 4518
+      },
+      {
+        "nombre": "Mercau Jorge Rodrigo",
+        "personaId": 23368
+      }
+    ],
+    "categoria": "Jurídico-contable"
+  },
+  {
+    "sociedadId": 12444,
+    "socios": [
+      {
+        "nombre": "Gimenez Tamara Alejandra",
+        "personaId": 23749
+      },
+      {
+        "nombre": "Luciano Jesus Basilici",
+        "personaId": 23750
+      }
+    ],
+    "categoria": "Jurídico-contable"
+  },
+  {
+    "sociedadId": 13447,
+    "socios": [
+      {
+        "nombre": "Iriarte David",
+        "personaId": 15290
+      },
+      {
+        "nombre": "Pablo Agustín Capella",
+        "personaId": 17290
+      }
+    ],
+    "categoria": "Jurídico-contable"
+  },
+  {
+    "sociedadId": 15541,
+    "socios": [
+      {
+        "nombre": "Gianinetto Barón, Emiliano Ruben",
+        "personaId": 28205
+      },
+      {
+        "nombre": "Sleiman, Samira Alejandra",
+        "personaId": 28206
+      }
+    ],
+    "categoria": "Jurídico-contable"
+  },
+  {
+    "sociedadId": 17841,
+    "socios": [
+      {
+        "nombre": "Federico Villarreal Granata",
+        "personaId": 31346
+      },
+      {
+        "nombre": "Rodrigo Villarreal Granata",
+        "personaId": 28850
+      }
+    ],
+    "categoria": "Jurídico-contable"
+  },
+  {
+    "sociedadId": 2136,
+    "socios": [
+      {
+        "nombre": "Gabriel Edgardo Torre",
+        "personaId": 4296
+      },
+      {
+        "nombre": "Maria Fernanda Flores",
+        "personaId": 4297
+      }
+    ],
+    "categoria": "Contable"
+  },
+  {
+    "sociedadId": 2848,
+    "socios": [
+      {
+        "nombre": "Horacio Ernesto Susso",
+        "personaId": 6227
+      },
+      {
+        "nombre": "Jorge Enrique Susso",
+        "personaId": 6228
+      },
+      {
+        "nombre": "Maria Florencia Susso",
+        "personaId": 6229
+      }
+    ],
+    "categoria": "Contable"
+  },
+  {
+    "sociedadId": 3984,
+    "socios": [
+      {
+        "nombre": "Carlos Alejandro Aznar",
+        "personaId": 8572
+      },
+      {
+        "nombre": "Gonzalo Foix",
+        "personaId": 8570
+      },
+      {
+        "nombre": "Graciela Betina Aznar",
+        "personaId": 8571
+      }
+    ],
+    "categoria": "Contable"
+  },
+  {
+    "sociedadId": 4485,
+    "socios": [
+      {
+        "nombre": "Carlos Alejandro Aznar",
+        "personaId": 8572
+      },
+      {
+        "nombre": "Gonzalo Foix",
+        "personaId": 8570
+      },
+      {
+        "nombre": "Graciela Betina Aznar",
+        "personaId": 8571
+      }
+    ],
+    "categoria": "Contable"
+  },
+  {
+    "sociedadId": 5471,
+    "socios": [
+      {
+        "nombre": "Laura Beatriz Odorico",
+        "personaId": 11576
+      },
+      {
+        "nombre": "María Laura Castro",
+        "personaId": 11571
+      },
+      {
+        "nombre": "Patricia Soledad Araujo",
+        "personaId": 11575
+      }
+    ],
+    "categoria": "Contable"
+  },
+  {
+    "sociedadId": 7047,
+    "socios": [
+      {
+        "nombre": "Carina Alicia Molina"
+      },
+      {
+        "nombre": "Sergio Andrés Pérez",
+        "personaId": 6259
+      }
+    ],
+    "categoria": "Contable"
+  },
+  {
+    "sociedadId": 8714,
+    "socios": [
+      {
+        "nombre": "Franco Gabriel Molina",
+        "personaId": 14526
+      },
+      {
+        "nombre": "Juan Manuel Molina",
+        "personaId": 14525
+      },
+      {
+        "nombre": "Julio Abelardo Blotta",
+        "personaId": 17711
+      },
+      {
+        "nombre": "Rosana Vanina Cruciani",
+        "personaId": 17710
+      }
+    ],
+    "categoria": "Contable"
+  },
+  {
+    "sociedadId": 10984,
+    "socios": [
+      {
+        "nombre": "Alejandro Miguel Codina",
+        "personaId": 21643
+      },
+      {
+        "nombre": "Miguel Codina",
+        "personaId": 21644
+      }
+    ],
+    "categoria": "Contable"
+  },
+  {
+    "sociedadId": 11645,
+    "socios": [
+      {
+        "nombre": "Laura Del Carmen Barroso",
+        "personaId": 22549
+      },
+      {
+        "nombre": "Martín Darío Malmod",
+        "personaId": 22548
+      }
+    ],
+    "categoria": "Contable"
+  },
+  {
+    "sociedadId": 13000,
+    "socios": [
+      {
+        "nombre": "Ivan David Menacho",
+        "personaId": 2802
+      }
+    ],
+    "categoria": "Contable"
+  },
+  {
+    "sociedadId": 16226,
+    "socios": [
+      {
+        "nombre": "Macarena Alonso",
+        "personaId": 14671
+      },
+      {
+        "nombre": "Matías Agustín Szymanski",
+        "personaId": 9436
+      }
+    ],
+    "categoria": "Contable"
+  },
+  {
+    "sociedadId": 3745,
+    "socios": [
+      {
+        "nombre": "Emmanuel Miguel Orsi Bertolo",
+        "personaId": 8059
+      },
+      {
+        "nombre": "Liliana Amelia Bertolo",
+        "personaId": 8057
+      },
+      {
+        "nombre": "Miguel Antonio Orsi",
+        "personaId": 8058
+      }
+    ],
+    "categoria": "Gestoría y trámites"
+  }
 ];

@@ -1,28 +1,31 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import {
   DEPARTAMENTOS_SERVICIOS_PROFESIONALES,
-  ENTIDADES,
   ESCRIBANOS_TOP,
   ESPECIALIDAD_ESTUDIOS,
   PROFESIONES_ECOSISTEMA,
   RANKING_PROFESIONES_LIBERALES,
   TIPO_ENTIDAD,
-  type EntidadServiciosProfesionales,
 } from "../../data/nichoServiciosProfesionales";
-import { fecha, hoyISO } from "../../lib/format";
+import { cuit as formatCuit, fecha, hoyISO, moneda } from "../../lib/format";
+import type { EntidadNicho } from "../../lib/informesApi";
 import { GraficoBarrasHorizontalPDF } from "./GraficoBarrasHorizontalPDF";
 import { MapaMendozaPDF } from "./MapaMendozaPDF";
 import { estilosPDF as e, CARBON } from "./estilosPDF";
 import { FuenteDatosPDF } from "./FuenteDatosPDF";
 
-const CATEGORIAS: EntidadServiciosProfesionales["categoria"][] = [
+const CATEGORIAS = [
   "Jurídico",
   "Jurídico-contable",
   "Contable",
   "Gestoría y trámites",
 ];
 
-export function InformeNichoServiciosProfesionalesPDF() {
+interface Props {
+  entidades: EntidadNicho[];
+}
+
+export function InformeNichoServiciosProfesionalesPDF({ entidades }: Props) {
   return (
     <Document title="INGcome — Abogados, contadores y escribanos en Mendoza">
       <Page size="A4" style={e.pagina} wrap>
@@ -145,11 +148,11 @@ export function InformeNichoServiciosProfesionalesPDF() {
           19.485 sociedades y 21.989 actos, no solo sobre los 46 estudios de este informe.
         </Text>
 
-        {ENTIDADES.length > 0 && (
+        {entidades.length > 0 && (
           <>
             <Text style={e.tituloSeccion}>Directorio completo: los 46 estudios</Text>
             {CATEGORIAS.map((categoria) => {
-              const entidadesCategoria = ENTIDADES.filter((ent) => ent.categoria === categoria);
+              const entidadesCategoria = entidades.filter((ent) => ent.categoria === categoria);
               if (entidadesCategoria.length === 0) return null;
               return (
                 <View key={categoria}>
@@ -166,22 +169,22 @@ export function InformeNichoServiciosProfesionalesPDF() {
                     {categoria} ({entidadesCategoria.length})
                   </Text>
                   {entidadesCategoria.map((ent) => (
-                    <View key={ent.nombre} style={{ marginBottom: 14 }} wrap={false}>
+                    <View key={ent.sociedadId} style={{ marginBottom: 14 }} wrap={false}>
                       <Text style={{ fontSize: 11, fontWeight: 700, color: CARBON }}>
-                        {ent.tipo} — {ent.nombre}
+                        {ent.tipo ? `${ent.tipo} — ` : ""}{ent.nombre}
                       </Text>
                       <View style={[e.grillaCampos, { marginTop: 4 }]}>
                         <View style={e.campo}>
                           <Text style={e.campoEtiqueta}>CUIT</Text>
-                          <Text style={e.campoValor}>{ent.cuit ?? "—"}</Text>
+                          <Text style={e.campoValor}>{formatCuit(ent.cuit)}</Text>
                         </View>
                         <View style={e.campo}>
                           <Text style={e.campoEtiqueta}>Capital</Text>
-                          <Text style={e.campoValor}>{ent.capital ?? "—"}</Text>
+                          <Text style={e.campoValor}>{moneda(ent.capital?.toString())}</Text>
                         </View>
                         <View style={e.campo}>
                           <Text style={e.campoEtiqueta}>Publicación</Text>
-                          <Text style={e.campoValor}>{ent.publicacion ?? "—"}</Text>
+                          <Text style={e.campoValor}>{fecha(ent.publicacion)}</Text>
                         </View>
                         <View style={e.campo}>
                           <Text style={e.campoEtiqueta}>Departamento</Text>
@@ -196,7 +199,7 @@ export function InformeNichoServiciosProfesionalesPDF() {
                       )}
                       <Text style={{ fontSize: 8, color: "#444444", marginTop: 2, lineHeight: 1.4 }}>
                         <Text style={{ fontWeight: 700 }}>Objeto social: </Text>
-                        {ent.objetoSocial}
+                        {ent.objetoSocial ?? "—"}
                       </Text>
                     </View>
                   ))}

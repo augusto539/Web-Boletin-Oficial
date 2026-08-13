@@ -59,6 +59,23 @@ docker compose -f docker-compose.prod.yml ps
 
 A partir de acá, cada merge a `main` redeploya solo.
 
+## Reinicio semanal preventivo de la VM
+
+[`deploy/reboot-semanal.service`](reboot-semanal.service) + [`deploy/reboot-semanal.timer`](reboot-semanal.timer): reinician la VM entera todos los sábados a las 5am hora Mendoza (08:00 UTC). Instalado el 12/08/2026 tras un incidente donde el servidor (Oracle Cloud E2.1.Micro, 956Mi RAM) quedó totalmente inalcanzable después de 22 días sin reiniciar — la sospecha es fragmentación de memoria acumulada, que hizo que un paso del job diario (repo `job-diario-boletin-oficial`) que venía terminando en 15s empezara a colgarse hasta tumbar todo el host, sin que cambiara el código ni el tamaño del archivo que procesaba. Es una mitigación de infra, no arregla la causa de fondo — complementa (no reemplaza) el fix de código ya aplicado en ese paso puntual.
+
+Instalación (ya hecha en el servidor actual, dejar acá para reprovisioning):
+
+```bash
+scp deploy/reboot-semanal.service deploy/reboot-semanal.timer usuario@servidor:/tmp/
+ssh usuario@servidor '
+  sudo mv /tmp/reboot-semanal.service /tmp/reboot-semanal.timer /etc/systemd/system/
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now reboot-semanal.timer
+'
+```
+
+Verificar: `systemctl list-timers reboot-semanal.timer`.
+
 ## Rollback manual
 
 Las imágenes quedan taggeadas por SHA en ghcr.io. Para volver a una versión anterior:

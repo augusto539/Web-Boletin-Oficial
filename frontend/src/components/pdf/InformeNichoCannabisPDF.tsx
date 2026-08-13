@@ -1,18 +1,23 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
-import {
-  DEPARTAMENTOS_CANNABIS,
-  ENTIDADES,
-  EVOLUCION_ANUAL,
-  SOCIOS_REPETIDOS,
-  TIPO_ENTIDAD,
-} from "../../data/nichoCannabis";
-import { fecha, hoyISO } from "../../lib/format";
+import { DEPARTAMENTOS_CANNABIS, EVOLUCION_ANUAL, TIPO_ENTIDAD } from "../../data/nichoCannabis";
+import { cuit as formatCuit, fecha, hoyISO, moneda } from "../../lib/format";
+import type { EntidadNicho } from "../../lib/informesApi";
 import { GraficoBarrasPDF } from "./GraficoBarrasPDF";
 import { MapaMendozaPDF } from "./MapaMendozaPDF";
 import { estilosPDF as e, CARBON } from "./estilosPDF";
 import { FuenteDatosPDF } from "./FuenteDatosPDF";
 
-export function InformeNichoCannabisPDF() {
+interface Props {
+  entidades: EntidadNicho[];
+  sociosRepetidos: { nombre: string; veces: number }[];
+}
+
+// entidades/sociosRepetidos llegan ya resueltos contra la base (ver
+// InformeNichoCannabis.tsx) -- este componente no importa datos de
+// sociedades/personas directo, así que un PDF generado hoy siempre refleja
+// el estado vigente de "oculta" (habeas data). Ver
+// docs/plan_centralizar_habeas_data.md.
+export function InformeNichoCannabisPDF({ entidades, sociosRepetidos }: Props) {
   return (
     <Document title="INGcome — Cannabis y Cáñamo en Mendoza">
       <Page size="A4" style={e.pagina} wrap>
@@ -110,23 +115,24 @@ export function InformeNichoCannabisPDF() {
           Ordenadas por fecha de publicación del acto de constitución en el Boletín.
         </Text>
 
-        {ENTIDADES.map((ent) => (
-          <View key={ent.nombre} style={{ marginBottom: 14 }} wrap={false}>
+        {entidades.map((ent) => (
+          <View key={ent.sociedadId} style={{ marginBottom: 14 }} wrap={false}>
             <Text style={{ fontSize: 11, fontWeight: 700, color: CARBON }}>
-              {ent.tipo} — {ent.nombre}
+              {ent.tipo ? `${ent.tipo} — ` : ""}
+              {ent.nombre}
             </Text>
             <View style={[e.grillaCampos, { marginTop: 4 }]}>
               <View style={e.campo}>
                 <Text style={e.campoEtiqueta}>CUIT</Text>
-                <Text style={e.campoValor}>{ent.cuit ?? "—"}</Text>
+                <Text style={e.campoValor}>{formatCuit(ent.cuit)}</Text>
               </View>
               <View style={e.campo}>
                 <Text style={e.campoEtiqueta}>Capital</Text>
-                <Text style={e.campoValor}>{ent.capital ?? "—"}</Text>
+                <Text style={e.campoValor}>{moneda(ent.capital?.toString())}</Text>
               </View>
               <View style={e.campo}>
                 <Text style={e.campoEtiqueta}>Publicación</Text>
-                <Text style={e.campoValor}>{ent.publicacion}</Text>
+                <Text style={e.campoValor}>{fecha(ent.publicacion)}</Text>
               </View>
               <View style={e.campo}>
                 <Text style={e.campoEtiqueta}>Departamento</Text>
@@ -139,10 +145,12 @@ export function InformeNichoCannabisPDF() {
                 {ent.socios.map((s) => s.nombre).join(" · ")}
               </Text>
             )}
-            <Text style={{ fontSize: 8, color: "#444444", marginTop: 2, lineHeight: 1.4 }}>
-              <Text style={{ fontWeight: 700 }}>Objeto social: </Text>
-              {ent.objetoSocial}
-            </Text>
+            {ent.objetoSocial && (
+              <Text style={{ fontSize: 8, color: "#444444", marginTop: 2, lineHeight: 1.4 }}>
+                <Text style={{ fontWeight: 700 }}>Objeto social: </Text>
+                {ent.objetoSocial}
+              </Text>
+            )}
             {ent.nombreGenerico && (
               <Text style={{ fontSize: 7, color: "#999999", marginTop: 3, fontStyle: "italic" }}>
                 El nombre sugiere actividad de cannabis, pero el objeto social registrado es
@@ -152,12 +160,14 @@ export function InformeNichoCannabisPDF() {
           </View>
         ))}
 
-        <View style={{ marginTop: 6, marginBottom: 8 }}>
-          <Text style={e.tituloSeccion}>Socios que participan en más de una entidad</Text>
-          <Text style={{ fontSize: 8, color: "#444444", lineHeight: 1.5 }}>
-            {SOCIOS_REPETIDOS.map((s) => `${s.nombre} (${s.veces})`).join(" · ")}
-          </Text>
-        </View>
+        {sociosRepetidos.length > 0 && (
+          <View style={{ marginTop: 6, marginBottom: 8 }}>
+            <Text style={e.tituloSeccion}>Socios que participan en más de una entidad</Text>
+            <Text style={{ fontSize: 8, color: "#444444", lineHeight: 1.5 }}>
+              {sociosRepetidos.map((s) => `${s.nombre} (${s.veces})`).join(" · ")}
+            </Text>
+          </View>
+        )}
 
         <FuenteDatosPDF extra="Términos de búsqueda: cannabis, cáñamo, marihuana, hemp, CBD, cannabidiol, THC, cbn, cbg y variantes. Algunas entidades fueron incluidas por nombre aunque su objeto social no menciona cannabis explícitamente — marcadas en el directorio. Ninguna búsqueda por palabras clave es perfecta: entidades con objeto social genérico y sin término cannábico en el nombre (ej. Wichan S.A.S.) no aparecen en este rastreo. Capital en pesos nominales, sin ajuste por inflación." />
 

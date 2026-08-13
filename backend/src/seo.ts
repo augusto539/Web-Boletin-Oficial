@@ -6,49 +6,43 @@ import { Pool } from "pg";
 import { asyncHandler } from "./asyncHandler.js";
 import {
   DEPARTAMENTOS_CANNABIS,
-  type EntidadCannabis,
   ENTIDADES,
   EVOLUCION_ANUAL,
   TIPO_ENTIDAD,
 } from "./data/nichoCannabis.js";
+import { resolverEntidades, type EntidadResuelta } from "./informesNicho.js";
 import {
   DEPARTAMENTOS_ENOTURISMO,
-  type EntidadEnoturismo,
   ENTIDADES as ENTIDADES_ENOTURISMO,
   EVOLUCION_ANUAL as EVOLUCION_ANUAL_ENOTURISMO,
   TIPO_ENTIDAD as TIPO_ENTIDAD_ENOTURISMO,
 } from "./data/nichoEnoturismo.js";
 import {
   DEPARTAMENTOS_BODEGAS,
-  type EntidadBodega,
   ENTIDADES as ENTIDADES_BODEGAS,
   EVOLUCION_ANUAL as EVOLUCION_ANUAL_BODEGAS,
   TIPO_ENTIDAD as TIPO_ENTIDAD_BODEGAS,
 } from "./data/nichoBodegasBoutique.js";
 import {
   DEPARTAMENTOS_ENERGIA,
-  type EntidadEnergia,
   ENTIDADES as ENTIDADES_ENERGIA,
   EVOLUCION_ANUAL as EVOLUCION_ANUAL_ENERGIA,
   TIPO_ENTIDAD as TIPO_ENTIDAD_ENERGIA,
 } from "./data/nichoEnergiaRenovable.js";
 import {
   DEPARTAMENTOS_CRIPTO,
-  type EntidadCripto,
   ENTIDADES as ENTIDADES_CRIPTO,
   EVOLUCION_ANUAL as EVOLUCION_ANUAL_CRIPTO,
   TIPO_ENTIDAD as TIPO_ENTIDAD_CRIPTO,
 } from "./data/nichoCriptoFintech.js";
 import {
   DEPARTAMENTOS_SOFTWARE,
-  type EntidadSoftware,
   ENTIDADES as ENTIDADES_SOFTWARE,
   EVOLUCION_ANUAL as EVOLUCION_ANUAL_SOFTWARE,
   TIPO_ENTIDAD as TIPO_ENTIDAD_SOFTWARE,
 } from "./data/nichoSoftware.js";
 import {
   DEPARTAMENTOS_SERVICIOS_PROFESIONALES,
-  type EntidadServiciosProfesionales,
   ENTIDADES as ENTIDADES_SERVICIOS_PROFESIONALES,
   ESCRIBANOS_TOP,
   ESPECIALIDAD_ESTUDIOS,
@@ -60,28 +54,24 @@ import {
 import {
   DEPARTAMENTOS_ARQUITECTURA,
   ECOSISTEMA_PROFESIONES,
-  type EntidadArquitectura,
   ENTIDADES as ENTIDADES_ARQUITECTURA,
   EVOLUCION_ANUAL as EVOLUCION_ANUAL_ARQUITECTURA,
   TIPO_ENTIDAD as TIPO_ENTIDAD_ARQUITECTURA,
 } from "./data/nichoArquitectura.js";
 import {
   DEPARTAMENTOS_CAFE,
-  type EntidadCafe,
   ENTIDADES as ENTIDADES_CAFE,
   EVOLUCION_ANUAL as EVOLUCION_ANUAL_CAFE,
   TIPO_ENTIDAD as TIPO_ENTIDAD_CAFE,
 } from "./data/nichoCafe.js";
 import {
   DEPARTAMENTOS_CERVEZA,
-  type EntidadCerveza,
   ENTIDADES as ENTIDADES_CERVEZA,
   EVOLUCION_ANUAL as EVOLUCION_ANUAL_CERVEZA,
   TIPO_ENTIDAD as TIPO_ENTIDAD_CERVEZA,
 } from "./data/nichoCerveza.js";
 import {
   DEPARTAMENTOS_RECICLAJE,
-  type EntidadReciclaje,
   ENTIDADES as ENTIDADES_RECICLAJE,
   OLEADAS as OLEADAS_RECICLAJE,
   TIPO_ENTIDAD as TIPO_ENTIDAD_RECICLAJE,
@@ -89,7 +79,6 @@ import {
 } from "./data/nichoReciclaje.js";
 import {
   DEPARTAMENTOS_FIDEICOMISOS,
-  type EntidadFideicomisos,
   ENTIDADES as ENTIDADES_FIDEICOMISOS,
   EVOLUCION_ANUAL as EVOLUCION_ANUAL_FIDEICOMISOS,
   TIPO_ENTIDAD as TIPO_ENTIDAD_FIDEICOMISOS,
@@ -191,28 +180,45 @@ function fuenteDatosHtml(extraHtml = ""): string {
   `;
 }
 
-function entidadHtml(e: EntidadCannabis): string {
+type EntidadCannabisResuelta = EntidadResuelta & { nombreGenerico?: boolean };
+
+function entidadHtml(e: EntidadCannabisResuelta): string {
   const flag = e.nombreGenerico
     ? `<p><em>El nombre de la entidad sugiere actividad de cannabis, pero el objeto social registrado es genérico y no lo menciona explícitamente — inclusión basada en el nombre, a confirmar.</em></p>`
     : "";
   const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
+  // Un socio sin personaId (nombre suelto, nunca cruzado contra la base, o
+  // sociedad -- ver resolverEntidades) va sin link, solo el texto.
   const sociosLinks = e.socios
-    .map((s) => `<a href="/persona/${s.personaId}">${escapeHtml(s.nombre)}</a>`)
+    .map((s) =>
+      s.personaId
+        ? `<a href="/persona/${s.personaId}">${escapeHtml(s.nombre)}</a>`
+        : s.sociedadId
+          ? `<a href="/sociedad/${s.sociedadId}">${escapeHtml(s.nombre)}</a>`
+          : escapeHtml(s.nombre),
+    )
     .join(" · ");
+  const capital = formatMoneda(e.capital);
+  const publicacion = formatFecha(e.publicacion);
   return `
-    <h3>${escapeHtml(e.tipo)} — ${nombreLink}</h3>
-    <p>CUIT: ${e.cuit ? escapeHtml(e.cuit) : "—"} · Capital: ${e.capital ? escapeHtml(e.capital) : "—"} · Publicación: ${escapeHtml(e.publicacion)} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
+    <h3>${e.tipo ? escapeHtml(e.tipo) : ""} — ${nombreLink}</h3>
+    <p>CUIT: ${e.cuit ? escapeHtml(formatCuit(e.cuit) ?? e.cuit) : "—"} · Capital: ${capital ? escapeHtml(capital) : "—"} · Publicación: ${publicacion ? escapeHtml(publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
     ${e.socios.length > 0 ? `<p>Socios/Integrantes: ${sociosLinks}</p>` : ""}
-    <p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>
+    ${e.objetoSocial ? `<p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>` : ""}
     ${flag}
   `;
 }
 
-function entidadesCannabisHtml(): string {
-  return ENTIDADES.map(entidadHtml).join("");
+async function entidadesCannabisHtml(): Promise<string> {
+  const entidades = await resolverEntidades(ENTIDADES);
+  // Orden por fecha de publicación (ver título "ordenadas por fecha de
+  // publicación" en la página React) -- las curadas ya venían en ese orden,
+  // pero resolverEntidades puede reordenar si alguna se descarta por oculta.
+  entidades.sort((a, b) => (a.publicacion ?? "").localeCompare(b.publicacion ?? ""));
+  return entidades.map(entidadHtml).join("");
 }
 
-function entidadEnoturismoHtml(e: EntidadEnoturismo): string {
+function entidadEnoturismoHtml(e: EntidadResuelta): string {
   const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
   const sociosLinks = e.socios
     .map((s) =>
@@ -223,19 +229,22 @@ function entidadEnoturismoHtml(e: EntidadEnoturismo): string {
           : escapeHtml(s.nombre),
     )
     .join(" · ");
+  const capital = formatMoneda(e.capital);
+  const publicacion = formatFecha(e.publicacion);
   return `
-    <h3>${escapeHtml(e.tipo)} — ${nombreLink}</h3>
-    <p>CUIT: ${e.cuit ? escapeHtml(e.cuit) : "—"} · Capital: ${e.capital ? escapeHtml(e.capital) : "—"} · Publicación: ${escapeHtml(e.publicacion)} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
+    <h3>${e.tipo ? escapeHtml(e.tipo) : ""} — ${nombreLink}</h3>
+    <p>CUIT: ${e.cuit ? escapeHtml(formatCuit(e.cuit) ?? e.cuit) : "—"} · Capital: ${capital ? escapeHtml(capital) : "—"} · Publicación: ${publicacion ? escapeHtml(publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
     ${e.socios.length > 0 ? `<p>Socios/Integrantes: ${sociosLinks}</p>` : ""}
-    <p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>
+    ${e.objetoSocial ? `<p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>` : ""}
   `;
 }
 
-function entidadesEnoturismoHtml(): string {
-  return ENTIDADES_ENOTURISMO.map(entidadEnoturismoHtml).join("");
+async function entidadesEnoturismoHtml(): Promise<string> {
+  const entidades = await resolverEntidades(ENTIDADES_ENOTURISMO);
+  return entidades.map(entidadEnoturismoHtml).join("");
 }
 
-function entidadBodegaHtml(e: EntidadBodega): string {
+function entidadBodegaHtml(e: EntidadResuelta): string {
   const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
   const sociosLinks = e.socios
     .map((s) =>
@@ -246,19 +255,22 @@ function entidadBodegaHtml(e: EntidadBodega): string {
           : escapeHtml(s.nombre),
     )
     .join(" · ");
+  const capital = formatMoneda(e.capital);
+  const publicacion = formatFecha(e.publicacion);
   return `
-    <h3>${escapeHtml(e.tipo)} — ${nombreLink}</h3>
-    <p>CUIT: ${e.cuit ? escapeHtml(e.cuit) : "—"} · Capital: ${e.capital ? escapeHtml(e.capital) : "—"} · Publicación: ${e.publicacion ? escapeHtml(e.publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
+    <h3>${e.tipo ? escapeHtml(e.tipo) : ""} — ${nombreLink}</h3>
+    <p>CUIT: ${e.cuit ? escapeHtml(formatCuit(e.cuit) ?? e.cuit) : "—"} · Capital: ${capital ? escapeHtml(capital) : "—"} · Publicación: ${publicacion ? escapeHtml(publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
     ${e.socios.length > 0 ? `<p>Socios/Integrantes: ${sociosLinks}</p>` : ""}
-    <p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>
+    ${e.objetoSocial ? `<p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>` : ""}
   `;
 }
 
-function entidadesBodegasHtml(): string {
-  return ENTIDADES_BODEGAS.map(entidadBodegaHtml).join("");
+async function entidadesBodegasHtml(): Promise<string> {
+  const entidades = await resolverEntidades(ENTIDADES_BODEGAS);
+  return entidades.map(entidadBodegaHtml).join("");
 }
 
-function entidadEnergiaHtml(e: EntidadEnergia): string {
+function entidadEnergiaHtml(e: EntidadResuelta): string {
   const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
   const sociosLinks = e.socios
     .map((s) =>
@@ -269,19 +281,22 @@ function entidadEnergiaHtml(e: EntidadEnergia): string {
           : escapeHtml(s.nombre),
     )
     .join(" · ");
+  const capital = formatMoneda(e.capital);
+  const publicacion = formatFecha(e.publicacion);
   return `
-    <h3>${escapeHtml(e.tipo)} — ${nombreLink}</h3>
-    <p>CUIT: ${e.cuit ? escapeHtml(e.cuit) : "—"} · Capital: ${e.capital ? escapeHtml(e.capital) : "—"} · Publicación: ${e.publicacion ? escapeHtml(e.publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
+    <h3>${e.tipo ? escapeHtml(e.tipo) : ""} — ${nombreLink}</h3>
+    <p>CUIT: ${e.cuit ? escapeHtml(formatCuit(e.cuit) ?? e.cuit) : "—"} · Capital: ${capital ? escapeHtml(capital) : "—"} · Publicación: ${publicacion ? escapeHtml(publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
     ${e.socios.length > 0 ? `<p>Socios/Integrantes: ${sociosLinks}</p>` : ""}
-    <p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>
+    ${e.objetoSocial ? `<p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>` : ""}
   `;
 }
 
-function entidadesEnergiaHtml(): string {
-  return ENTIDADES_ENERGIA.map(entidadEnergiaHtml).join("");
+async function entidadesEnergiaHtml(): Promise<string> {
+  const entidades = await resolverEntidades(ENTIDADES_ENERGIA);
+  return entidades.map(entidadEnergiaHtml).join("");
 }
 
-function entidadCriptoHtml(e: EntidadCripto): string {
+function entidadCriptoHtml(e: EntidadResuelta): string {
   const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
   const sociosLinks = e.socios
     .map((s) =>
@@ -292,19 +307,22 @@ function entidadCriptoHtml(e: EntidadCripto): string {
           : escapeHtml(s.nombre),
     )
     .join(" · ");
+  const capital = formatMoneda(e.capital);
+  const publicacion = formatFecha(e.publicacion);
   return `
-    <h3>${escapeHtml(e.tipo)} — ${nombreLink}</h3>
-    <p>CUIT: ${e.cuit ? escapeHtml(e.cuit) : "—"} · Capital: ${e.capital ? escapeHtml(e.capital) : "—"} · Publicación: ${e.publicacion ? escapeHtml(e.publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
+    <h3>${e.tipo ? escapeHtml(e.tipo) : ""} — ${nombreLink}</h3>
+    <p>CUIT: ${e.cuit ? escapeHtml(formatCuit(e.cuit) ?? e.cuit) : "—"} · Capital: ${capital ? escapeHtml(capital) : "—"} · Publicación: ${publicacion ? escapeHtml(publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
     ${e.socios.length > 0 ? `<p>Socios/Integrantes: ${sociosLinks}</p>` : ""}
-    <p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>
+    ${e.objetoSocial ? `<p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>` : ""}
   `;
 }
 
-function entidadesCriptoHtml(): string {
-  return ENTIDADES_CRIPTO.map(entidadCriptoHtml).join("");
+async function entidadesCriptoHtml(): Promise<string> {
+  const entidades = await resolverEntidades(ENTIDADES_CRIPTO);
+  return entidades.map(entidadCriptoHtml).join("");
 }
 
-function entidadSoftwareHtml(e: EntidadSoftware): string {
+function entidadSoftwareHtml(e: EntidadResuelta): string {
   const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
   const sociosLinks = e.socios
     .map((s) =>
@@ -315,19 +333,22 @@ function entidadSoftwareHtml(e: EntidadSoftware): string {
           : escapeHtml(s.nombre),
     )
     .join(" · ");
+  const capital = formatMoneda(e.capital);
+  const publicacion = formatFecha(e.publicacion);
   return `
-    <h3>${escapeHtml(e.tipo)} — ${nombreLink}</h3>
-    <p>CUIT: ${e.cuit ? escapeHtml(e.cuit) : "—"} · Capital: ${e.capital ? escapeHtml(e.capital) : "—"} · Publicación: ${e.publicacion ? escapeHtml(e.publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
+    <h3>${e.tipo ? escapeHtml(e.tipo) : ""} — ${nombreLink}</h3>
+    <p>CUIT: ${e.cuit ? escapeHtml(formatCuit(e.cuit) ?? e.cuit) : "—"} · Capital: ${capital ? escapeHtml(capital) : "—"} · Publicación: ${publicacion ? escapeHtml(publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
     ${e.socios.length > 0 ? `<p>Socios/Integrantes: ${sociosLinks}</p>` : ""}
-    <p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>
+    ${e.objetoSocial ? `<p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>` : ""}
   `;
 }
 
-function entidadesSoftwareHtml(): string {
-  return ENTIDADES_SOFTWARE.map(entidadSoftwareHtml).join("");
+async function entidadesSoftwareHtml(): Promise<string> {
+  const entidades = await resolverEntidades(ENTIDADES_SOFTWARE);
+  return entidades.map(entidadSoftwareHtml).join("");
 }
 
-function entidadServiciosProfesionalesHtml(e: EntidadServiciosProfesionales): string {
+function entidadServiciosProfesionalesHtml(e: EntidadResuelta): string {
   const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
   const sociosLinks = e.socios
     .map((s) =>
@@ -338,30 +359,33 @@ function entidadServiciosProfesionalesHtml(e: EntidadServiciosProfesionales): st
           : escapeHtml(s.nombre),
     )
     .join(" · ");
+  const capital = formatMoneda(e.capital);
+  const publicacion = formatFecha(e.publicacion);
   return `
-    <h3>${escapeHtml(e.tipo)} — ${nombreLink}</h3>
-    <p>CUIT: ${e.cuit ? escapeHtml(e.cuit) : "—"} · Capital: ${e.capital ? escapeHtml(e.capital) : "—"} · Publicación: ${e.publicacion ? escapeHtml(e.publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
+    <h3>${e.tipo ? escapeHtml(e.tipo) : ""} — ${nombreLink}</h3>
+    <p>CUIT: ${e.cuit ? escapeHtml(formatCuit(e.cuit) ?? e.cuit) : "—"} · Capital: ${capital ? escapeHtml(capital) : "—"} · Publicación: ${publicacion ? escapeHtml(publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
     ${e.socios.length > 0 ? `<p>Socios/Integrantes: ${sociosLinks}</p>` : ""}
-    <p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>
+    ${e.objetoSocial ? `<p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>` : ""}
   `;
 }
 
-const CATEGORIAS_SERVICIOS_PROFESIONALES: EntidadServiciosProfesionales["categoria"][] = [
+const CATEGORIAS_SERVICIOS_PROFESIONALES = [
   "Jurídico",
   "Jurídico-contable",
   "Contable",
   "Gestoría y trámites",
 ];
 
-function entidadesServiciosProfesionalesHtml(): string {
+async function entidadesServiciosProfesionalesHtml(): Promise<string> {
+  const entidades = await resolverEntidades(ENTIDADES_SERVICIOS_PROFESIONALES);
   return CATEGORIAS_SERVICIOS_PROFESIONALES.map((categoria) => {
-    const entidadesCategoria = ENTIDADES_SERVICIOS_PROFESIONALES.filter((e) => e.categoria === categoria);
+    const entidadesCategoria = entidades.filter((e) => e.categoria === categoria);
     if (entidadesCategoria.length === 0) return "";
     return `<h3>${escapeHtml(categoria)} (${entidadesCategoria.length})</h3>${entidadesCategoria.map(entidadServiciosProfesionalesHtml).join("")}`;
   }).join("");
 }
 
-function entidadArquitecturaHtml(e: EntidadArquitectura): string {
+function entidadArquitecturaHtml(e: EntidadResuelta): string {
   const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
   const sociosLinks = e.socios
     .map((s) =>
@@ -372,19 +396,22 @@ function entidadArquitecturaHtml(e: EntidadArquitectura): string {
           : escapeHtml(s.nombre),
     )
     .join(" · ");
+  const capital = formatMoneda(e.capital);
+  const publicacion = formatFecha(e.publicacion);
   return `
-    <h3>${escapeHtml(e.tipo)} — ${nombreLink}</h3>
-    <p>CUIT: ${e.cuit ? escapeHtml(e.cuit) : "—"} · Capital: ${e.capital ? escapeHtml(e.capital) : "—"} · Publicación: ${e.publicacion ? escapeHtml(e.publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
+    <h3>${e.tipo ? escapeHtml(e.tipo) : ""} — ${nombreLink}</h3>
+    <p>CUIT: ${e.cuit ? escapeHtml(formatCuit(e.cuit) ?? e.cuit) : "—"} · Capital: ${capital ? escapeHtml(capital) : "—"} · Publicación: ${publicacion ? escapeHtml(publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
     ${e.socios.length > 0 ? `<p>Socios/Integrantes: ${sociosLinks}</p>` : ""}
-    <p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>
+    ${e.objetoSocial ? `<p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>` : ""}
   `;
 }
 
-function entidadesArquitecturaHtml(): string {
-  return ENTIDADES_ARQUITECTURA.map(entidadArquitecturaHtml).join("");
+async function entidadesArquitecturaHtml(): Promise<string> {
+  const entidades = await resolverEntidades(ENTIDADES_ARQUITECTURA);
+  return entidades.map(entidadArquitecturaHtml).join("");
 }
 
-function entidadCafeHtml(e: EntidadCafe): string {
+function entidadCafeHtml(e: EntidadResuelta): string {
   const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
   const sociosLinks = e.socios
     .map((s) =>
@@ -395,19 +422,22 @@ function entidadCafeHtml(e: EntidadCafe): string {
           : escapeHtml(s.nombre),
     )
     .join(" · ");
+  const capital = formatMoneda(e.capital);
+  const publicacion = formatFecha(e.publicacion);
   return `
-    <h3>${escapeHtml(e.tipo)} — ${nombreLink}</h3>
-    <p>CUIT: ${e.cuit ? escapeHtml(e.cuit) : "—"} · Capital: ${e.capital ? escapeHtml(e.capital) : "—"} · Publicación: ${e.publicacion ? escapeHtml(e.publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
+    <h3>${e.tipo ? escapeHtml(e.tipo) : ""} — ${nombreLink}</h3>
+    <p>CUIT: ${e.cuit ? escapeHtml(formatCuit(e.cuit) ?? e.cuit) : "—"} · Capital: ${capital ? escapeHtml(capital) : "—"} · Publicación: ${publicacion ? escapeHtml(publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
     ${e.socios.length > 0 ? `<p>Socios/Integrantes: ${sociosLinks}</p>` : ""}
-    <p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>
+    ${e.objetoSocial ? `<p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>` : ""}
   `;
 }
 
-function entidadesCafeHtml(): string {
-  return ENTIDADES_CAFE.map(entidadCafeHtml).join("");
+async function entidadesCafeHtml(): Promise<string> {
+  const entidades = await resolverEntidades(ENTIDADES_CAFE);
+  return entidades.map(entidadCafeHtml).join("");
 }
 
-function entidadCervezaHtml(e: EntidadCerveza): string {
+function entidadCervezaHtml(e: EntidadResuelta): string {
   const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
   const sociosLinks = e.socios
     .map((s) =>
@@ -418,19 +448,22 @@ function entidadCervezaHtml(e: EntidadCerveza): string {
           : escapeHtml(s.nombre),
     )
     .join(" · ");
+  const capital = formatMoneda(e.capital);
+  const publicacion = formatFecha(e.publicacion);
   return `
-    <h3>${escapeHtml(e.tipo)} — ${nombreLink}</h3>
-    <p>CUIT: ${e.cuit ? escapeHtml(e.cuit) : "—"} · Capital: ${e.capital ? escapeHtml(e.capital) : "—"} · Publicación: ${e.publicacion ? escapeHtml(e.publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
+    <h3>${e.tipo ? escapeHtml(e.tipo) : ""} — ${nombreLink}</h3>
+    <p>CUIT: ${e.cuit ? escapeHtml(formatCuit(e.cuit) ?? e.cuit) : "—"} · Capital: ${capital ? escapeHtml(capital) : "—"} · Publicación: ${publicacion ? escapeHtml(publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
     ${e.socios.length > 0 ? `<p>Socios/Integrantes: ${sociosLinks}</p>` : ""}
-    <p>Objeto social: ${e.objetoSocial ? escapeHtml(e.objetoSocial) : "—"}</p>
+    ${e.objetoSocial ? `<p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>` : ""}
   `;
 }
 
-function entidadesCervezaHtml(): string {
-  return ENTIDADES_CERVEZA.map(entidadCervezaHtml).join("");
+async function entidadesCervezaHtml(): Promise<string> {
+  const entidades = await resolverEntidades(ENTIDADES_CERVEZA);
+  return entidades.map(entidadCervezaHtml).join("");
 }
 
-function entidadReciclajeHtml(e: EntidadReciclaje): string {
+function entidadReciclajeHtml(e: EntidadResuelta): string {
   const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
   const sociosLinks = e.socios
     .map((s) =>
@@ -441,19 +474,22 @@ function entidadReciclajeHtml(e: EntidadReciclaje): string {
           : escapeHtml(s.nombre),
     )
     .join(" · ");
+  const capital = formatMoneda(e.capital);
+  const publicacion = formatFecha(e.publicacion);
   return `
-    <h3>${escapeHtml(e.tipo)} — ${nombreLink}</h3>
-    <p>CUIT: ${e.cuit ? escapeHtml(e.cuit) : "—"} · Capital: ${e.capital ? escapeHtml(e.capital) : "—"} · Publicación: ${e.publicacion ? escapeHtml(e.publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
+    <h3>${e.tipo ? escapeHtml(e.tipo) : ""} — ${nombreLink}</h3>
+    <p>CUIT: ${e.cuit ? escapeHtml(formatCuit(e.cuit) ?? e.cuit) : "—"} · Capital: ${capital ? escapeHtml(capital) : "—"} · Publicación: ${publicacion ? escapeHtml(publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
     ${e.socios.length > 0 ? `<p>Socios/Integrantes: ${sociosLinks}</p>` : ""}
-    <p>Objeto social: ${e.objetoSocial ? escapeHtml(e.objetoSocial) : "—"}</p>
+    ${e.objetoSocial ? `<p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>` : ""}
   `;
 }
 
-function entidadesReciclajeHtml(): string {
-  return ENTIDADES_RECICLAJE.map(entidadReciclajeHtml).join("");
+async function entidadesReciclajeHtml(): Promise<string> {
+  const entidades = await resolverEntidades(ENTIDADES_RECICLAJE);
+  return entidades.map(entidadReciclajeHtml).join("");
 }
 
-function entidadFideicomisosHtml(e: EntidadFideicomisos): string {
+function entidadFideicomisosHtml(e: EntidadResuelta): string {
   const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
   const sociosLinks = e.socios
     .map((s) =>
@@ -464,16 +500,19 @@ function entidadFideicomisosHtml(e: EntidadFideicomisos): string {
           : escapeHtml(s.nombre),
     )
     .join(" · ");
+  const capital = formatMoneda(e.capital);
+  const publicacion = formatFecha(e.publicacion);
   return `
-    <h3>${escapeHtml(e.tipo)} — ${nombreLink}</h3>
-    <p>CUIT: ${e.cuit ? escapeHtml(e.cuit) : "—"} · Capital: ${e.capital ? escapeHtml(e.capital) : "—"} · Publicación: ${e.publicacion ? escapeHtml(e.publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
+    <h3>${e.tipo ? escapeHtml(e.tipo) : ""} — ${nombreLink}</h3>
+    <p>CUIT: ${e.cuit ? escapeHtml(formatCuit(e.cuit) ?? e.cuit) : "—"} · Capital: ${capital ? escapeHtml(capital) : "—"} · Publicación: ${publicacion ? escapeHtml(publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
     ${e.socios.length > 0 ? `<p>Socios/Integrantes: ${sociosLinks}</p>` : ""}
-    <p>Objeto social: ${e.objetoSocial ? escapeHtml(e.objetoSocial) : "—"}</p>
+    ${e.objetoSocial ? `<p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>` : ""}
   `;
 }
 
-function entidadesFideicomisosHtml(): string {
-  return ENTIDADES_FIDEICOMISOS.map(entidadFideicomisosHtml).join("");
+async function entidadesFideicomisosHtml(): Promise<string> {
+  const entidades = await resolverEntidades(ENTIDADES_FIDEICOMISOS);
+  return entidades.map(entidadFideicomisosHtml).join("");
 }
 
 function siteUrl(): string {
@@ -491,6 +530,14 @@ function formatFecha(iso: string | Date | null): string | null {
   const s = typeof iso === "string" ? iso : iso.toISOString();
   const [anio, mes, dia] = s.slice(0, 10).split("-");
   return `${dia}/${mes}/${anio}`;
+}
+
+// Mismo formato que moneda() en frontend/src/lib/format.ts (toLocaleString
+// corre igual en Node que en el navegador -- mismo motor V8) para que el
+// HTML server-side y la ficha React muestren el capital idéntico.
+function formatMoneda(valor: number | null): string | null {
+  if (valor === null) return null;
+  return valor.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 }
 
 interface Inyeccion {
@@ -1066,18 +1113,19 @@ seoRouter.get(
   }),
 );
 
-// Informe de nicho sectorial: a diferencia del resto de /informes/*, el
-// contenido es estático (texto y cifras ya redactados a mano, ver
-// frontend/src/data/nichoCannabis.ts) — no hay tabla precomputada ni query a
-// la base acá, solo el mismo HTML que ve un crawler duplicado a mano desde
-// la página React (mismo criterio que el resto de este archivo: el server
-// no puede ejecutar el SVG interactivo del cliente, así que la tabla
-// equivalente tiene que existir también como HTML real).
+// Informe de nicho sectorial: el texto y las cifras agregadas (evolución,
+// tipo de entidad, mapa) son curados a mano, ver backend/src/data/
+// nichoCannabis.ts — pero el directorio de entidades (nombre/CUIT/capital/
+// socios) se resuelve EN VIVO contra la base (ver entidadesCannabisHtml()),
+// para que una sociedad/persona marcada oculta desde el panel de admin deje
+// de aparecer acá también (antes no: ver docs/plan_centralizar_habeas_data.md).
 seoRouter.get(
   "/informes/nicho-cannabis",
   asyncHandler(async (_req: Request, res: Response, next) => {
     const base = leerIndexHtml();
     if (!base) return next();
+
+    const directorioHtml = await entidadesCannabisHtml();
 
     const title = "Cannabis en Mendoza: empresas registradas 2017–2026 | INGcome";
     const description =
@@ -1122,7 +1170,7 @@ seoRouter.get(
       <p>25 de las 27 entidades tienen departamento identificado; 2 no.</p>
       <p><strong>Advertencia metodológica:</strong> el domicilio es LEGAL, no necesariamente el lugar donde ocurre el cultivo o la producción. Luján de Cuyo, San Rafael, San Martín, Las Heras y Guaymallén son más representativos de dónde efectivamente se desarrollan actividades agropecuarias e industriales vinculadas al cannabis y el cáñamo que Capital, que domina el ranking solo por concentrar domicilios legales.</p>
       <h2>Directorio completo: las 27 entidades</h2>
-      ${entidadesCannabisHtml()}
+      ${directorioHtml}
       <h2>Fuente y metodología</h2>
       <p>Fuente: Boletín Oficial de la Provincia de Mendoza, sección Contratos Sociales. Términos de búsqueda: cannabis, cáñamo, marihuana, hemp, CBD, cannabidiol, THC, cbn, cbg y variantes. Algunas entidades fueron incluidas por nombre aunque su objeto social registrado no menciona cannabis explícitamente — marcadas individualmente arriba. Ninguna búsqueda por palabras clave es perfecta: quedan afuera entidades con objeto social genérico y sin ningún término cannábico en el nombre (ver más arriba el caso de Wichan S.A.S.). Capital expresado en pesos nominales, sin ajuste por inflación. CUIT cruzado con el Registro Nacional de Sociedades / padrón ARCA-AFIP donde estuvo disponible.</p>
       ${fuenteDatosHtml()}
@@ -1153,6 +1201,8 @@ seoRouter.get(
   asyncHandler(async (_req: Request, res: Response, next) => {
     const base = leerIndexHtml();
     if (!base) return next();
+
+    const directorioEnoturismoHtml = await entidadesEnoturismoHtml();
 
     const title = "Enoturismo en Mendoza: empresas registradas 2017–2026 | INGcome";
     const description =
@@ -1196,7 +1246,7 @@ seoRouter.get(
       <h2>Quiénes son: diversidad del rubro</h2>
       <p>El enoturismo mendocino no es un solo negocio sino al menos tres perfiles que conviven: bodegas que suman una pata turística, agencias especializadas en turismo del vino, y alojamientos boutique construidos alrededor de la experiencia vitivinícola, con híbridos y variantes digitales en el medio.</p>
       <h2>Directorio completo: las 43 empresas</h2>
-      ${entidadesEnoturismoHtml()}
+      ${directorioEnoturismoHtml}
       <h2>Metodología de selección</h2>
       <p>Búsqueda amplia por palabras clave en nombre y objeto social (403 candidatas), seguida de revisión individual de cada una para confirmar actividad de enoturismo real y específica, no una mención de relleno en un objeto social genérico. El filtro descartó 360 de los 403 candidatos (89 %). Las constituciones se cuentan por la fecha de publicación del acto en el Boletín, no por la fecha de constitución declarada en el estatuto.</p>
       ${fuenteDatosHtml()}
@@ -1227,6 +1277,8 @@ seoRouter.get(
   asyncHandler(async (_req: Request, res: Response, next) => {
     const base = leerIndexHtml();
     if (!base) return next();
+
+    const directorioBodegasHtml = await entidadesBodegasHtml();
 
     const title = "Bodegas boutique en Mendoza: 63 empresas 2017–2026 | INGcome";
     const description =
@@ -1268,7 +1320,7 @@ seoRouter.get(
       <p>61 de las 63 sociedades tienen departamento identificado; 2 no.</p>
       <p><strong>Advertencia metodológica:</strong> el domicilio es LEGAL, no necesariamente donde está la finca. A diferencia de Enoturismo y Cannabis, acá la distribución fuera de Capital está más repartida entre zonas vitivinícolas tradicionales: Luján de Cuyo (10), San Martín y Guaymallén (6 cada uno), San Rafael y Maipú (5 cada uno) — sumadas, más que duplican a Capital y reflejan mejor la geografía real de la producción vitivinícola mendocina.</p>
       <h2>Directorio completo: las 63 bodegas y emprendimientos</h2>
-      ${entidadesBodegasHtml()}
+      ${directorioBodegasHtml}
       <h2>Metodología y fuente de datos</h2>
       <p>Búsqueda inicial por nombre ("bodega", "viñedo", "viñas", "viña") y objeto social, 112 candidatas. Desafío específico: en español "bodega" es ambigua (también significa depósito o almacén), así que aparecieron empresas de self-storage, proveedoras de insumos y uniones transitorias sin relación con el vino. El filtro manual descartó 49 de las 112 (43,8 %). Las constituciones se cuentan por fecha de publicación del acto en el Boletín, no por la fecha declarada en el contrato.</p>
       ${fuenteDatosHtml()}
@@ -1299,6 +1351,8 @@ seoRouter.get(
   asyncHandler(async (_req: Request, res: Response, next) => {
     const base = leerIndexHtml();
     if (!base) return next();
+
+    const directorioEnergiaHtml = await entidadesEnergiaHtml();
 
     const title = "Energía solar y eólica en Mendoza: 50 empresas 2017–2026 | INGcome";
     const description =
@@ -1340,7 +1394,7 @@ seoRouter.get(
       <p>47 de las 50 empresas tienen departamento identificado; 3 no.</p>
       <p><strong>Advertencia metodológica:</strong> el departamento corresponde al domicilio LEGAL, no necesariamente a la ubicación física del parque. A diferencia de Enoturismo, Cannabis y Bodegas boutique —donde Capital encabeza claramente el ranking—, en energía renovable Capital queda en tercer lugar, detrás de Luján de Cuyo (13) y San Rafael (11). "Helios Río Diamante" remite al río Diamante, en San Rafael: en este rubro el domicilio legal tiende a coincidir más con la zona real del proyecto que en el resto de la serie.</p>
       <h2>Directorio completo: las 50 empresas</h2>
-      ${entidadesEnergiaHtml()}
+      ${directorioEnergiaHtml}
       <h2>Metodología y fuente de datos</h2>
       <p>Búsqueda inicial por nombre y objeto social (solar, eólica/eolica, fotovoltaica, renovable, energía renovable, energías limpias), 95 candidatas. El filtro manual descartó 45 de las 95 (47,4 %) — incluyendo casos donde "solar" no se refería a energía (apellidos, nombres de fincas, sinónimo de terreno). Varios socios de la ola 2017 son personas jurídicas (Dax Energy Argentina Holdings S.p.A., Dax Energy Holdings S.p.A., Tassaroli S.A., Green S.A., Grupo Energías Globales S.A., entre otras) sin ficha propia en este sitio.</p>
       ${fuenteDatosHtml()}
@@ -1371,6 +1425,8 @@ seoRouter.get(
   asyncHandler(async (_req: Request, res: Response, next) => {
     const base = leerIndexHtml();
     if (!base) return next();
+
+    const directorioCriptoHtml = await entidadesCriptoHtml();
 
     const title = "Cripto y fintech en Mendoza: 14 empresas 2017–2026 | INGcome";
     const description =
@@ -1411,7 +1467,7 @@ seoRouter.get(
       </table>
       <p>Las 14 empresas tienen departamento identificado (100 % de cobertura, algo inusual en esta serie). A diferencia de otros informes de esta serie, acá no hace falta la advertencia sobre la brecha entre domicilio legal y zona real de actividad: un negocio de cripto o fintech no tiene una "zona de producción" física equivalente a un viñedo o un parque solar. Capital concentra más de la mitad de los casos (8 de 14), coherente con un rubro digital, de oficina.</p>
       <h2>Directorio completo: las 14 empresas</h2>
-      ${entidadesCriptoHtml()}
+      ${directorioCriptoHtml}
       <h2>Metodología y fuente de datos</h2>
       <p>Búsqueda inicial por nombre y objeto social (cripto, crypto, blockchain, bitcoin, fintech, activos digitales, billetera virtual, medios de pago, pasarela de pago, moneda digital, activos virtuales, exchange), 35 candidatas. El filtro manual descartó 21 de las 35 (60 %) — la proporción de descarte más alta de la serie hasta ahora. Las constituciones se cuentan por fecha de publicación del acto en el Boletín, no por fecha de constitución declarada.</p>
       ${fuenteDatosHtml()}
@@ -1445,6 +1501,8 @@ seoRouter.get(
   asyncHandler(async (_req: Request, res: Response, next) => {
     const base = leerIndexHtml();
     if (!base) return next();
+
+    const directorioSoftwareHtml = await entidadesSoftwareHtml();
 
     const title = "Desarrollo de software en Mendoza: 103 sociedades 2017–2026 | INGcome";
     const description =
@@ -1484,7 +1542,7 @@ seoRouter.get(
         <tbody>${DEPARTAMENTOS_SOFTWARE.map((d) => `<tr><td>${d.departamento}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
       </table>
       <p>99 de las 103 sociedades tienen departamento identificado; 4 no. Capital y Godoy Cruz concentran el 61 % — la mayor concentración geográfica de toda esta tanda de informes, consistente con un sector de trabajo remoto/de oficina que gravita hacia donde ya está el ecosistema profesional y universitario.</p>
-      ${ENTIDADES_SOFTWARE.length > 0 ? `<h2>Directorio completo: las 103 sociedades</h2>${entidadesSoftwareHtml()}` : ""}
+      ${ENTIDADES_SOFTWARE.length > 0 ? `<h2>Directorio completo: las 103 sociedades</h2>${directorioSoftwareHtml}` : ""}
       <h2>Metodología y límites</h2>
       <p>Búsqueda: objeto social con "desarrollo de software/sistemas/aplicaciones", "programación" (en sentido informático), "servicios informáticos", "consultoría informática", "desarrollo web/de plataformas", más nombre con "software" — 214 sociedades candidatas. Clasificación asistida por script de tres niveles, con revisión manual de las 41 candidatas ambiguas y una segunda pasada sobre la palabra "programación" (ambigua en español). 111 de las 214 (52 %) se descartaron. Cobertura ARCA: 37 de 103 (35,9 %), la más baja de esta tanda. Las constituciones se cuentan por fecha de publicación del acto en el Boletín, no por fecha de constitución declarada.</p>
       ${fuenteDatosHtml()}
@@ -1515,6 +1573,8 @@ seoRouter.get(
   asyncHandler(async (_req: Request, res: Response, next) => {
     const base = leerIndexHtml();
     if (!base) return next();
+
+    const directorioServiciosProfesionalesHtml = await entidadesServiciosProfesionalesHtml();
 
     const title =
       "Abogados, contadores y escribanos en Mendoza: 46 estudios profesionales 2017–2026 | INGcome";
@@ -1574,7 +1634,7 @@ seoRouter.get(
         <tbody>${DEPARTAMENTOS_SERVICIOS_PROFESIONALES.map((d) => `<tr><td>${escapeHtml(d.departamento)}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
       </table>
       <p>45 de los 46 estudios tienen departamento identificado; 1 no. Capital concentra el 73,9% (34 de 46) — la mayor concentración geográfica de toda esta tanda de informes.</p>
-      ${ENTIDADES_SERVICIOS_PROFESIONALES.length > 0 ? `<h2>Directorio completo: los 46 estudios</h2>${entidadesServiciosProfesionalesHtml()}` : ""}
+      ${ENTIDADES_SERVICIOS_PROFESIONALES.length > 0 ? `<h2>Directorio completo: los 46 estudios</h2>${directorioServiciosProfesionalesHtml}` : ""}
       <h2>Metodología y límites</h2>
       <p>Búsqueda por objeto social y nombre: términos jurídicos, contables y notariales — 163 sociedades candidatas. Revisión manual completa: 117 de las 163 (71,8%) se descartaron. Los datos de escribanos y de profesiones entre socios se calculan sobre toda la base de 19.485 sociedades y 21.989 actos, no solo sobre los 46 estudios de este informe. Las constituciones se cuentan por fecha de publicación del acto en el Boletín, no por fecha de constitución declarada.</p>
       ${fuenteDatosHtml()}
@@ -1605,6 +1665,8 @@ seoRouter.get(
   asyncHandler(async (_req: Request, res: Response, next) => {
     const base = leerIndexHtml();
     if (!base) return next();
+
+    const directorioArquitecturaHtml = await entidadesArquitecturaHtml();
 
     const title = "Arquitectura en Mendoza: 27 estudios y una profesión de asociación media | INGcome";
     const description =
@@ -1648,7 +1710,7 @@ seoRouter.get(
         <tbody>${DEPARTAMENTOS_ARQUITECTURA.map((d) => `<tr><td>${escapeHtml(d.departamento)}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
       </table>
       <p>Capital reúne solo el 26% de los estudios — la proporción más baja de cualquier nicho evaluado en esta tanda. El desarrollo inmobiliario y la obra privada que sostiene a un estudio de arquitectura ocurre en todos los departamentos donde hay crecimiento urbano: General Alvear, San Carlos y Tupungato, que casi no aparecen en el resto de esta serie, tienen acá su propio estudio.</p>
-      ${ENTIDADES_ARQUITECTURA.length > 0 ? `<h2>Directorio completo: los 27 estudios</h2>${entidadesArquitecturaHtml()}` : ""}
+      ${ENTIDADES_ARQUITECTURA.length > 0 ? `<h2>Directorio completo: los 27 estudios</h2>${directorioArquitecturaHtml}` : ""}
       <h2>Metodología y límites</h2>
       <p>Búsqueda solo por nombre ("arquitect%"), a diferencia de casi todos los demás nichos de esta serie — el objeto social es una frase de boilerplate demasiado común en constructoras e inmobiliarias sin relación con un estudio real. Las 27 candidatas por nombre no tuvieron que depurarse. El ángulo de ecosistema usa el campo profesión autodeclarado de personas_fisicas, sin verificación contra la matrícula del Colegio de Arquitectos de Mendoza. Universo chico: cualquier lectura de tendencia temporal o geográfica debe tomarse como orientativa. Las constituciones se cuentan por fecha de publicación del acto en el Boletín, no por fecha de constitución declarada.</p>
       ${fuenteDatosHtml()}
@@ -1679,6 +1741,8 @@ seoRouter.get(
   asyncHandler(async (_req: Request, res: Response, next) => {
     const base = leerIndexHtml();
     if (!base) return next();
+
+    const directorioCafeHtml = await entidadesCafeHtml();
 
     const title =
       "Café de especialidad en Mendoza: crecimiento sostenido, sin el boom ni el colapso de la cerveza artesanal | INGcome";
@@ -1731,7 +1795,7 @@ seoRouter.get(
       <p>San Rafael, con 5 cafeterías (12% del nicho), es un polo llamativo para un departamento fuera del Gran Mendoza — explicado en buena parte por el grupo familiar Guillén.</p>
       <h2>Un caso de duplicado detectado</h2>
       <p>Cafeteria Tina S.A.S. aparece dos veces en la base con fechas de publicación separadas por solo 8 días, el mismo socio, el mismo capital y un objeto social casi idéntico. Es, con alta probabilidad, la misma constitución societaria publicada dos veces en el Boletín. Se cuenta una sola vez en todos los números de este informe (42 sociedades, no 43).</p>
-      ${ENTIDADES_CAFE.length > 0 ? `<h2>Directorio completo: las 42 cafeterías y tostadurías</h2>${entidadesCafeHtml()}` : ""}
+      ${ENTIDADES_CAFE.length > 0 ? `<h2>Directorio completo: las 42 cafeterías y tostadurías</h2>${directorioCafeHtml}` : ""}
       <h2>Metodología y límites</h2>
       <p>Búsqueda por nombre ("café", "coffee", "tostad%", "barista", "roaster") — 41 de las 43 candidatas tienen "café" o "coffee" literalmente en su razón social. Solo 2 (Mondovi S.A. y Norbu S.A.S.) se incluyeron exclusivamente por objeto social. Cobertura ARCA: 20 de 42 (47,6%). Las constituciones se cuentan por fecha de publicación del acto en el Boletín, no por fecha de constitución declarada.</p>
       ${fuenteDatosHtml()}
@@ -1762,6 +1826,8 @@ seoRouter.get(
   asyncHandler(async (_req: Request, res: Response, next) => {
     const base = leerIndexHtml();
     if (!base) return next();
+
+    const directorioCervezaHtml = await entidadesCervezaHtml();
 
     const title = "Cerveza artesanal en Mendoza: un boom de tres años que no volvió a repetirse | INGcome";
     const description =
@@ -1804,7 +1870,7 @@ seoRouter.get(
       <p>Cruzando los socios de las 36 cerveceras aparecen ocho personas que participan en más de una. El caso más llamativo: los cuatro socios de Leven Anclas S.A.S. (20/12/2018) son los mismos cuatro de Rodder S.A.S. (29/11/2018) — veintiún días antes.</p>
       <h2>La cámara gremial</h2>
       <p>La Asociación Cámara Mendocina de Cervecerías Artesanales se constituyó en 2018, en pleno pico del boom (11 cerveceras ese año).</p>
-      ${ENTIDADES_CERVEZA.length > 0 ? `<h2>Directorio completo: las 36 cervecerías</h2>${entidadesCervezaHtml()}` : ""}
+      ${ENTIDADES_CERVEZA.length > 0 ? `<h2>Directorio completo: las 36 cervecerías</h2>${directorioCervezaHtml}` : ""}
       <h2>Metodología y límites</h2>
       <p>Búsqueda por "cerveza", "cervecer[íi]a", "l[uú]pulo", "malter[íi]a", "brewing", "brewery" en nombre y objeto social — 90 sociedades candidatas. Clasificación manual: 54 de las 90 quedaron afuera por objeto social genérico sin que la cerveza fuera el eje del negocio. Cobertura ARCA: 14 de 36 (39%). Las constituciones se cuentan por fecha de publicación del acto en el Boletín, no por fecha de constitución declarada.</p>
       ${fuenteDatosHtml()}
@@ -1835,6 +1901,8 @@ seoRouter.get(
   asyncHandler(async (_req: Request, res: Response, next) => {
     const base = leerIndexHtml();
     if (!base) return next();
+
+    const directorioReciclajeHtml = await entidadesReciclajeHtml();
 
     const title =
       "Reciclaje y economía circular en Mendoza: de la chatarrería al \"impacto ambiental\" como marca | INGcome";
@@ -1879,7 +1947,7 @@ seoRouter.get(
         <tbody>${DEPARTAMENTOS_RECICLAJE.map((d) => `<tr><td>${escapeHtml(d.departamento)}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
       </table>
       <p>Capital y Guaymallén concentran más de la mitad del nicho — el corredor urbano del Gran Mendoza, donde se genera la mayor parte de los residuos a gestionar.</p>
-      ${ENTIDADES_RECICLAJE.length > 0 ? `<h2>Directorio completo: las 41 empresas de reciclaje</h2>${entidadesReciclajeHtml()}` : ""}
+      ${ENTIDADES_RECICLAJE.length > 0 ? `<h2>Directorio completo: las 41 empresas de reciclaje</h2>${directorioReciclajeHtml}` : ""}
       <h2>Metodología y límites</h2>
       <p>Búsqueda por "recicl%", "circular", "residuo%", "chatarr%", "compost%", "scrap" en nombre y objeto social — 81 sociedades candidatas. Clasificación manual: 40 de las 81 quedaron afuera por objeto social catálogo sin que el reciclaje/residuos fuera el eje del negocio. Las constituciones se cuentan por fecha de publicación del acto en el Boletín, no por fecha de constitución declarada.</p>
       ${fuenteDatosHtml()}
@@ -1910,6 +1978,8 @@ seoRouter.get(
   asyncHandler(async (_req: Request, res: Response, next) => {
     const base = leerIndexHtml();
     if (!base) return next();
+
+    const directorioFideicomisosHtml = await entidadesFideicomisosHtml();
 
     const title =
       "Servicios de fideicomisos en Mendoza: el vehículo financiero del boom inmobiliario | INGcome";
@@ -1978,7 +2048,7 @@ seoRouter.get(
         <tbody>${DEPARTAMENTOS_FIDEICOMISOS.map((d) => `<tr><td>${escapeHtml(d.departamento)}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
       </table>
       <p>Capital, Luján de Cuyo y Godoy Cruz concentran el 69% del nicho — los tres departamentos del Gran Mendoza con más desarrollo inmobiliario de edificios y countries en la última década, consistente con la lectura de que este es, ante todo, un vehículo de financiamiento de obra urbana.</p>
-      ${ENTIDADES_FIDEICOMISOS.length > 0 ? `<h2>Directorio completo: las 63 sociedades de servicios de fideicomisos</h2>${entidadesFideicomisosHtml()}` : ""}
+      ${ENTIDADES_FIDEICOMISOS.length > 0 ? `<h2>Directorio completo: las 63 sociedades de servicios de fideicomisos</h2>${directorioFideicomisosHtml}` : ""}
       <h2>Metodología y límites</h2>
       <p>Búsqueda por CLAE, mismo método que otros nichos de esta serie. Se usó el código 643001 ("Servicios de fideicomisos") como actividad principal (orden 1, estado activo) declarada ante ARCA. Este método solo alcanza al 61,7% del corpus con cruce ARCA — una sociedad fiduciaria real sin ese cruce queda invisible, sin forma de estimar cuántas son.</p>
       <p>71 candidatas → 63 sociedades únicas: el cruce dio 71 filas, pero 8 nombres normalizados aparecían dos veces por el mismo patrón de republicación en el Boletín — se deduplicó por nombre normalizado, conservando la primera publicación cronológica.</p>

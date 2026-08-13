@@ -11,24 +11,6 @@
 // DEPARTAMENTOS va como array plano acá (no Map, que no es JSON-serializable
 // tal cual para el render de texto plano del SEO).
 
-export interface SocioFideicomisos {
-  nombre: string;
-  personaId?: number;
-  sociedadId?: number;
-}
-
-export interface EntidadFideicomisos {
-  tipo: string;
-  nombre: string;
-  sociedadId: number;
-  cuit: string | null;
-  capital: string | null;
-  publicacion: string | null;
-  departamento: string | null;
-  socios: SocioFideicomisos[];
-  objetoSocial: string | null;
-}
-
 export const EVOLUCION_ANUAL = [
   { etiqueta: "2018", valor: 10 },
   { etiqueta: "2019", valor: 6 },
@@ -59,68 +41,886 @@ export const DEPARTAMENTOS_FIDEICOMISOS = [
   { departamento: "Tunuyán", cantidad: 1 },
 ];
 
-export const ENTIDADES: EntidadFideicomisos[] = [
-  { tipo: "S.A.S.", nombre: "Blue Light S.A.S.", sociedadId: 925, cuit: "30-71605526-0", capital: "$30.000", publicacion: "30/01/2018", departamento: "Lavalle", socios: [{ nombre: "Gerardo Javier Tirenti", personaId: 2153 }, { nombre: "Walter Damián Tirenti", personaId: 2152 }], objetoSocial: "Comercial, importación y exportación, mandatos y fiduciaria." },
-  { tipo: "S.A.", nombre: "Pescar S.A.", sociedadId: 992, cuit: "33-71607785-9", capital: "$100.000", publicacion: "20/02/2018", departamento: "Capital", socios: [{ nombre: "Daniel Horacio Salas", personaId: 2279 }, { nombre: "Mariana Elena Romairone", personaId: 2280 }], objetoSocial: "Planificación, proyección, compra venta y realización de proyectos inmobiliarios; operaciones comerciales, agrícolas, inmobiliarias, mandatos, financieras, importación y exportación, e inversoras." },
-  { tipo: "S.A.S.", nombre: "Mawer Pro S.A.S.", sociedadId: 1358, cuit: "30-71629658-6", capital: "$20.000", publicacion: "22/05/2018", departamento: "Capital", socios: [{ nombre: "Gimena Fernanda Uriza", personaId: 3105 }, { nombre: "Mauro Ivo Maltoni", personaId: 3104 }], objetoSocial: "Realizar actividades fiduciarias: celebrar o aceptar contratos de fideicomiso con roles de fiduciante, fiduciario, beneficiario o fideicomisarios sobre inmuebles, muebles, créditos u otros bienes, incluyendo fideicomisos financieros, de garantía, administración y transferencia de propiedad." },
-  { tipo: "S.A.", nombre: "Dosados Sociedad Anónima", sociedadId: 1369, cuit: "30-71620012-0", capital: "$100.000", publicacion: "24/05/2018", departamento: "Capital", socios: [{ nombre: "Bernardo José Sottile", personaId: 3124 }, { nombre: "Carlos Fabián Bajach", personaId: 3123 }, { nombre: "Franco Gabriel Pérez Magnelli", personaId: 3122 }], objetoSocial: "Realizar actividades inmobiliaria, comercial y fiduciaria por cuenta propia o de terceros, asociada o no con terceros." },
-  { tipo: "S.A.", nombre: "Administradora Lekeito S.A.", sociedadId: 1375, cuit: "30-71615196-0", capital: "$100.000", publicacion: "28/05/2018", departamento: "Godoy Cruz", socios: [{ nombre: "Martin Ignacio Odoriz", personaId: 3135 }, { nombre: "Silvia Pilar Baez", personaId: 3136 }], objetoSocial: "Realizar por cuenta propia o de terceros o asociada a terceros, la actividad de Administración, en el país o en el extranjero." },
-  { tipo: "S.A.S.", nombre: "Jatunyay Sociedad Por Acciones Simplificada", sociedadId: 1726, cuit: "30-71625231-7", capital: "$30.000", publicacion: "13/08/2018", departamento: "Luján de Cuyo", socios: [{ nombre: "Agustin Nebro Tibaldi", personaId: 3869 }, { nombre: "Modolo Luis Adrian", personaId: 3868 }], objetoSocial: "Servicios, gastronómica y administración, por cuenta propia o asociada a terceros." },
-  { tipo: "S.A.", nombre: "Fontalba S.A.", sociedadId: 1744, cuit: "33-71615076-9", capital: "$300.000", publicacion: "16/08/2018", departamento: "Capital", socios: [{ nombre: "Adriana Huerta", personaId: 3903 }, { nombre: "Luis Baldini Pescarmona", personaId: 3902 }], objetoSocial: "Fiduciaria: ejercer el carácter de fiduciaria en todo tipo de fideicomiso con excepción de los financieros y aquellos sujetos a la normativa de la ley de entidades financieras." },
-  { tipo: "S.A.", nombre: "Fiduciaria Diamante S.A.", sociedadId: 1769, cuit: "30-71701344-8", capital: "$140.000", publicacion: "23/08/2018", departamento: "San Rafael", socios: [{ nombre: "Elsa Virginia Trabaloni", personaId: 3951 }, { nombre: "Franco Giorgio Torelli", personaId: 3950 }], objetoSocial: "Administración fiduciaria de fondos fiduciarios; ejercicio de mandatos, comisiones y representaciones; servicios de asesoramiento y consultoría; actividades inmobiliarias de adquisición, enajenación, explotación, locación y administración de inmuebles." },
-  { tipo: "S.A.S.", nombre: "Fiduciaria Duplo S.A.S.", sociedadId: 1874, cuit: "30-71633825-4", capital: "$25.000", publicacion: "06/09/2018", departamento: "Capital", socios: [{ nombre: "Guido Hernán Scalabrelli", personaId: 4189 }, { nombre: "Nicolás Javier Fernandez Barud", personaId: 4190 }], objetoSocial: "Agente fiduciario de fideicomisos financieros y no financieros. Administración de negocios financieros, títulos de crédito, representaciones, cobranzas, mandatos, comisiones. Construcción de inmuebles y desarrollo de loteos." },
-  { tipo: "S.A.", nombre: "Dhh Capital S.A.", sociedadId: 2346, cuit: "30-71631138-0", capital: "$100.000", publicacion: "13/12/2018", departamento: "Maipú", socios: [{ nombre: "Carlos Antonio Diaz", personaId: 5162 }, { nombre: "Sergio Ariel Diaz", personaId: 5161 }], objetoSocial: "Dedicarse a actividades fiduciaria e inmobiliarias." },
-  { tipo: "S.A.S.", nombre: "Seis Lados S.A.S.", sociedadId: 2455, cuit: "30-71633017-2", capital: "$400.000", publicacion: "07/01/2019", departamento: "Godoy Cruz", socios: [{ nombre: "Alejandro Martín Mazzoni", personaId: 5387 }], objetoSocial: "Realizar por cuenta propia o de terceros, actividades en mandatos, comerciales y otras, tanto en el país como en el extranjero." },
-  { tipo: "S.A.S.", nombre: "Mareu S.A.S.", sociedadId: 2738, cuit: "30-71644208-6", capital: "$100.000", publicacion: "20/03/2019", departamento: "Capital", socios: [{ nombre: "Marta Isabel Antonicelli", personaId: 5993 }], objetoSocial: "Servicios gastronómicos, comerciales, mandatos y actividades fiduciarias." },
-  { tipo: "S.A.S.", nombre: "Liatelan S.A.S.", sociedadId: 2958, cuit: "30-71647747-5", capital: "$100.000", publicacion: "06/05/2019", departamento: "Luján de Cuyo", socios: [{ nombre: "Adriana Paula Blesa", personaId: 6454 }, { nombre: "Leandro Esteban Echavarria", personaId: 6453 }], objetoSocial: "Actividades agropecuaria, comercial, industrial, importación y exportación, mandatos, inmobiliaria y fiduciaria." },
-  { tipo: "S.A.S.", nombre: "Furmich S.A.S.", sociedadId: 3315, cuit: "30-71661293-3", capital: "$50.000", publicacion: "15/07/2019", departamento: "Capital", socios: [{ nombre: "Iván Alejandro Tkaczek Delgado", personaId: 7216 }, { nombre: "Nicolas David Tkaczek Delgado", personaId: 7032 }, { nombre: "Sergio Agustín Tkaczek Delgado", personaId: 7031 }, { nombre: "Tobías Santiago Tkaczek Delgado", personaId: 7217 }], objetoSocial: "Operaciones inmobiliarias: compraventa, locación, leasing, fideicomiso de inmuebles. Actos jurídicos, inversiones y aportes de capitales, actuación como fiduciario, contratos de colaboración, operaciones con títulos y valores, créditos y operaciones financieras." },
-  { tipo: "S.A.S.", nombre: "Monterod S.A.S.", sociedadId: 3476, cuit: "30-71660439-6", capital: "$30.000", publicacion: "09/08/2019", departamento: "Luján de Cuyo", socios: [{ nombre: "Germán Luís Monteverdi", personaId: 1326 }, { nombre: "María Jimena Rodríguez", personaId: 7515 }], objetoSocial: "Fiduciaria, constructora-inmobiliaria, agropecuaria, franquicias, financiera, mandatos, proveedor del estado, importación y exportación." },
-  { tipo: "S.A.S.", nombre: "E.G.F.E. S.A.S.", sociedadId: 3893, cuit: "30-71672931-8", capital: "$150.000", publicacion: "30/10/2019", departamento: "Godoy Cruz", socios: [{ nombre: "Pedro Ricardo Martínez", personaId: 7756 }, { nombre: "Virginia María Orallo", personaId: 7757 }], objetoSocial: "Compra, venta y permuta de bienes muebles, materias primas y maquinarias; administración de fideicomisos; mandatos y representación de franquicias y concesiones para venta, distribución y comercialización de productos o servicios." },
-  { tipo: "S.A.S.", nombre: "Black Rock Development Sas", sociedadId: 4586, cuit: "30-71687454-7", capital: "$100.000", publicacion: "04/05/2020", departamento: "Capital", socios: [{ nombre: "Carla Beatriz Ferrari Galdame", personaId: 9840 }, { nombre: "Guillermo Federico Simone", personaId: 9841 }, { nombre: "Osvaldo José Nasazzi Ruano", personaId: 9839 }], objetoSocial: "Fiduciaria, agropecuaria, comercial y de servicios de gestión y desarrollo de proyectos inmobiliarios y/o agropecuarios." },
-  { tipo: "S.A.S.", nombre: "Virgen Del Cerro S.A.S.", sociedadId: 5073, cuit: "30-71697855-5", capital: "$300.000", publicacion: "12/08/2020", departamento: "Las Heras", socios: [{ nombre: "Jose Mario Althabe", personaId: 10812 }, { nombre: "María Inés Moreno", personaId: 10813 }], objetoSocial: "Compra, venta, permuta de bienes muebles, materias primas, maquinarias y mercaderías. Administración de Fideicomisos como Administradora Fiduciaria. Ejercicio de mandatos lícitos, gestiones de negocios, administraciones, representación de franquicias, concesiones y distribución de productos o servicios." },
-  { tipo: "S.A.S.", nombre: "Sutton 212 S.A.S.", sociedadId: 5273, cuit: "30-71693918-5", capital: "$100.000", publicacion: "11/09/2020", departamento: "San Rafael", socios: [{ nombre: "Ivo Santino Bistolfi", personaId: 11190 }, { nombre: "Julio Javier Bistolfi", personaId: 11189 }, { nombre: "Leonardo Roman Bistolfi", personaId: 11191 }, { nombre: "María Lujan Bistolfi", personaId: 11193 }, { nombre: "Victoria Florencia Bistolfi", personaId: 11192 }], objetoSocial: "Fiduciaria, industrial y agropecuaria." },
-  { tipo: "S.A.", nombre: "Rocajack Fiduciaria S.A.", sociedadId: 5304, cuit: "30-71696923-8", capital: "$200.000", publicacion: "17/09/2020", departamento: "Luján de Cuyo", socios: [{ nombre: "Daniel Alejandro Magdalena", personaId: 11253 }, { nombre: "Federico Diego Magdalena", personaId: 11254 }], objetoSocial: "Actividades inmobiliarias, constructoras y fiduciaria incluyendo inversión en adquisición, construcción, alquiler, venta y administración de inmuebles, ejecución de obras de ingeniería y arquitectura, y asumir el rol de fiduciario en contratos de fideicomiso ordinario, de garantía o administración." },
-  { tipo: "S.A.S.", nombre: "Administradora Rosario Bautista S.A.S.", sociedadId: 5316, cuit: "30-71697531-9", capital: "$100.000", publicacion: "21/09/2020", departamento: "Luján de Cuyo", socios: [{ nombre: "Cayetano Alessandrello", personaId: 11267 }, { nombre: "Leonilda Ester Davicino", personaId: 11268 }], objetoSocial: "Realizar por cuenta propia o asociada a terceros actividades inmobiliaria, transporte, importación y exportación, y administración." },
-  { tipo: "S.A.S.", nombre: "Anarsa S.A.S.", sociedadId: 5761, cuit: "30-71718022-0", capital: "$45.000", publicacion: "26/11/2020", departamento: "Maipú", socios: [{ nombre: "José Luis Saldaña Beccari", personaId: 3909 }, { nombre: "Juan Manuel Saldaña Beccari", personaId: 12145 }, { nombre: "Leonardo Jose Andreu", personaId: 1970 }, { nombre: "Luis Eduardo Andreu", personaId: 2843 }, { nombre: "Nicolás Armentano", personaId: 1162 }, { nombre: "Raul Fabian Andreu", personaId: 2844 }], objetoSocial: "Creación, producción, intercambio, fabricación, transformación, industrialización, comercialización, importación y exportación de bienes y servicios relacionados con: mantenimiento de automotores, agropecuaria, comunicaciones, industrias manufactureras, educación, tecnología, gastronomía, inmobiliaria, finanzas, energía, salud, transporte y administración de fideicomisos." },
-  { tipo: "S.A.S.", nombre: "Bayfer Sociedad Por Acciones Simplificada", sociedadId: 5818, cuit: "30-71707027-1", capital: "$100.000", publicacion: "04/12/2020", departamento: "Godoy Cruz", socios: [{ nombre: "Tania Noelia Bayarri", personaId: 12273 }], objetoSocial: "Creación, producción, intercambio, fabricación, transformación, industrialización, comercialización, intermediación, representación, importación y exportación de bienes y servicios en diversas actividades agropecuarias, comunicaciones, industrias manufactureras, culturales, tecnológicas, gastronómicas, inmobiliarias, financieras, petroleras, de salud y transporte." },
-  { tipo: "S.A.S.", nombre: "Don Lucio S.A.S.", sociedadId: 6634, cuit: "30-71724644-2", capital: "$120.000", publicacion: "11/05/2021", departamento: "Capital", socios: [{ nombre: "Fernando Javier Roggerone", personaId: 7602 }, { nombre: "María Soledad Martínez Granero", personaId: 13836 }], objetoSocial: "Actividades inmobiliaria, constructora, asesoramiento y consultoría." },
-  { tipo: "S.A.S.", nombre: "Asdfm S.A.S", sociedadId: 7335, cuit: "30-71752971-1", capital: "$100.000", publicacion: "07/09/2021", departamento: "Maipú", socios: [{ nombre: "Lorenzo Rodríguez Diego Gabriel", personaId: 15151 }, { nombre: "Lorenzo Rodríguez Florencia Estefanía", personaId: 15152 }, { nombre: "Lorenzo Rodríguez Marisol Agostina", personaId: 15153 }], objetoSocial: "Administración de bienes en dominio fiduciario, actividades inmobiliarias, urbanizadoras, constructoras, servicios, financieras, mandatos y licitaciones; gestión de fideicomisos, operaciones bancarias, compra-venta de bonos, operaciones con moneda extranjera, formación de uniones transitorias, trading, consorcios y joint venture." },
-  { tipo: "S.A.S.", nombre: "Sumaq Desarrollos Inmobiliarios S.A.S.", sociedadId: 7375, cuit: "33-71735802-9", capital: "$300.000", publicacion: "13/09/2021", departamento: "Guaymallén", socios: [{ nombre: "Cristian Abel Colque", personaId: 15214 }, { nombre: "José Luis Colque", personaId: 15215 }], objetoSocial: "Comercial; constructora; inmobiliaria; exportación e importación; licitaciones; mandataria; fiduciaria." },
-  { tipo: "S.A.S.", nombre: "Aconca-Huac S.A.S.", sociedadId: 7590, cuit: "30-71747630-8", capital: "$100.000", publicacion: "18/10/2021", departamento: "Maipú", socios: [{ nombre: "Renedo Marcela Adriana", personaId: 15611 }], objetoSocial: "Industriales; comerciales; mandataria; inmobiliaria; construcción de obras públicas y privadas; fiduciaria; servicios; licitaciones y concursos." },
-  { tipo: "S.A.S.", nombre: "Pire Patagonia S.A.S.", sociedadId: 8484, cuit: "30-71792032-1", capital: "$100.000", publicacion: "16/03/2022", departamento: "General Alvear", socios: [{ nombre: "Guillermo Gonzalez", personaId: 17292 }, { nombre: "María Agustina Martel Lopez", personaId: 17291 }, { nombre: "Pablo Agustín Capella", personaId: 17290 }], objetoSocial: "Actividades inmobiliarias, industriales de elaboración y fabricación de helados y productos afines, comerciales de importación y exportación, administración de bienes y servicios de mandataria. Inscripción y explotación de patentes, marcas, licencias y diseños industriales." },
-  { tipo: "S.A.S.", nombre: "Palma Y Vieytes Sas", sociedadId: 8780, cuit: "30-71764878-8", capital: "$500.000", publicacion: "06/05/2022", departamento: "Godoy Cruz", socios: [{ nombre: "Guido Alvaro Di Cesare", personaId: 5381 }], objetoSocial: "Actividades inmobiliarias y constructoras, inversoras, financieras, mandatarias y fiduciarias." },
-  { tipo: "S.A.S.", nombre: "Numa S.A.S.", sociedadId: 9056, cuit: "30-71770030-5", capital: "$100.000", publicacion: "21/06/2022", departamento: "Luján de Cuyo", socios: [{ nombre: "Cecilia Anabel Fredes", personaId: 18370 }, { nombre: "Eric Lionel Barriga Maldonado", personaId: 18369 }], objetoSocial: "Actividades industrial, comercial, importación, exportación y mandatos." },
-  { tipo: "S.A.S.", nombre: "Cor Intus S.A.S.", sociedadId: 9420, cuit: "30-71778945-4", capital: "$100.000", publicacion: "19/08/2022", departamento: "Luján de Cuyo", socios: [{ nombre: "Omar Alcides Leboeuf", personaId: 8563 }], objetoSocial: "Desarrollo de tecnologías, software, maquinarias, innovación, logística, transporte, construcción, servicios financieros y agropecuarios. Actividades de telecomunicaciones, informática, diseño, importación, exportación, comercialización y explotación de bienes de toda clase." },
-  { tipo: "S.A.S.", nombre: "Limones Azules S.A.S.", sociedadId: 9763, cuit: "30-71823475-8", capital: "$500.000", publicacion: "05/10/2022", departamento: "Capital", socios: [{ nombre: "Daiana Szejpiacki", personaId: 19694 }, { nombre: "Pablo Ezequiel Zarate Alfieri", personaId: 19679 }], objetoSocial: "Transporte terrestre, fluvial o marítimo; agencias de turismo; logística, almacenaje y distribución de cargas; actividades fiduciarias; inmobiliaria; compra venta de vehículos; comercialización de artículos de cotillón y alimentos; construcción y refacción de inmuebles." },
-  { tipo: "S.A.S.", nombre: "Lledre S.A.S.", sociedadId: 10355, cuit: "33-71799225-9", capital: "$200.000", publicacion: "29/12/2022", departamento: "Godoy Cruz", socios: [{ nombre: "Marcela Inés Lledo", personaId: 20777 }, { nombre: "Sergio Marcos Breitman", personaId: 20776 }], objetoSocial: "Agropecuarias, avícolas, ganaderas, pesqueras, tamberas y vitivinícolas; comunicaciones, espectáculos, editoriales y gráficas; industrias manufactureras; culturales y educativas; desarrollo de tecnologías, investigación e innovación y software; gastronómicas, hoteleras y turísticas; inmobiliarias y constructoras; inversoras y financieras; petroleras, gasíferas, forestales, mineras y energéticas; salud; transporte." },
-  { tipo: "S.A.S.", nombre: "Gordonmill S.A.S.", sociedadId: 10714, cuit: "30-71804975-6", capital: "$150.000", publicacion: "02/03/2023", departamento: "Guaymallén", socios: [{ nombre: "Agustin Alberto Perlino", personaId: 21260 }, { nombre: "Ana Ines Perlino", personaId: 21262 }, { nombre: "Maria Victoria Perlino", personaId: 21261 }], objetoSocial: "Industrial, Servicios, y Fiduciaria." },
-  { tipo: "S.A.S.", nombre: "Newland Fiduciaria Sas", sociedadId: 10989, cuit: "30-71811337-3", capital: "$200.000", publicacion: "12/04/2023", departamento: "Tunuyán", socios: [{ nombre: "María Mercedes Gomez", personaId: 21651 }, { nombre: "Sergio Alejandro Roby", personaId: 21650 }], objetoSocial: "Actividades fiduciarias, comerciales, mandataria, licitaciones, exportadora e importadora, inmobiliaria y constructora." },
-  { tipo: "S.A.S.", nombre: "Fivestarvacay S.A.S.", sociedadId: 11147, cuit: "30-71807809-8", capital: "$250.000", publicacion: "04/05/2023", departamento: "Luján de Cuyo", socios: [{ nombre: "Roberto Tomás Barrozo Ahumada", personaId: 21878 }], objetoSocial: "Administración y gestión de activos fiduciarios, ordinarios, privados. Administrar fideicomisos (inmobiliarios, garantía, administración, inversión, mixtos, seguros, desarrollo, productivos). Inversora y financiera: aportes de fondos a inversiones en proyectos, aportes de capital en sociedades comerciales y fideicomisos. Realizar operaciones financieras lícitas, compra venta de títulos y valores, créditos y operaciones financieras." },
-  { tipo: "S.A.S.", nombre: "Stag S.A.S.", sociedadId: 11800, cuit: "33-71823426-9", capital: "$180.000", publicacion: "28/07/2023", departamento: "Capital", socios: [{ nombre: "Danilo Martin Stevanato", personaId: 22778 }, { nombre: "Mauro Ezequiel Dominguez", personaId: 22779 }], objetoSocial: "Realizar por cuenta propia o de terceros o asociada a terceros y/o en comisión actividades comerciales, inmobiliarias/mobiliarias, importación y exportación, transporte, licitaciones y fideicomisos." },
-  { tipo: "S.A.S.", nombre: "Redeemaq S.A.S.", sociedadId: 11872, cuit: "30-71822248-2", capital: "$400.000", publicacion: "09/08/2023", departamento: "Guaymallén", socios: [{ nombre: "Sierra Alejandro Walter", personaId: 14467 }], objetoSocial: "Fiduciaria, Constructora, Actividad agrícola ganadera, Actividad comercial, Actividad de importación y exportación, Transporte, Inmobiliaria, Turismo, Mandataria, Financiera." },
-  { tipo: "S.A.S.", nombre: "Bauti10 S.A.S.", sociedadId: 12642, cuit: "30-71837140-2", capital: "$500.000", publicacion: "23/11/2023", departamento: "Capital", socios: [{ nombre: "Julieta Ailen Massara Diaz", personaId: 1087 }, { nombre: "Lucas Damián Massara Diaz", personaId: 1086 }], objetoSocial: "Realizar por cuenta propia o asociada a terceros, sea personas humanas o jurídicas, tanto en el país como en el extranjero; las siguientes actividades: comercial, importación y exportación y administración." },
-  { tipo: "S.A.S.", nombre: "Arezzo S.A.S.", sociedadId: 12878, cuit: "30-71844379-9", capital: "$292.000", publicacion: "19/12/2023", departamento: "Capital", socios: [{ nombre: "Bruno Leonardo Bendinelli Fernández", personaId: 24359 }, { nombre: "Leonardo Fabian Bendinelli", personaId: 707 }, { nombre: "Mauro Leandro Bendinelli Fernández", personaId: 24357 }, { nombre: "Roxana Carina Fernandez", personaId: 7856 }, { nombre: "Tania Micaela Bendinelli Fernández", personaId: 24358 }], objetoSocial: "Dedicarse, constituir o intervenir en toda clase de fideicomisos (excepto financieros), como fiduciante, fiduciaria, fideicomisaria y/o beneficiaria. Intervenir en concursos, licitaciones, importación/exportación, adquisición y transferencia de bienes muebles e inmuebles, urbanizaciones, construcción de viviendas e infraestructuras inmobiliarias, operaciones financieras (excluidas las reguladas por Ley de Entidades Financieras)." },
-  { tipo: "S.A.S.", nombre: "Perilago Developments Sas", sociedadId: 13118, cuit: "30-71843598-2", capital: "$500.000", publicacion: "23/01/2024", departamento: "Luján de Cuyo", socios: [{ nombre: "Griselda Verónica Paola Araya", personaId: 10629 }, { nombre: "Julia Porretta", personaId: 24713 }, { nombre: "Luca Porretta", personaId: 10628 }, { nombre: "Valentina Porretta", personaId: 24712 }], objetoSocial: "Actividades agropecuarias, avícolas, ganaderas, pesqueras, tamberas, vitivinícolas, comunicaciones, espectáculos, editoriales, gráficas, industrias manufactureras, culturales, educativas, tecnología, investigación, software, gastronómicas, hoteleras, turísticas, inmobiliarias, constructoras, inversoras, financieras, fideicomisos, petroleras, gasíferas, forestales, mineras, energéticas, salud, transporte, mandatos, fiduciarías y toda actividad lícita." },
-  { tipo: "S.A.S.", nombre: "Flavy S.A.S.", sociedadId: 13937, cuit: "30-71864941-9", capital: "$500.000", publicacion: "04/06/2024", departamento: "Godoy Cruz", socios: [{ nombre: "Camila Yacopini", personaId: 25873 }], objetoSocial: "Creación, producción, intercambio, fabricación, transformación, industrialización, comercialización, intermediación, representación, importación y exportación de bienes materiales e inmateriales y prestación de servicios relacionados con actividades agropecuarias, comunicaciones, manufactura, alimentos, tecnología, gastronomía, inmobiliarias, financieras, energéticas, salud, fideicomisos y transporte." },
-  { tipo: "S.A.S.", nombre: "Greif Sas", sociedadId: 14231, cuit: "30-71864485-9", capital: "$500.000", publicacion: "18/07/2024", departamento: "Godoy Cruz", socios: [{ nombre: "Pablo Andrés Lucero", personaId: 21661 }], objetoSocial: "Creación, producción, intercambio, fabricación, transformación, comercialización, intermediación, representación, importación y exportación de bienes relacionados con servicios, construcción, fiducia, patentes y marcas, mandataria, compra venta y locación." },
-  { tipo: "S.A.S.", nombre: "Poldena Moon Sas", sociedadId: 14595, cuit: "30-71870074-0", capital: "$2.000.000", publicacion: "03/09/2024", departamento: "Las Heras", socios: [{ nombre: "Cardena Paula Noemi", personaId: 12985 }, { nombre: "Pollicino Aldo Nicolas", personaId: 12984 }], objetoSocial: "Transporte, construcciones, logística, servicios, faena y comercialización de animales y de productos y subproductos derivados, actividades comerciales, exportadora e importadora, licitaciones, mandataria y fiduciaria, representaciones." },
-  { tipo: "S.A.S.", nombre: "Fundamenta Pilares Desarrollos S.A.S.", sociedadId: 14602, cuit: "30-71875101-9", capital: "$10.000.000", publicacion: "04/09/2024", departamento: "Capital", socios: [{ nombre: "Alejandro Fabián Dabin", personaId: 10383 }, { nombre: "Andrés Emilio Benenati", personaId: 26806 }, { nombre: "Facundo Dabin Barbero", personaId: 26808 }, { nombre: "Fernando Miroti", personaId: 26807 }], objetoSocial: "Dedicarse a la creación, producción, intercambio, fabricación, transformación, industrialización, comercialización, intermediación, representación, importación y exportación de bienes materiales e inmateriales y prestación de servicios relacionados con actividades agropecuarias, avícolas, ganaderas, pesqueras, tamberas, vitivinícola, comunicaciones, espectáculos, editoriales, gráficas, industrias manufactureras, culturales, educativas, tecnológicas, gastronómicas, hoteleras, turísticas, inmobiliarias, constructoras, inversoras, financieras, petroleras, gasíferas, forestales, mineras, energéticas, salud, transporte, indumentaria y textil." },
-  { tipo: "S.A.S.", nombre: "Cc Mirage S.A.S.", sociedadId: 14816, cuit: "30-71879416-8", capital: "$600.000", publicacion: "01/10/2024", departamento: "Godoy Cruz", socios: [{ nombre: "Matías Fernando Cantón", personaId: 3466 }], objetoSocial: "Actividades comerciales, inmobiliarias, industriales y fiduciarias: compra, venta, permuta y distribución de mercadería; construcción, alquiler y venta de inmuebles; fabricación y reparación de productos; actuación como agente fiduciaria." },
-  { tipo: "S.A.S.", nombre: "Grupo Gestion Urbana S.A.S.", sociedadId: 14911, cuit: "30-71881646-3", capital: "$1.500.000", publicacion: "14/10/2024", departamento: "San Rafael", socios: [{ nombre: "Gustavo Javier Rodriguez", personaId: 16540 }, { nombre: "José Adrián Troyano", personaId: 24436 }], objetoSocial: "Creación, producción, intercambio, fabricación, transformación, industrialización, comercialización, intermediación, representación, importación y exportación de bienes materiales e inmateriales y prestación de servicios relacionados con actividades agropecuarias, comunicaciones, industrias manufactureras, culturales, gastronómicas, inmobiliarias, inversoras, petroleras, salud, transporte y mandatos." },
-  { tipo: "S.A.S.", nombre: "Espacio Los Guindos S.A.S.", sociedadId: 15271, cuit: "30-71880282-9", capital: "$1.000.000", publicacion: "26/11/2024", departamento: "Guaymallén", socios: [{ nombre: "Cristina Elizabeth Copa", personaId: 27806 }, { nombre: "Emiliano Ángel Vargas", personaId: 27807 }, { nombre: "Marcos Carlos Puebla", personaId: 27809 }, { nombre: "Miguel Ángel Ruiz", personaId: 27808 }], objetoSocial: "Agropecuarias, avícolas, ganaderas, pesqueras, tamberas y vitivinícolas; comercialización y distribución de productos alimenticios y bebidas; cafetería, bar y restaurante; comunicaciones, espectáculos, editoriales y gráficas; industria manufactureras; culturales y educativas; desarrollo de tecnologías, investigación e innovación y software; gastronómicas, hoteleras y turísticas; inmobiliarias y constructoras; inversoras, financieras y fideicomisos; petroleras, gasíferas, forestales, mineras y energéticas; salud; transporte privado." },
-  { tipo: "S.A.S.", nombre: "Utopia Desarrollos S.A.S.", sociedadId: 15589, cuit: "30-71892198-4", capital: "$8.000.000", publicacion: "08/01/2025", departamento: "San Rafael", socios: [{ nombre: "Lautaro Lisandro Rinaudo", personaId: 15761 }, { nombre: "Martin Maximiliano Barisio", personaId: 26083 }], objetoSocial: "Creación, producción, intercambio, fabricación, transformación, industrialización, comercialización, intermediación, representación, importación y exportación de bienes materiales e inmateriales y prestación de servicios relacionados con actividades agropecuarias, comunicaciones, industrias manufactureras, culturales, tecnológicas, gastronómicas, inmobiliarias, inversoras, petroleras, salud y transporte." },
-  { tipo: "S.A.S.", nombre: "Grupo Magoviva S.A.S.", sociedadId: 15763, cuit: "30-71896136-6", capital: "$20.000.000", publicacion: "14/02/2025", departamento: "Capital", socios: [{ nombre: "Gabriela Alejandra Ojeda", personaId: 2163 }, { nombre: "Orlando Estanislao Altamirano", personaId: 2162 }], objetoSocial: "Prestación de Servicios de Seguridad Privada, Servicios de Limpieza, Comercialización, Representaciones y Mandatos, Transporte, Licitaciones, Mandataria y Fiduciaria, Importación y Exportación, Construcciones." },
-  { tipo: "S.A.S.", nombre: "Eredita S.A.S.", sociedadId: 15902, cuit: "30-71891926-2", capital: "$800.000", publicacion: "12/03/2025", departamento: "Luján de Cuyo", socios: [{ nombre: "Ciro Humberto Ferrer", personaId: 28721 }, { nombre: "Lilia Micaela Dubini", personaId: 28722 }], objetoSocial: "Creación, producción, intercambio, fabricación, transformación, industrialización, comercialización, intermediación, representación, importación y exportación de bienes materiales e inmateriales y prestación de servicios relacionados con actividades agropecuarias, avícolas, ganaderas, comunicaciones, industrias manufactureras, culturales, educativas, tecnológicas, comerciales, inmobiliarias, inversoras, financieras, petroleras, gasíferas, forestales, mineras, energéticas, salud y transporte privado." },
-  { tipo: "S.A.S.", nombre: "Lampa S.A.S.", sociedadId: 16145, cuit: "30-71899081-1", capital: "$600.000", publicacion: "11/04/2025", departamento: "Luján de Cuyo", socios: [{ nombre: "Laura Cecilia Lampa", personaId: 28997 }], objetoSocial: "Creación, producción, intercambio, fabricación, transformación, industrialización, comercialización, intermediación, representación, importación y exportación de bienes materiales e inmateriales y prestación de servicios relacionados con transporte, paneles solares, energía eléctrica, construcción, actividades agropecuarias, tecnologías, software, comerciales, turísticas, inmobiliarias, inversiones y financieras." },
-  { tipo: "S.A.S.", nombre: "Doppiati Sas", sociedadId: 16231, cuit: "30-71908067-3", capital: "$450.000", publicacion: "25/04/2025", departamento: "Godoy Cruz", socios: [{ nombre: "Franchetti Aldo", personaId: 15074 }, { nombre: "Franchetti Marcelo", personaId: 15073 }], objetoSocial: "Creación, producción, intercambio, fabricación, transformación, industrialización, comercialización, intermediación, representación, importación y exportación de bienes materiales e inmateriales y prestación de servicios en actividades agropecuarias, comunicaciones, industrias manufactureras, culturales, tecnología, comerciales, inmobiliarias, financieras, petroleras, salud y transporte privado." },
-  { tipo: "S.A.S.", nombre: "Del Uco Sas", sociedadId: 16432, cuit: "30-71900528-0", capital: "$630.000", publicacion: "29/05/2025", departamento: "Luján de Cuyo", socios: [{ nombre: "Estanislao Puelles", personaId: 29420 }], objetoSocial: "Creación, producción, intercambio, fabricación, transformación, industrialización, comercialización, intermediación, representación, importación y exportación de bienes materiales e inmateriales y prestación de servicios relacionados con actividades agropecuarias, comunicaciones, industrias manufactureras, culturales, educativas, tecnológicas, comerciales, inmobiliarias, inversoras, petroleras, de salud y transporte." },
-  { tipo: "S.A.S.", nombre: "Gus&Ser Sas", sociedadId: 16685, cuit: "30-71918023-6", capital: "$800.000", publicacion: "02/07/2025", departamento: "Godoy Cruz", socios: [{ nombre: "Gustavo César Bernardi", personaId: 29793 }, { nombre: "Sergio Ariel Bernardi", personaId: 29795 }], objetoSocial: "Creación, producción, intercambio, fabricación, transformación, industrialización, comercialización, intermediación, representación, importación y exportación de bienes materiales e inmateriales y prestación de servicios relacionados con actividades agropecuarias, comunicaciones, industrias manufactureras, culturales, educativas, tecnológicas, comerciales, inmobiliarias, inversoras, financieras, de salud, transporte y otras." },
-  { tipo: "S.A.S.", nombre: "Betania S.A.S.", sociedadId: 16953, cuit: "30-71913535-4", capital: "$4.000.000", publicacion: "07/08/2025", departamento: "Luján de Cuyo", socios: [{ nombre: "Javier Hernán Capomaggi", personaId: 30168 }, { nombre: "Lorena Lourdes Benedetti", personaId: 30169 }], objetoSocial: "Actividades comerciales, gastronómicas, licitaciones, leasing, mandataria y fiduciaria, inmobiliaria, exportadora e importadora, representaciones." },
-  { tipo: "S.A.S.", nombre: "The Otter Project S.A.S.", sociedadId: 17261, cuit: "30-71916164-9", capital: "$1.000.000", publicacion: "16/09/2025", departamento: "Capital", socios: [{ nombre: "Fernando Buscema", personaId: 4832 }, { nombre: "María Rosana Mesa", personaId: 30584 }], objetoSocial: "Realizar actividades comerciales, civiles lícitas, prestación de servicios y movimiento económico-jurídico de bienes, relacionados con: inmobiliaria y construcción, financieras, mandatos, importación y exportación, inversiones, aportes de capital, fideicomisos con fines turísticos, agrícolas e inmobiliarios." },
-  { tipo: "S.A.S.", nombre: "Jolmogori S.A.S.", sociedadId: 17409, cuit: "30-71921126-3", capital: "$1.500.000", publicacion: "01/10/2025", departamento: "Guaymallén", socios: [{ nombre: "Lucia Mabel Villanova", personaId: 30771 }, { nombre: "Mario Jorge Peña", personaId: 30770 }], objetoSocial: "Creación, producción, intercambio, fabricación, transformación, industrialización, comercialización, intermediación, representación, importación y exportación de bienes materiales e inmateriales y prestación de servicios relacionados con actividades agropecuarias, vitivinícolas, comunicaciones, industrias manufactureras, tecnologías, gastronómicas, inmobiliarias, financieras, energéticas, salud y transporte." },
-  { tipo: "S.A.S.", nombre: "Faivel S.A.S.", sociedadId: 17515, cuit: "30-71920109-8", capital: "$700.000", publicacion: "14/10/2025", departamento: "Capital", socios: [{ nombre: "Alicia Ostropolsky", personaId: 30943 }, { nombre: "Andres Marcelo Ostropolsky", personaId: 2733 }, { nombre: "Cecilia Perla Ostropolsky", personaId: 24055 }, { nombre: "Claudia Ruth Ostropolsky", personaId: 30942 }, { nombre: "Irene Paula Ostropolsky", personaId: 30944 }], objetoSocial: "Dedicarse a la creación, producción, intercambio, fabricación, transformación, industrialización, comercialización, intermediación, representación, importación y exportación de bienes materiales e inmateriales y prestación de servicios relacionados con actividades agropecuarias, manufactureras, tecnológicas, gastronómicas, inmobiliarias, inversoras, petroleras y de transporte." },
-  { tipo: "S.A.S.", nombre: "Etnia S.A.S.", sociedadId: 17975, cuit: "30-71932160-3", capital: "$700.000", publicacion: "16/12/2025", departamento: "Capital", socios: [{ nombre: "Maria Isabel Zareba", personaId: 31507 }, { nombre: "Pablo Andres Calabro", personaId: 31508 }], objetoSocial: "Creación, producción, intercambio, fabricación, transformación, industrialización, comercialización, intermediación, representación, importación y exportación de bienes materiales e inmateriales y prestación de servicios relacionados con actividades agropecuarias, avícolas, ganaderas, pesqueras, tamberas, vitivinícolas, comunicaciones, espectáculos, editoriales, gráficas, manufactureras, culturales, educativas, tecnológicas, comerciales, gastronómicas, hoteleras, turísticas, inmobiliarias, constructoras, inversoras, financieras, fideicomisos, petroleras, gasíferas, forestales, mineras, energéticas, salud y transporte privado." },
-  { tipo: "S.A.S.", nombre: "Flogulu S.A.S.", sociedadId: 17991, cuit: "30-71932956-6", capital: "$2.000.000", publicacion: "17/12/2025", departamento: "Capital", socios: [{ nombre: "Maria Cecilia Torrent", personaId: 8147 }, { nombre: "Mauricio Raul Raffa", personaId: 8146 }], objetoSocial: "Actividades agropecuarias, avícolas, ganaderas, pesqueras, tamberas, vitivinícolas, comunicaciones, espectáculos, editoriales, gráficas, industrias manufactureras, culturales, educativas, tecnologías, investigación, innovación, software, gastronómicas, hoteleras, turísticas, inmobiliarias, constructoras, salud, farmacéutica y transporte." },
-  { tipo: "S.A.S.", nombre: "Qcefe S.A.S.", sociedadId: 18470, cuit: "30-71934890-0", capital: "$1.500.000", publicacion: "27/02/2026", departamento: "Luján de Cuyo", socios: [{ nombre: "Agustin David Ferrari Moreno", personaId: 25466 }, { nombre: "Franco Matías Di Santo", personaId: 32097 }, { nombre: "Labanca Diego Miguel", personaId: 18323 }], objetoSocial: "Creación, producción, intercambio, fabricación, transformación, industrialización, comercialización, intermediación, representación, importación y exportación de bienes materiales e inmateriales y prestación de servicios relacionados con actividades agropecuarias, comunicaciones, industrias manufactureras, culturales, tecnológicas, comerciales, inmobiliarias, financieras, petroleras, salud y transporte." },
-  { tipo: "S.A.S.", nombre: "D.P.S. Land & Apartment S.A.S.", sociedadId: 18805, cuit: "30-71940840-7", capital: "$1.500.000", publicacion: "23/04/2026", departamento: null, socios: [{ nombre: "Diego Ricardo Sottano", personaId: 32503 }, { nombre: "Pablo Marcelo Sottano", personaId: 32504 }], objetoSocial: "Actividades agropecuarias, avícolas, ganaderas, pesqueras, tamberas, vitivinícolas, comunicaciones, espectáculos, editoriales, gráficas, industriales manufactureras, culturales, educativas, tecnologías, investigación, software, comerciales, gastronómicas, hoteleras, turísticas, inmobiliarias, constructoras, inversoras, financieras, fideicomisos, petroleras, gasíferas, forestales, mineras, energéticas, salud y transporte privado." },
+import type { EntidadCuradaBase, SocioCurado } from "../informesNicho.js";
+
+export interface EntidadFideicomisosCurada extends EntidadCuradaBase {
+  socios: SocioCurado[];
+}
+
+export const ENTIDADES: EntidadFideicomisosCurada[] = [
+  {
+    "sociedadId": 925,
+    "socios": [
+      {
+        "nombre": "Gerardo Javier Tirenti",
+        "personaId": 2153
+      },
+      {
+        "nombre": "Walter Damián Tirenti",
+        "personaId": 2152
+      }
+    ]
+  },
+  {
+    "sociedadId": 992,
+    "socios": [
+      {
+        "nombre": "Daniel Horacio Salas",
+        "personaId": 2279
+      },
+      {
+        "nombre": "Mariana Elena Romairone",
+        "personaId": 2280
+      }
+    ]
+  },
+  {
+    "sociedadId": 1358,
+    "socios": [
+      {
+        "nombre": "Gimena Fernanda Uriza",
+        "personaId": 3105
+      },
+      {
+        "nombre": "Mauro Ivo Maltoni",
+        "personaId": 3104
+      }
+    ]
+  },
+  {
+    "sociedadId": 1369,
+    "socios": [
+      {
+        "nombre": "Bernardo José Sottile",
+        "personaId": 3124
+      },
+      {
+        "nombre": "Carlos Fabián Bajach",
+        "personaId": 3123
+      },
+      {
+        "nombre": "Franco Gabriel Pérez Magnelli",
+        "personaId": 3122
+      }
+    ]
+  },
+  {
+    "sociedadId": 1375,
+    "socios": [
+      {
+        "nombre": "Martin Ignacio Odoriz",
+        "personaId": 3135
+      },
+      {
+        "nombre": "Silvia Pilar Baez",
+        "personaId": 3136
+      }
+    ]
+  },
+  {
+    "sociedadId": 1726,
+    "socios": [
+      {
+        "nombre": "Agustin Nebro Tibaldi",
+        "personaId": 3869
+      },
+      {
+        "nombre": "Modolo Luis Adrian",
+        "personaId": 3868
+      }
+    ]
+  },
+  {
+    "sociedadId": 1744,
+    "socios": [
+      {
+        "nombre": "Adriana Huerta",
+        "personaId": 3903
+      },
+      {
+        "nombre": "Luis Baldini Pescarmona",
+        "personaId": 3902
+      }
+    ]
+  },
+  {
+    "sociedadId": 1769,
+    "socios": [
+      {
+        "nombre": "Elsa Virginia Trabaloni",
+        "personaId": 3951
+      },
+      {
+        "nombre": "Franco Giorgio Torelli",
+        "personaId": 3950
+      }
+    ]
+  },
+  {
+    "sociedadId": 1874,
+    "socios": [
+      {
+        "nombre": "Guido Hernán Scalabrelli",
+        "personaId": 4189
+      },
+      {
+        "nombre": "Nicolás Javier Fernandez Barud",
+        "personaId": 4190
+      }
+    ]
+  },
+  {
+    "sociedadId": 2346,
+    "socios": [
+      {
+        "nombre": "Carlos Antonio Diaz",
+        "personaId": 5162
+      },
+      {
+        "nombre": "Sergio Ariel Diaz",
+        "personaId": 5161
+      }
+    ]
+  },
+  {
+    "sociedadId": 2455,
+    "socios": [
+      {
+        "nombre": "Alejandro Martín Mazzoni",
+        "personaId": 5387
+      }
+    ]
+  },
+  {
+    "sociedadId": 2738,
+    "socios": [
+      {
+        "nombre": "Marta Isabel Antonicelli",
+        "personaId": 5993
+      }
+    ]
+  },
+  {
+    "sociedadId": 2958,
+    "socios": [
+      {
+        "nombre": "Adriana Paula Blesa",
+        "personaId": 6454
+      },
+      {
+        "nombre": "Leandro Esteban Echavarria",
+        "personaId": 6453
+      }
+    ]
+  },
+  {
+    "sociedadId": 3315,
+    "socios": [
+      {
+        "nombre": "Iván Alejandro Tkaczek Delgado",
+        "personaId": 7216
+      },
+      {
+        "nombre": "Nicolas David Tkaczek Delgado",
+        "personaId": 7032
+      },
+      {
+        "nombre": "Sergio Agustín Tkaczek Delgado",
+        "personaId": 7031
+      },
+      {
+        "nombre": "Tobías Santiago Tkaczek Delgado",
+        "personaId": 7217
+      }
+    ]
+  },
+  {
+    "sociedadId": 3476,
+    "socios": [
+      {
+        "nombre": "Germán Luís Monteverdi",
+        "personaId": 1326
+      },
+      {
+        "nombre": "María Jimena Rodríguez",
+        "personaId": 7515
+      }
+    ]
+  },
+  {
+    "sociedadId": 3893,
+    "socios": [
+      {
+        "nombre": "Pedro Ricardo Martínez",
+        "personaId": 7756
+      },
+      {
+        "nombre": "Virginia María Orallo",
+        "personaId": 7757
+      }
+    ]
+  },
+  {
+    "sociedadId": 4586,
+    "socios": [
+      {
+        "nombre": "Carla Beatriz Ferrari Galdame",
+        "personaId": 9840
+      },
+      {
+        "nombre": "Guillermo Federico Simone",
+        "personaId": 9841
+      },
+      {
+        "nombre": "Osvaldo José Nasazzi Ruano",
+        "personaId": 9839
+      }
+    ]
+  },
+  {
+    "sociedadId": 5073,
+    "socios": [
+      {
+        "nombre": "Jose Mario Althabe",
+        "personaId": 10812
+      },
+      {
+        "nombre": "María Inés Moreno",
+        "personaId": 10813
+      }
+    ]
+  },
+  {
+    "sociedadId": 5273,
+    "socios": [
+      {
+        "nombre": "Ivo Santino Bistolfi",
+        "personaId": 11190
+      },
+      {
+        "nombre": "Julio Javier Bistolfi",
+        "personaId": 11189
+      },
+      {
+        "nombre": "Leonardo Roman Bistolfi",
+        "personaId": 11191
+      },
+      {
+        "nombre": "María Lujan Bistolfi",
+        "personaId": 11193
+      },
+      {
+        "nombre": "Victoria Florencia Bistolfi",
+        "personaId": 11192
+      }
+    ]
+  },
+  {
+    "sociedadId": 5304,
+    "socios": [
+      {
+        "nombre": "Daniel Alejandro Magdalena",
+        "personaId": 11253
+      },
+      {
+        "nombre": "Federico Diego Magdalena",
+        "personaId": 11254
+      }
+    ]
+  },
+  {
+    "sociedadId": 5316,
+    "socios": [
+      {
+        "nombre": "Cayetano Alessandrello",
+        "personaId": 11267
+      },
+      {
+        "nombre": "Leonilda Ester Davicino",
+        "personaId": 11268
+      }
+    ]
+  },
+  {
+    "sociedadId": 5761,
+    "socios": [
+      {
+        "nombre": "José Luis Saldaña Beccari",
+        "personaId": 3909
+      },
+      {
+        "nombre": "Juan Manuel Saldaña Beccari",
+        "personaId": 12145
+      },
+      {
+        "nombre": "Leonardo Jose Andreu",
+        "personaId": 1970
+      },
+      {
+        "nombre": "Luis Eduardo Andreu",
+        "personaId": 2843
+      },
+      {
+        "nombre": "Nicolás Armentano",
+        "personaId": 1162
+      },
+      {
+        "nombre": "Raul Fabian Andreu",
+        "personaId": 2844
+      }
+    ]
+  },
+  {
+    "sociedadId": 5818,
+    "socios": [
+      {
+        "nombre": "Tania Noelia Bayarri",
+        "personaId": 12273
+      }
+    ]
+  },
+  {
+    "sociedadId": 6634,
+    "socios": [
+      {
+        "nombre": "Fernando Javier Roggerone",
+        "personaId": 7602
+      },
+      {
+        "nombre": "María Soledad Martínez Granero",
+        "personaId": 13836
+      }
+    ]
+  },
+  {
+    "sociedadId": 7335,
+    "socios": [
+      {
+        "nombre": "Lorenzo Rodríguez Diego Gabriel",
+        "personaId": 15151
+      },
+      {
+        "nombre": "Lorenzo Rodríguez Florencia Estefanía",
+        "personaId": 15152
+      },
+      {
+        "nombre": "Lorenzo Rodríguez Marisol Agostina",
+        "personaId": 15153
+      }
+    ]
+  },
+  {
+    "sociedadId": 7375,
+    "socios": [
+      {
+        "nombre": "Cristian Abel Colque",
+        "personaId": 15214
+      },
+      {
+        "nombre": "José Luis Colque",
+        "personaId": 15215
+      }
+    ]
+  },
+  {
+    "sociedadId": 7590,
+    "socios": [
+      {
+        "nombre": "Renedo Marcela Adriana",
+        "personaId": 15611
+      }
+    ]
+  },
+  {
+    "sociedadId": 8484,
+    "socios": [
+      {
+        "nombre": "Guillermo Gonzalez",
+        "personaId": 17292
+      },
+      {
+        "nombre": "María Agustina Martel Lopez",
+        "personaId": 17291
+      },
+      {
+        "nombre": "Pablo Agustín Capella",
+        "personaId": 17290
+      }
+    ]
+  },
+  {
+    "sociedadId": 8780,
+    "socios": [
+      {
+        "nombre": "Guido Alvaro Di Cesare",
+        "personaId": 5381
+      }
+    ]
+  },
+  {
+    "sociedadId": 9056,
+    "socios": [
+      {
+        "nombre": "Cecilia Anabel Fredes",
+        "personaId": 18370
+      },
+      {
+        "nombre": "Eric Lionel Barriga Maldonado",
+        "personaId": 18369
+      }
+    ]
+  },
+  {
+    "sociedadId": 9420,
+    "socios": [
+      {
+        "nombre": "Omar Alcides Leboeuf",
+        "personaId": 8563
+      }
+    ]
+  },
+  {
+    "sociedadId": 9763,
+    "socios": [
+      {
+        "nombre": "Daiana Szejpiacki",
+        "personaId": 19694
+      },
+      {
+        "nombre": "Pablo Ezequiel Zarate Alfieri",
+        "personaId": 19679
+      }
+    ]
+  },
+  {
+    "sociedadId": 10355,
+    "socios": [
+      {
+        "nombre": "Marcela Inés Lledo",
+        "personaId": 20777
+      },
+      {
+        "nombre": "Sergio Marcos Breitman",
+        "personaId": 20776
+      }
+    ]
+  },
+  {
+    "sociedadId": 10714,
+    "socios": [
+      {
+        "nombre": "Agustin Alberto Perlino",
+        "personaId": 21260
+      },
+      {
+        "nombre": "Ana Ines Perlino",
+        "personaId": 21262
+      },
+      {
+        "nombre": "Maria Victoria Perlino",
+        "personaId": 21261
+      }
+    ]
+  },
+  {
+    "sociedadId": 10989,
+    "socios": [
+      {
+        "nombre": "María Mercedes Gomez",
+        "personaId": 21651
+      },
+      {
+        "nombre": "Sergio Alejandro Roby",
+        "personaId": 21650
+      }
+    ]
+  },
+  {
+    "sociedadId": 11147,
+    "socios": [
+      {
+        "nombre": "Roberto Tomás Barrozo Ahumada",
+        "personaId": 21878
+      }
+    ]
+  },
+  {
+    "sociedadId": 11800,
+    "socios": [
+      {
+        "nombre": "Danilo Martin Stevanato",
+        "personaId": 22778
+      },
+      {
+        "nombre": "Mauro Ezequiel Dominguez",
+        "personaId": 22779
+      }
+    ]
+  },
+  {
+    "sociedadId": 11872,
+    "socios": [
+      {
+        "nombre": "Sierra Alejandro Walter",
+        "personaId": 14467
+      }
+    ]
+  },
+  {
+    "sociedadId": 12642,
+    "socios": [
+      {
+        "nombre": "Julieta Ailen Massara Diaz",
+        "personaId": 1087
+      },
+      {
+        "nombre": "Lucas Damián Massara Diaz",
+        "personaId": 1086
+      }
+    ]
+  },
+  {
+    "sociedadId": 12878,
+    "socios": [
+      {
+        "nombre": "Bruno Leonardo Bendinelli Fernández",
+        "personaId": 24359
+      },
+      {
+        "nombre": "Leonardo Fabian Bendinelli",
+        "personaId": 707
+      },
+      {
+        "nombre": "Mauro Leandro Bendinelli Fernández",
+        "personaId": 24357
+      },
+      {
+        "nombre": "Roxana Carina Fernandez",
+        "personaId": 7856
+      },
+      {
+        "nombre": "Tania Micaela Bendinelli Fernández",
+        "personaId": 24358
+      }
+    ]
+  },
+  {
+    "sociedadId": 13118,
+    "socios": [
+      {
+        "nombre": "Griselda Verónica Paola Araya",
+        "personaId": 10629
+      },
+      {
+        "nombre": "Julia Porretta",
+        "personaId": 24713
+      },
+      {
+        "nombre": "Luca Porretta",
+        "personaId": 10628
+      },
+      {
+        "nombre": "Valentina Porretta",
+        "personaId": 24712
+      }
+    ]
+  },
+  {
+    "sociedadId": 13937,
+    "socios": [
+      {
+        "nombre": "Camila Yacopini",
+        "personaId": 25873
+      }
+    ]
+  },
+  {
+    "sociedadId": 14231,
+    "socios": [
+      {
+        "nombre": "Pablo Andrés Lucero",
+        "personaId": 21661
+      }
+    ]
+  },
+  {
+    "sociedadId": 14595,
+    "socios": [
+      {
+        "nombre": "Cardena Paula Noemi",
+        "personaId": 12985
+      },
+      {
+        "nombre": "Pollicino Aldo Nicolas",
+        "personaId": 12984
+      }
+    ]
+  },
+  {
+    "sociedadId": 14602,
+    "socios": [
+      {
+        "nombre": "Alejandro Fabián Dabin",
+        "personaId": 10383
+      },
+      {
+        "nombre": "Andrés Emilio Benenati",
+        "personaId": 26806
+      },
+      {
+        "nombre": "Facundo Dabin Barbero",
+        "personaId": 26808
+      },
+      {
+        "nombre": "Fernando Miroti",
+        "personaId": 26807
+      }
+    ]
+  },
+  {
+    "sociedadId": 14816,
+    "socios": [
+      {
+        "nombre": "Matías Fernando Cantón",
+        "personaId": 3466
+      }
+    ]
+  },
+  {
+    "sociedadId": 14911,
+    "socios": [
+      {
+        "nombre": "Gustavo Javier Rodriguez",
+        "personaId": 16540
+      },
+      {
+        "nombre": "José Adrián Troyano",
+        "personaId": 24436
+      }
+    ]
+  },
+  {
+    "sociedadId": 15271,
+    "socios": [
+      {
+        "nombre": "Cristina Elizabeth Copa",
+        "personaId": 27806
+      },
+      {
+        "nombre": "Emiliano Ángel Vargas",
+        "personaId": 27807
+      },
+      {
+        "nombre": "Marcos Carlos Puebla",
+        "personaId": 27809
+      },
+      {
+        "nombre": "Miguel Ángel Ruiz",
+        "personaId": 27808
+      }
+    ]
+  },
+  {
+    "sociedadId": 15589,
+    "socios": [
+      {
+        "nombre": "Lautaro Lisandro Rinaudo",
+        "personaId": 15761
+      },
+      {
+        "nombre": "Martin Maximiliano Barisio",
+        "personaId": 26083
+      }
+    ]
+  },
+  {
+    "sociedadId": 15763,
+    "socios": [
+      {
+        "nombre": "Gabriela Alejandra Ojeda",
+        "personaId": 2163
+      },
+      {
+        "nombre": "Orlando Estanislao Altamirano",
+        "personaId": 2162
+      }
+    ]
+  },
+  {
+    "sociedadId": 15902,
+    "socios": [
+      {
+        "nombre": "Ciro Humberto Ferrer",
+        "personaId": 28721
+      },
+      {
+        "nombre": "Lilia Micaela Dubini",
+        "personaId": 28722
+      }
+    ]
+  },
+  {
+    "sociedadId": 16145,
+    "socios": [
+      {
+        "nombre": "Laura Cecilia Lampa",
+        "personaId": 28997
+      }
+    ]
+  },
+  {
+    "sociedadId": 16231,
+    "socios": [
+      {
+        "nombre": "Franchetti Aldo",
+        "personaId": 15074
+      },
+      {
+        "nombre": "Franchetti Marcelo",
+        "personaId": 15073
+      }
+    ]
+  },
+  {
+    "sociedadId": 16432,
+    "socios": [
+      {
+        "nombre": "Estanislao Puelles",
+        "personaId": 29420
+      }
+    ]
+  },
+  {
+    "sociedadId": 16685,
+    "socios": [
+      {
+        "nombre": "Gustavo César Bernardi",
+        "personaId": 29793
+      },
+      {
+        "nombre": "Sergio Ariel Bernardi",
+        "personaId": 29795
+      }
+    ]
+  },
+  {
+    "sociedadId": 16953,
+    "socios": [
+      {
+        "nombre": "Javier Hernán Capomaggi",
+        "personaId": 30168
+      },
+      {
+        "nombre": "Lorena Lourdes Benedetti",
+        "personaId": 30169
+      }
+    ]
+  },
+  {
+    "sociedadId": 17261,
+    "socios": [
+      {
+        "nombre": "Fernando Buscema",
+        "personaId": 4832
+      },
+      {
+        "nombre": "María Rosana Mesa",
+        "personaId": 30584
+      }
+    ]
+  },
+  {
+    "sociedadId": 17409,
+    "socios": [
+      {
+        "nombre": "Lucia Mabel Villanova",
+        "personaId": 30771
+      },
+      {
+        "nombre": "Mario Jorge Peña",
+        "personaId": 30770
+      }
+    ]
+  },
+  {
+    "sociedadId": 17515,
+    "socios": [
+      {
+        "nombre": "Alicia Ostropolsky",
+        "personaId": 30943
+      },
+      {
+        "nombre": "Andres Marcelo Ostropolsky",
+        "personaId": 2733
+      },
+      {
+        "nombre": "Cecilia Perla Ostropolsky",
+        "personaId": 24055
+      },
+      {
+        "nombre": "Claudia Ruth Ostropolsky",
+        "personaId": 30942
+      },
+      {
+        "nombre": "Irene Paula Ostropolsky",
+        "personaId": 30944
+      }
+    ]
+  },
+  {
+    "sociedadId": 17975,
+    "socios": [
+      {
+        "nombre": "Maria Isabel Zareba",
+        "personaId": 31507
+      },
+      {
+        "nombre": "Pablo Andres Calabro",
+        "personaId": 31508
+      }
+    ]
+  },
+  {
+    "sociedadId": 17991,
+    "socios": [
+      {
+        "nombre": "Maria Cecilia Torrent",
+        "personaId": 8147
+      },
+      {
+        "nombre": "Mauricio Raul Raffa",
+        "personaId": 8146
+      }
+    ]
+  },
+  {
+    "sociedadId": 18470,
+    "socios": [
+      {
+        "nombre": "Agustin David Ferrari Moreno",
+        "personaId": 25466
+      },
+      {
+        "nombre": "Franco Matías Di Santo",
+        "personaId": 32097
+      },
+      {
+        "nombre": "Labanca Diego Miguel",
+        "personaId": 18323
+      }
+    ]
+  },
+  {
+    "sociedadId": 18805,
+    "socios": [
+      {
+        "nombre": "Diego Ricardo Sottano",
+        "personaId": 32503
+      },
+      {
+        "nombre": "Pablo Marcelo Sottano",
+        "personaId": 32504
+      }
+    ]
+  }
 ];

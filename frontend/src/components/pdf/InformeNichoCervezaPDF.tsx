@@ -1,13 +1,18 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
-import { DEPARTAMENTOS_CERVEZA, ENTIDADES, EVOLUCION_ANUAL, PERFIL_SOCIETARIO_DONA } from "../../data/nichoCerveza";
-import { fecha, hoyISO } from "../../lib/format";
+import { DEPARTAMENTOS_CERVEZA, EVOLUCION_ANUAL, PERFIL_SOCIETARIO_DONA } from "../../data/nichoCerveza";
+import { cuit as formatCuit, fecha, hoyISO, moneda } from "../../lib/format";
+import type { EntidadNicho } from "../../lib/informesApi";
 import { GraficoBarrasPDF } from "./GraficoBarrasPDF";
 import { GraficoDonaPDF } from "./GraficoDonaPDF";
 import { MapaMendozaPDF } from "./MapaMendozaPDF";
 import { estilosPDF as e, CARBON } from "./estilosPDF";
 import { FuenteDatosPDF } from "./FuenteDatosPDF";
 
-export function InformeNichoCervezaPDF() {
+interface Props {
+  entidades: EntidadNicho[];
+}
+
+export function InformeNichoCervezaPDF({ entidades }: Props) {
   return (
     <Document title="INGcome — Cerveza artesanal en Mendoza">
       <Page size="A4" style={e.pagina} wrap>
@@ -108,26 +113,26 @@ export function InformeNichoCervezaPDF() {
           genérico sin que la cerveza fuera el eje del negocio. Cobertura ARCA: 14 de 36 (39%).
         </Text>
 
-        {ENTIDADES.length > 0 && (
+        {entidades.length > 0 && (
           <>
             <Text style={e.tituloSeccion}>Directorio completo: las 36 cervecerías</Text>
-            {ENTIDADES.map((ent) => (
-              <View key={ent.nombre} style={{ marginBottom: 14 }} wrap={false}>
+            {entidades.map((ent) => (
+              <View key={ent.sociedadId} style={{ marginBottom: 14 }} wrap={false}>
                 <Text style={{ fontSize: 11, fontWeight: 700, color: CARBON }}>
-                  {ent.tipo} — {ent.nombre}
+                  {ent.tipo ? `${ent.tipo} — ` : ""}{ent.nombre}
                 </Text>
                 <View style={[e.grillaCampos, { marginTop: 4 }]}>
                   <View style={e.campo}>
                     <Text style={e.campoEtiqueta}>CUIT</Text>
-                    <Text style={e.campoValor}>{ent.cuit ?? "—"}</Text>
+                    <Text style={e.campoValor}>{formatCuit(ent.cuit)}</Text>
                   </View>
                   <View style={e.campo}>
                     <Text style={e.campoEtiqueta}>Capital</Text>
-                    <Text style={e.campoValor}>{ent.capital ?? "—"}</Text>
+                    <Text style={e.campoValor}>{moneda(ent.capital?.toString())}</Text>
                   </View>
                   <View style={e.campo}>
                     <Text style={e.campoEtiqueta}>Publicación</Text>
-                    <Text style={e.campoValor}>{ent.publicacion ?? "—"}</Text>
+                    <Text style={e.campoValor}>{fecha(ent.publicacion)}</Text>
                   </View>
                   <View style={e.campo}>
                     <Text style={e.campoEtiqueta}>Departamento</Text>

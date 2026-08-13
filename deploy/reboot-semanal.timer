@@ -1,0 +1,17 @@
+# /etc/systemd/system/reboot-semanal.timer
+[Unit]
+Description=Disparador del reinicio semanal preventivo de la VM
+
+[Timer]
+# Sábado 5am hora Mendoza (UTC-3 todo el año, sin horario de verano -- mismo
+# criterio que job-diario.timer del repo job-diario-boletin-oficial) = 08:00
+# UTC. Sábado a esa hora para no pisar ninguna corrida del job diario (lunes
+# a viernes 15:30 UTC) ni horario de uso real del sitio.
+OnCalendar=Sat *-*-* 08:00:00
+# Sin Persistent=true a propósito: si la VM estuvo caída justo en ese
+# horario, no hace falta "recuperar" el reinicio apenas vuelva -- es
+# mantenimiento preventivo, no una tarea que deba garantizarse todas las
+# semanas. Total, un reinicio manual o el próximo sábado ya lo cubren.
+
+[Install]
+WantedBy=timers.target

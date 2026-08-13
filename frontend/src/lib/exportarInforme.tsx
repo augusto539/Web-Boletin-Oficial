@@ -16,7 +16,7 @@ import { InformeNichoReciclajePDF } from "../components/pdf/InformeNichoReciclaj
 import { InformeNichoFideicomisosPDF } from "../components/pdf/InformeNichoFideicomisosPDF";
 import { InformeNichoServiciosProfesionalesPDF } from "../components/pdf/InformeNichoServiciosProfesionalesPDF";
 import { InformeNichoSoftwarePDF } from "../components/pdf/InformeNichoSoftwarePDF";
-import type { Anuario, DepartamentoActivo } from "./informesApi";
+import type { Anuario, DepartamentoActivo, EntidadNicho } from "./informesApi";
 
 // Duplicado a propósito (no importado de exportarFicha.tsx): ese módulo se
 // carga con await import() dinámico desde Sociedad.tsx/Persona.tsx
@@ -53,63 +53,68 @@ export async function exportarAnuarioPDF(anuario: Anuario) {
   descargarBlob(blob, `anuario-${anuario.anio}.pdf`);
 }
 
-export async function exportarNichoCannabisPDF() {
-  const blob = await pdf(<InformeNichoCannabisPDF />).toBlob();
+export async function exportarNichoCannabisPDF(
+  entidades: EntidadNicho[],
+  sociosRepetidos: { nombre: string; veces: number }[],
+) {
+  const blob = await pdf(
+    <InformeNichoCannabisPDF entidades={entidades} sociosRepetidos={sociosRepetidos} />,
+  ).toBlob();
   descargarBlob(blob, "cannabis-y-canamo-en-mendoza.pdf");
 }
 
-export async function exportarNichoEnoturismoPDF() {
-  const blob = await pdf(<InformeNichoEnoturismoPDF />).toBlob();
+export async function exportarNichoEnoturismoPDF(entidades: EntidadNicho[]) {
+  const blob = await pdf(<InformeNichoEnoturismoPDF entidades={entidades} />).toBlob();
   descargarBlob(blob, "enoturismo-en-mendoza.pdf");
 }
 
-export async function exportarNichoBodegasBoutiquePDF() {
-  const blob = await pdf(<InformeNichoBodegasBoutiquePDF />).toBlob();
+export async function exportarNichoBodegasBoutiquePDF(entidades: EntidadNicho[]) {
+  const blob = await pdf(<InformeNichoBodegasBoutiquePDF entidades={entidades} />).toBlob();
   descargarBlob(blob, "bodegas-boutique-en-mendoza.pdf");
 }
 
-export async function exportarNichoEnergiaRenovablePDF() {
-  const blob = await pdf(<InformeNichoEnergiaRenovablePDF />).toBlob();
+export async function exportarNichoEnergiaRenovablePDF(entidades: EntidadNicho[]) {
+  const blob = await pdf(<InformeNichoEnergiaRenovablePDF entidades={entidades} />).toBlob();
   descargarBlob(blob, "energia-solar-y-eolica-en-mendoza.pdf");
 }
 
-export async function exportarNichoCriptoFintechPDF() {
-  const blob = await pdf(<InformeNichoCriptoFintechPDF />).toBlob();
+export async function exportarNichoCriptoFintechPDF(entidades: EntidadNicho[]) {
+  const blob = await pdf(<InformeNichoCriptoFintechPDF entidades={entidades} />).toBlob();
   descargarBlob(blob, "cripto-y-fintech-en-mendoza.pdf");
 }
 
-export async function exportarNichoSoftwarePDF() {
-  const blob = await pdf(<InformeNichoSoftwarePDF />).toBlob();
+export async function exportarNichoSoftwarePDF(entidades: EntidadNicho[]) {
+  const blob = await pdf(<InformeNichoSoftwarePDF entidades={entidades} />).toBlob();
   descargarBlob(blob, "desarrollo-de-software-en-mendoza.pdf");
 }
 
-export async function exportarNichoServiciosProfesionalesPDF() {
-  const blob = await pdf(<InformeNichoServiciosProfesionalesPDF />).toBlob();
+export async function exportarNichoServiciosProfesionalesPDF(entidades: EntidadNicho[]) {
+  const blob = await pdf(<InformeNichoServiciosProfesionalesPDF entidades={entidades} />).toBlob();
   descargarBlob(blob, "abogados-contadores-y-escribanos-en-mendoza.pdf");
 }
 
-export async function exportarNichoArquitecturaPDF() {
-  const blob = await pdf(<InformeNichoArquitecturaPDF />).toBlob();
+export async function exportarNichoArquitecturaPDF(entidades: EntidadNicho[]) {
+  const blob = await pdf(<InformeNichoArquitecturaPDF entidades={entidades} />).toBlob();
   descargarBlob(blob, "arquitectura-en-mendoza.pdf");
 }
 
-export async function exportarNichoCafePDF() {
-  const blob = await pdf(<InformeNichoCafePDF />).toBlob();
+export async function exportarNichoCafePDF(entidades: EntidadNicho[]) {
+  const blob = await pdf(<InformeNichoCafePDF entidades={entidades} />).toBlob();
   descargarBlob(blob, "cafe-de-especialidad-en-mendoza.pdf");
 }
 
-export async function exportarNichoCervezaPDF() {
-  const blob = await pdf(<InformeNichoCervezaPDF />).toBlob();
+export async function exportarNichoCervezaPDF(entidades: EntidadNicho[]) {
+  const blob = await pdf(<InformeNichoCervezaPDF entidades={entidades} />).toBlob();
   descargarBlob(blob, "cerveza-artesanal-en-mendoza.pdf");
 }
 
-export async function exportarNichoReciclajePDF() {
-  const blob = await pdf(<InformeNichoReciclajePDF />).toBlob();
+export async function exportarNichoReciclajePDF(entidades: EntidadNicho[]) {
+  const blob = await pdf(<InformeNichoReciclajePDF entidades={entidades} />).toBlob();
   descargarBlob(blob, "reciclaje-y-economia-circular-en-mendoza.pdf");
 }
 
-export async function exportarNichoFideicomisosPDF() {
-  const blob = await pdf(<InformeNichoFideicomisosPDF />).toBlob();
+export async function exportarNichoFideicomisosPDF(entidades: EntidadNicho[]) {
+  const blob = await pdf(<InformeNichoFideicomisosPDF entidades={entidades} />).toBlob();
   descargarBlob(blob, "servicios-de-fideicomisos-en-mendoza.pdf");
 }
 

@@ -20,6 +20,7 @@ import {
 import { descargasRouter } from "./descargas.js";
 import { historialRouter } from "./historial.js";
 import { informesPublicoRouter, recalcularInformes } from "./informes.js";
+import { informesNichoRouter } from "./informesNicho.js";
 import { leadsRouter } from "./leads.js";
 import { notificacionesRouter, procesarNotificaciones } from "./notificaciones.js";
 import { seoRouter } from "./seo.js";
@@ -125,6 +126,7 @@ app.use("/api/solicitudes-informe", solicitudesInformeRouter);
 app.use("/api/historial", historialRouter);
 app.use("/api/descargas", descargasRouter);
 app.use("/api/informes", informesPublicoRouter);
+app.use("/api/informes/nicho", informesNichoRouter);
 app.use("/api/notificaciones", notificacionesRouter);
 
 // "Modo solo administradores" (tab Configuración de /admin): bloquea la

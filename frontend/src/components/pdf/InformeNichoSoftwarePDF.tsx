@@ -1,12 +1,17 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
-import { DEPARTAMENTOS_SOFTWARE, ENTIDADES, EVOLUCION_ANUAL, TIPO_ENTIDAD } from "../../data/nichoSoftware";
-import { fecha, hoyISO } from "../../lib/format";
+import { DEPARTAMENTOS_SOFTWARE, EVOLUCION_ANUAL, TIPO_ENTIDAD } from "../../data/nichoSoftware";
+import { cuit as formatCuit, fecha, hoyISO, moneda } from "../../lib/format";
+import type { EntidadNicho } from "../../lib/informesApi";
 import { GraficoBarrasPDF } from "./GraficoBarrasPDF";
 import { MapaMendozaPDF } from "./MapaMendozaPDF";
 import { estilosPDF as e, CARBON } from "./estilosPDF";
 import { FuenteDatosPDF } from "./FuenteDatosPDF";
 
-export function InformeNichoSoftwarePDF() {
+interface Props {
+  entidades: EntidadNicho[];
+}
+
+export function InformeNichoSoftwarePDF({ entidades }: Props) {
   return (
     <Document title="INGcome — Desarrollo de Software en Mendoza">
       <Page size="A4" style={e.pagina} wrap>
@@ -92,26 +97,26 @@ export function InformeNichoSoftwarePDF() {
           eventos/obras). 111 de las 214 (52 %) se descartaron. Cobertura ARCA: 37 de 103 (35,9 %).
         </Text>
 
-        {ENTIDADES.length > 0 && (
+        {entidades.length > 0 && (
           <>
             <Text style={e.tituloSeccion}>Directorio completo: las 103 sociedades</Text>
-            {ENTIDADES.map((ent) => (
-              <View key={ent.nombre} style={{ marginBottom: 14 }} wrap={false}>
+            {entidades.map((ent) => (
+              <View key={ent.sociedadId} style={{ marginBottom: 14 }} wrap={false}>
                 <Text style={{ fontSize: 11, fontWeight: 700, color: CARBON }}>
-                  {ent.tipo} — {ent.nombre}
+                  {ent.tipo ? `${ent.tipo} — ` : ""}{ent.nombre}
                 </Text>
                 <View style={[e.grillaCampos, { marginTop: 4 }]}>
                   <View style={e.campo}>
                     <Text style={e.campoEtiqueta}>CUIT</Text>
-                    <Text style={e.campoValor}>{ent.cuit ?? "—"}</Text>
+                    <Text style={e.campoValor}>{formatCuit(ent.cuit)}</Text>
                   </View>
                   <View style={e.campo}>
                     <Text style={e.campoEtiqueta}>Capital</Text>
-                    <Text style={e.campoValor}>{ent.capital ?? "—"}</Text>
+                    <Text style={e.campoValor}>{moneda(ent.capital?.toString())}</Text>
                   </View>
                   <View style={e.campo}>
                     <Text style={e.campoEtiqueta}>Publicación</Text>
-                    <Text style={e.campoValor}>{ent.publicacion ?? "—"}</Text>
+                    <Text style={e.campoValor}>{fecha(ent.publicacion)}</Text>
                   </View>
                   <View style={e.campo}>
                     <Text style={e.campoEtiqueta}>Departamento</Text>
@@ -126,7 +131,7 @@ export function InformeNichoSoftwarePDF() {
                 )}
                 <Text style={{ fontSize: 8, color: "#444444", marginTop: 2, lineHeight: 1.4 }}>
                   <Text style={{ fontWeight: 700 }}>Objeto social: </Text>
-                  {ent.objetoSocial}
+                  {ent.objetoSocial ?? "—"}
                 </Text>
               </View>
             ))}
