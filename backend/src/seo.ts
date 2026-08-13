@@ -84,6 +84,13 @@ import {
   TIPO_ENTIDAD as TIPO_ENTIDAD_FIDEICOMISOS,
 } from "./data/nichoFideicomisos.js";
 import {
+  DEPARTAMENTOS_AGENCIAS_VIAJES,
+  ENTIDADES as ENTIDADES_AGENCIAS_VIAJES,
+  EVOLUCION_ANUAL as EVOLUCION_ANUAL_AGENCIAS_VIAJES,
+  TIPO_CLAE as TIPO_CLAE_AGENCIAS_VIAJES,
+  TIPO_ENTIDAD as TIPO_ENTIDAD_AGENCIAS_VIAJES,
+} from "./data/nichoAgenciasViajes.js";
+import {
   EVOLUCION_ANUAL as EVOLUCION_ANUAL_MUJERES,
   PANORAMA,
   TOP_MUJERES,
@@ -515,6 +522,32 @@ async function entidadesFideicomisosHtml(): Promise<string> {
   return entidades.map(entidadFideicomisosHtml).join("");
 }
 
+function entidadAgenciasViajesHtml(e: EntidadResuelta): string {
+  const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
+  const sociosLinks = e.socios
+    .map((s) =>
+      s.sociedadId
+        ? `<a href="/sociedad/${s.sociedadId}">${escapeHtml(s.nombre)}</a>`
+        : s.personaId
+          ? `<a href="/persona/${s.personaId}">${escapeHtml(s.nombre)}</a>`
+          : escapeHtml(s.nombre),
+    )
+    .join(" · ");
+  const capital = formatMoneda(e.capital);
+  const publicacion = formatFecha(e.publicacion);
+  return `
+    <h3>${e.tipo ? escapeHtml(e.tipo) : ""} — ${nombreLink}</h3>
+    <p>CUIT: ${e.cuit ? escapeHtml(formatCuit(e.cuit) ?? e.cuit) : "—"} · Capital: ${capital ? escapeHtml(capital) : "—"} · Publicación: ${publicacion ? escapeHtml(publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
+    ${e.socios.length > 0 ? `<p>Socios/Integrantes: ${sociosLinks}</p>` : ""}
+    ${e.objetoSocial ? `<p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>` : ""}
+  `;
+}
+
+async function entidadesAgenciasViajesHtml(): Promise<string> {
+  const entidades = await resolverEntidades(ENTIDADES_AGENCIAS_VIAJES);
+  return entidades.map(entidadAgenciasViajesHtml).join("");
+}
+
 function siteUrl(): string {
   return (process.env.SITE_URL ?? "http://localhost:5050").replace(/\/$/, "");
 }
@@ -831,6 +864,7 @@ seoRouter.get(
         <li><a href="/informes/nicho-cerveza">Cerveza Artesanal en Mendoza</a></li>
         <li><a href="/informes/nicho-reciclaje">Reciclaje y Economía Circular en Mendoza</a></li>
         <li><a href="/informes/nicho-fideicomisos">Servicios de Fideicomisos en Mendoza</a></li>
+        <li><a href="/informes/nicho-agencias-viajes">Agencias de Viajes en Mendoza</a></li>
       </ul>
       ${anios.length > 0 ? `<h2>Anuarios</h2><ul>${anuarioLinksHtml}</ul>` : ""}
       ${fuenteDatosHtml()}
@@ -2074,6 +2108,88 @@ seoRouter.get(
   }),
 );
 
+// Informe de nicho sectorial: mismo criterio que los anteriores — contenido
+// estático duplicado a mano desde frontend/src/data/nichoAgenciasViajes.ts.
+seoRouter.get(
+  "/informes/nicho-agencias-viajes",
+  asyncHandler(async (_req: Request, res: Response, next) => {
+    const base = leerIndexHtml();
+    if (!base) return next();
+
+    const directorioAgenciasViajesHtml = await entidadesAgenciasViajesHtml();
+
+    const title =
+      "Agencias de viajes en Mendoza: la pandemia frenó la curva un año, no la cortó | INGcome";
+    const description =
+      "168 agencias de viajes en Mendoza (2017–2026): la pandemia frena la curva en 2020 pero el pico llega en 2023 (40, el más alto de toda la serie). 85% minoristas, cobertura ARCA la más alta de la serie.";
+    const canonical = `${siteUrl()}/informes/nicho-agencias-viajes`;
+
+    const contentHtml = `
+    <main>
+      <h1>Agencias de viajes en Mendoza</h1>
+      <p>La pandemia frenó la curva un año, no la cortó</p>
+      <p>168 agencias de viajes identificadas entre 2017 y 2026 — el universo más grande de esta serie hasta ahora, construido con el código CLAE oficial (791100 minorista o 791200 mayorista) en vez de una búsqueda de texto libre.</p>
+      <h2>Resumen ejecutivo</h2>
+      <ul>
+        <li>168 agencias de viajes identificadas entre 2017 y 2026 — el universo más grande de esta serie hasta ahora, y el primero construido con el código CLAE oficial que cada sociedad declaró ante ARCA como actividad principal.</li>
+        <li>La pandemia frenó la curva de constituciones, no la cortó: de 14 agencias en 2019 cae a 8 en 2020 y ya en 2021 supera el nivel prepandemia (16). El pico real llega en 2023 (40, el año más alto de toda la serie).</li>
+        <li>85% son minoristas (143 de 168) contra 15% mayoristas (25).</li>
+        <li>Cobertura ARCA excepcionalmente alta para esta serie: 130 de 168 (77,4%) tienen cruce con el padrón de AFIP, todas activas — la más alta de todos los nichos de la serie.</li>
+        <li>Viajo Facil S.A. (2025, Luján de Cuyo) reúne, en una sociedad nueva con $30.000.000 de capital, a dos socios que un año y medio antes habían fundado agencias separadas el mismo día.</li>
+      </ul>
+      <h2>Un año de pausa, no de quiebre</h2>
+      <table>
+        <thead><tr><th>Año</th><th>Agencias constituidas</th></tr></thead>
+        <tbody>${EVOLUCION_ANUAL_AGENCIAS_VIAJES.map((d) => `<tr><td>${d.etiqueta}</td><td>${d.valor}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>* 2026 es parcial: el relevamiento llega hasta julio. Dos sociedades del nicho no tienen fecha de Constitución capturada y no figuran en esta tabla.</p>
+      <p>El turismo internacional fue uno de los sectores más golpeados por la pandemia, y la caída de 2019 a 2020 (14 → 8, -43%) lo confirma en los datos societarios locales. Pero el freno duró exactamente un año: 2021 ya cierra por encima de 2019 (16 contra 14), y de ahí el crecimiento es prácticamente ininterrumpido hasta el pico de 40 agencias en 2023 — el año más alto de cualquier nicho relevado en esta serie hasta ahora. 2024 y 2025 se mantienen en una meseta alta (29 y 27) sin volver a los niveles pre-2022, lo que sugiere que 2023 fue un pico de reapertura post-pandemia ("revenge travel") más que un nuevo piso estructural del sector.</p>
+      <h2>Minoristas y mayoristas</h2>
+      <table>
+        <thead><tr><th>Tipo CLAE</th><th>Cantidad</th></tr></thead>
+        <tbody>${TIPO_CLAE_AGENCIAS_VIAJES.map((d) => `<tr><td>${d.tipo}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>La proporción es la esperable en cualquier mercado turístico: la mayoría vende directo al público (minorista), y un grupo más chico opera como intermediario mayorista/operador. El capital declarado no distingue claramente a un grupo del otro: dos de los tres capitales más altos del nicho (Viajo Facil S.A. e Intermission S.A.S., ambas $30.000.000) están clasificadas como minoristas, no mayoristas.</p>
+      <h2>Perfil societario</h2>
+      <table>
+        <thead><tr><th>Tipo</th><th>Cantidad</th></tr></thead>
+        <tbody>${TIPO_ENTIDAD_AGENCIAS_VIAJES.map((d) => `<tr><td>${d.tipo}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>El dominio de la S.A.S. (89%) es el más alto de toda la serie de nichos — coherente con que el 70% de las agencias se constituyeron desde 2021, el período en que la S.A.S. ya era la forma societaria por defecto para un emprendimiento chico en Mendoza. Capital declarado: mediana de $400.000, rango de $20.000 (Puerto Montt Viajes S.A.S., 2018) a $30.000.000 (dos casos: Viajo Facil S.A. y Lantier S.A., ambas 2025).</p>
+      <h2>Una fusión de trayectorias: el caso Viajo Facil</h2>
+      <p>Cruzando socios entre las 168 agencias aparecen 15 pares de personas que participaron, en momentos distintos, de más de una agencia del nicho. Viajo Facil S.A. (03/04/2025, Luján de Cuyo, $30.000.000) es la sociedad con más capital del nicho, y sus dos socios no llegaron ahí como primerizos: Nicolas Furtado Flores había fundado Be Fun Travel S.A. ($5.000.000, Guaymallén) y Martin Lopez había fundado Global Xplore S.A. ($6.000.000, Capital) — ambas el mismo día, 15/05/2023. Casi dos años después, los dos se asociaron en una sociedad nueva con casi seis veces el capital de cualquiera de sus emprendimientos individuales anteriores.</p>
+      <p>Un patrón inverso, de sociedad que se divide en vez de fusionarse, aparece en Sg S.A.S. (05/10/2020, Capital): sus dos socios fundadores se separaron societariamente al año siguiente, cada uno fundando una agencia nueva con un objeto social casi calcado del original.</p>
+      <h2>Dónde están</h2>
+      <table>
+        <thead><tr><th>Departamento</th><th>Agencias</th></tr></thead>
+        <tbody>${DEPARTAMENTOS_AGENCIAS_VIAJES.map((d) => `<tr><td>${escapeHtml(d.departamento)}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>Capital concentra un tercio del nicho, esperable para un rubro de oficina y atención al público. Lo notable es la fuerte presencia de Luján de Cuyo (26, segundo lugar) por encima de Godoy Cruz — sede también de dos de las tres agencias con capital más alto, y de gran parte de la industria vitivinícola y del turismo del vino de la provincia.</p>
+      ${ENTIDADES_AGENCIAS_VIAJES.length > 0 ? `<h2>Directorio completo: las 168 agencias de viajes</h2>${directorioAgenciasViajesHtml}` : ""}
+      <h2>Metodología y límites</h2>
+      <p>Búsqueda por CLAE, no por palabra clave. Se usó el código de actividad económica que cada sociedad declaró ante ARCA al inscribirse: 791100 ("Servicios minoristas de agencias de viajes") o 791200 ("Servicios mayoristas de agencias de viajes"), tomando siempre la actividad marcada como principal. Es más preciso que el texto libre, pero solo alcanza al 61,7% del corpus que logró cruzar contra el Registro Nacional de Sociedades.</p>
+      <p>191 candidatas → 168 agencias únicas: el cruce por CLAE principal dio 191 filas (164 minorista + 27 mayorista); 189 sobrevivieron al filtro de duplicados exactos. De esas, 19 pares/tríos correspondían a la misma sociedad publicada más de una vez en el Boletín — se deduplicó por nombre normalizado, conservando la primera publicación cronológica.</p>
+      <p>Cobertura ARCA: 130 de 168 (77,4%) cruzan contra el padrón de AFIP, todas con estado "Activo" — la cobertura más alta de toda la serie de nichos, coherente con que operar como agencia de viajes es una actividad regulada que exige inscripción formal.</p>
+      ${fuenteDatosHtml()}
+    </main>
+  `.trim();
+
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      name: title,
+      description,
+      url: canonical,
+      creator: { "@type": "Organization", name: "INGcome" },
+      temporalCoverage: "2017/2026",
+      dateModified: "2026-08-13",
+    };
+
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.send(renderHtml(base, { title, description, canonical, noindex: false, jsonLd, contentHtml }));
+  }),
+);
+
 // Informe de corte transversal (no es un nicho sectorial, ver nota en
 // frontend/src/data/mujeresFundadoras.ts): mismo criterio de duplicado a
 // mano que el resto de /informes. Sin ENTIDADES: no hay sociedades/personas
@@ -2478,6 +2594,7 @@ seoRouter.get(
       `  <url><loc>${siteUrl()}/informes/nicho-cerveza</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/nicho-reciclaje</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/nicho-fideicomisos</loc><lastmod>${hoy}</lastmod></url>`,
+      `  <url><loc>${siteUrl()}/informes/nicho-agencias-viajes</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/mujeres-fundadoras</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/actividades-clae</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/analisis-redes</loc><lastmod>${hoy}</lastmod></url>`,

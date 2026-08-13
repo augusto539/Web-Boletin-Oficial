@@ -185,6 +185,7 @@ export function socioRepetidos(
 // que depender del orden en que ESM ejecuta imports con solo efectos
 // secundarios.
 
+import { ENTIDADES as AGENCIAS_VIAJES } from "./data/nichoAgenciasViajes.js";
 import { ENTIDADES as CANNABIS } from "./data/nichoCannabis.js";
 import { ENTIDADES as ARQUITECTURA } from "./data/nichoArquitectura.js";
 import { ENTIDADES as BODEGAS_BOUTIQUE } from "./data/nichoBodegasBoutique.js";
@@ -199,6 +200,7 @@ import { ENTIDADES as SERVICIOS_PROFESIONALES } from "./data/nichoServiciosProfe
 import { ENTIDADES as SOFTWARE } from "./data/nichoSoftware.js";
 
 const REGISTRO: Record<string, EntidadCuradaBase[]> = {
+  "agencias-viajes": AGENCIAS_VIAJES,
   cannabis: CANNABIS,
   arquitectura: ARQUITECTURA,
   "bodegas-boutique": BODEGAS_BOUTIQUE,

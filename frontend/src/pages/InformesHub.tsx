@@ -73,6 +73,11 @@ const NICHOS = [
     nombre: "Servicios de Fideicomisos en Mendoza",
     descripcion: "El vehículo financiero del boom inmobiliario, 2017–2026.",
   },
+  {
+    slug: "agencias-viajes",
+    nombre: "Agencias de Viajes en Mendoza",
+    descripcion: "La pandemia frenó la curva un año, no la cortó, 2017–2026.",
+  },
 ];
 
 export default function InformesHub() {

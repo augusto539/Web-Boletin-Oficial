@@ -26,6 +26,7 @@ const TIPOS_VALIDOS = new Set([
   "informe_nicho_cerveza",
   "informe_nicho_reciclaje",
   "informe_nicho_fideicomisos",
+  "informe_nicho_agencias_viajes",
   "informe_mujeres_fundadoras",
   "informe_actividades_clae",
   "informe_analisis_redes",
