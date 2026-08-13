@@ -91,6 +91,12 @@ import {
   TIPO_ENTIDAD as TIPO_ENTIDAD_AGENCIAS_VIAJES,
 } from "./data/nichoAgenciasViajes.js";
 import {
+  DEPARTAMENTOS_SEGURIDAD_PRIVADA,
+  ENTIDADES as ENTIDADES_SEGURIDAD_PRIVADA,
+  EVOLUCION_ANUAL as EVOLUCION_ANUAL_SEGURIDAD_PRIVADA,
+  TIPO_ENTIDAD as TIPO_ENTIDAD_SEGURIDAD_PRIVADA,
+} from "./data/nichoSeguridadPrivada.js";
+import {
   EVOLUCION_ANUAL as EVOLUCION_ANUAL_MUJERES,
   PANORAMA,
   TOP_MUJERES,
@@ -548,6 +554,32 @@ async function entidadesAgenciasViajesHtml(): Promise<string> {
   return entidades.map(entidadAgenciasViajesHtml).join("");
 }
 
+function entidadSeguridadPrivadaHtml(e: EntidadResuelta): string {
+  const nombreLink = `<a href="/sociedad/${e.sociedadId}">${escapeHtml(e.nombre)}</a>`;
+  const sociosLinks = e.socios
+    .map((s) =>
+      s.sociedadId
+        ? `<a href="/sociedad/${s.sociedadId}">${escapeHtml(s.nombre)}</a>`
+        : s.personaId
+          ? `<a href="/persona/${s.personaId}">${escapeHtml(s.nombre)}</a>`
+          : escapeHtml(s.nombre),
+    )
+    .join(" · ");
+  const capital = formatMoneda(e.capital);
+  const publicacion = formatFecha(e.publicacion);
+  return `
+    <h3>${e.tipo ? escapeHtml(e.tipo) : ""} — ${nombreLink}</h3>
+    <p>CUIT: ${e.cuit ? escapeHtml(formatCuit(e.cuit) ?? e.cuit) : "—"} · Capital: ${capital ? escapeHtml(capital) : "—"} · Publicación: ${publicacion ? escapeHtml(publicacion) : "—"} · Departamento: ${e.departamento ? escapeHtml(e.departamento) : "—"}</p>
+    ${e.socios.length > 0 ? `<p>Socios/Integrantes: ${sociosLinks}</p>` : ""}
+    ${e.objetoSocial ? `<p>Objeto social: ${escapeHtml(e.objetoSocial)}</p>` : ""}
+  `;
+}
+
+async function entidadesSeguridadPrivadaHtml(): Promise<string> {
+  const entidades = await resolverEntidades(ENTIDADES_SEGURIDAD_PRIVADA);
+  return entidades.map(entidadSeguridadPrivadaHtml).join("");
+}
+
 function siteUrl(): string {
   return (process.env.SITE_URL ?? "http://localhost:5050").replace(/\/$/, "");
 }
@@ -865,6 +897,7 @@ seoRouter.get(
         <li><a href="/informes/nicho-reciclaje">Reciclaje y Economía Circular en Mendoza</a></li>
         <li><a href="/informes/nicho-fideicomisos">Servicios de Fideicomisos en Mendoza</a></li>
         <li><a href="/informes/nicho-agencias-viajes">Agencias de Viajes en Mendoza</a></li>
+        <li><a href="/informes/nicho-seguridad-privada">Seguridad Privada en Mendoza</a></li>
       </ul>
       ${anios.length > 0 ? `<h2>Anuarios</h2><ul>${anuarioLinksHtml}</ul>` : ""}
       ${fuenteDatosHtml()}
@@ -2190,6 +2223,86 @@ seoRouter.get(
   }),
 );
 
+// Informe de nicho sectorial: mismo criterio que los anteriores — contenido
+// estático duplicado a mano desde frontend/src/data/nichoSeguridadPrivada.ts.
+seoRouter.get(
+  "/informes/nicho-seguridad-privada",
+  asyncHandler(async (_req: Request, res: Response, next) => {
+    const base = leerIndexHtml();
+    if (!base) return next();
+
+    const directorioSeguridadPrivadaHtml = await entidadesSeguridadPrivadaHtml();
+
+    const title =
+      "Seguridad privada en Mendoza: el único rubro de la serie que no sintió la pandemia | INGcome";
+    const description =
+      "136 empresas de seguridad privada en Mendoza (2017–2026): el único nicho de la serie sin caída en 2020, con 2024 y 2025 como los años más altos de toda la serie.";
+    const canonical = `${siteUrl()}/informes/nicho-seguridad-privada`;
+
+    const contentHtml = `
+    <main>
+      <h1>Seguridad privada en Mendoza</h1>
+      <p>El único rubro de la serie que no sintió la pandemia</p>
+      <p>136 empresas de seguridad privada identificadas entre 2017 y 2026, vía el código CLAE 801090 ("Servicios de seguridad e investigación n.c.p.") declarado como actividad principal — mismo método por clasificación oficial que el informe anterior de esta serie (Agencias de Viajes).</p>
+      <h2>Resumen ejecutivo</h2>
+      <ul>
+        <li>136 empresas de seguridad privada identificadas entre 2017 y 2026, vía el código CLAE 801090 declarado como actividad principal.</li>
+        <li>El único nicho de la serie sin caída en 2020: mientras las agencias de viajes cayeron 43% ese año, la seguridad privada apenas bajó de 15 a 13 empresas nuevas (-13%) y ya en 2021 se mantiene en el mismo nivel.</li>
+        <li>Crecimiento sostenido hasta el final de la serie: 2024 y 2025 son los dos años más altos (21 empresas cada uno), sin señales de meseta ni de declive.</li>
+        <li>Un código, dos negocios distintos: 26 empresas declaran explícitamente sistemas técnicos (alarmas, cámaras, monitoreo), 9 declaran transporte de caudales/valores, y solo 6 mencionan "investigación privada" en sentido literal de detective.</li>
+        <li>Grupo Rl: Lorena Belén Lescano y Pablo Andrés Juliani fundaron tres empresas de seguridad en Maipú en cuatro años — la cadena de fundadores repetidos más larga de toda la serie de nichos.</li>
+      </ul>
+      <h2>Crecimiento sin pausa, ni siquiera en pandemia</h2>
+      <table>
+        <thead><tr><th>Año</th><th>Empresas de seguridad constituidas</th></tr></thead>
+        <tbody>${EVOLUCION_ANUAL_SEGURIDAD_PRIVADA.map((d) => `<tr><td>${d.etiqueta}</td><td>${d.valor}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>* 2026 es parcial: el relevamiento llega hasta julio. Cinco empresas del nicho no tienen fecha de acto capturada y no figuran en esta tabla.</p>
+      <p>El contraste con el informe anterior de esta serie es directo: las agencias de viajes cayeron 43% interanual en 2020 y tardaron un año en recuperar el nivel prepandemia. La seguridad privada, en cambio, apenas sintió el golpe (-13%) y nunca dejó de crecer en el mediano plazo — 2024 y 2025 son los dos años más altos de toda la serie del rubro (21 cada uno), sin el patrón de pico-y-meseta que muestran café, cerveza o incluso las propias agencias de viajes.</p>
+      <h2>Un código, dos negocios distintos (y un tercero minoritario)</h2>
+      <p>El nombre del código CLAE —"servicios de seguridad e investigación"— es una herencia de la clasificación internacional (ISIC/CIIU), que agrupa históricamente vigilancia privada y detectives bajo una misma categoría. De las 136 empresas, 26 declaran explícitamente sistemas técnicos (alarmas, cámaras, monitoreo), 9 declaran transporte de caudales/valores, y solo 6 mencionan "investigación privada" en sentido literal — siempre junto con vigilancia y custodia, nunca como actividad exclusiva.</p>
+      <p>"Servicios de investigación privada, vigilancia, custodia de bienes, seguridad en transporte de mercadería y caudales, fabricación y comercialización de [artículos de seguridad]..." — Asabay Seguridad Privada S.A.S.</p>
+      <p>No aparece ningún caso de una sociedad dedicada solo a investigación privada sin vigilancia — el detective como actividad exclusiva, si existe en Mendoza, no se constituye bajo este código ni con esta combinación de palabras.</p>
+      <h2>Perfil societario</h2>
+      <table>
+        <thead><tr><th>Tipo</th><th>Cantidad</th></tr></thead>
+        <tbody>${TIPO_ENTIDAD_SEGURIDAD_PRIVADA.map((d) => `<tr><td>${d.tipo}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>Capital declarado: mediana de $200.000 (la más baja de toda la serie de nichos hasta ahora), rango de $1 a $30.000.000. El caso de $1 (Valhalla Servicios S.A.S., 2026) es casi con certeza un artefacto de extracción o un error de tipeo en el Boletín original, no un capital real — se conserva en los datos sin corregir, siguiendo el mismo criterio del resto del pipeline de no alterar lo publicado.</p>
+      <h2>Grupo Rl: tres empresas, dos socios, cuatro años</h2>
+      <p>Cruzando socios entre las 136 empresas aparece la cadena de fundadores repetidos más larga de toda la serie de nichos: Lorena Belén Lescano y Pablo Andrés Juliani aparecen juntos como socios en tres sociedades de seguridad sucesivas, todas en Maipú — Grupo Rl Seguridad Privada S.A. (08/09/2020), Vabeju S.A.S. (05/05/2023) y Grupo Rl Vigilancia Er S.A.S. (19/12/2024). El patrón sugiere una misma operación comercial reconstituida bajo sociedades nuevas, más que tres emprendimientos independientes.</p>
+      <p>Un segundo caso, más simple, es una historia de continuidad de marca: Javier Andrés Muñoz fundó Visión Seguridad S.A.S. (10/05/2022, Capital) y tres años después Seguridad Grupo Visión Sas (28/07/2025, Guaymallén) — mismo nombre de fantasía, otro departamento, un posible relanzamiento o expansión de la misma marca.</p>
+      <h2>Dónde están</h2>
+      <table>
+        <thead><tr><th>Departamento</th><th>Empresas</th></tr></thead>
+        <tbody>${DEPARTAMENTOS_SEGURIDAD_PRIVADA.map((d) => `<tr><td>${escapeHtml(d.departamento)}</td><td>${d.cantidad}</td></tr>`).join("")}</tbody>
+      </table>
+      <p>Capital y Guaymallén concentran casi la mitad del nicho a partes iguales (32 cada uno). Lo más llamativo es la presencia de Junín (6 empresas) — un departamento chico y agrícola que no aparece con este peso en ningún otro nicho de la serie, y que junto con Tunuyán y Tupungato sugiere una porción de la demanda ligada a custodia rural y de establecimientos agroindustriales, no solo a seguridad urbana.</p>
+      ${ENTIDADES_SEGURIDAD_PRIVADA.length > 0 ? `<h2>Directorio completo: las 136 empresas de seguridad</h2>${directorioSeguridadPrivadaHtml}` : ""}
+      <h2>Metodología y límites</h2>
+      <p>Búsqueda por CLAE, mismo método que Agencias de Viajes. Se usó el código 801090 ("Servicios de seguridad e investigación n.c.p.") como actividad principal declarada ante ARCA. Se excluyó deliberadamente el código 801020 ("Servicios de sistemas de seguridad", 22 empresas en el corpus) — es una actividad más específicamente técnica, y mezclarla hubiera diluido el foco del informe. Este método solo alcanza al 61,7% del corpus con cruce ARCA.</p>
+      <p>153 candidatas → 136 empresas únicas. El cruce dio 153 filas; ninguna quedó marcada como duplicado exacto, pero 17 nombres normalizados aparecían dos veces por el mismo patrón de republicación en el Boletín — se deduplicó por nombre normalizado, conservando la primera publicación cronológica. Cinco de las 153 filas no son actos de Constitución — sociedades sin acto de Constitución identificado, donde se usó la fecha del acto disponible.</p>
+      <p>Cobertura ARCA: 93 de 136 (68,4%) cruzan contra el padrón de AFIP, todas con estado "Activo" — más alta que el promedio de la serie, aunque algo menor que Agencias de Viajes (77,4%).</p>
+      ${fuenteDatosHtml()}
+    </main>
+  `.trim();
+
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      name: title,
+      description,
+      url: canonical,
+      creator: { "@type": "Organization", name: "INGcome" },
+      temporalCoverage: "2017/2026",
+      dateModified: "2026-08-13",
+    };
+
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.send(renderHtml(base, { title, description, canonical, noindex: false, jsonLd, contentHtml }));
+  }),
+);
+
 // Informe de corte transversal (no es un nicho sectorial, ver nota en
 // frontend/src/data/mujeresFundadoras.ts): mismo criterio de duplicado a
 // mano que el resto de /informes. Sin ENTIDADES: no hay sociedades/personas
@@ -2595,6 +2708,7 @@ seoRouter.get(
       `  <url><loc>${siteUrl()}/informes/nicho-reciclaje</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/nicho-fideicomisos</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/nicho-agencias-viajes</loc><lastmod>${hoy}</lastmod></url>`,
+      `  <url><loc>${siteUrl()}/informes/nicho-seguridad-privada</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/mujeres-fundadoras</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/actividades-clae</loc><lastmod>${hoy}</lastmod></url>`,
       `  <url><loc>${siteUrl()}/informes/analisis-redes</loc><lastmod>${hoy}</lastmod></url>`,

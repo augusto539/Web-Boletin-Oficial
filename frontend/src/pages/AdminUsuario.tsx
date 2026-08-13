@@ -39,6 +39,7 @@ const ETIQUETAS_TIPO_DESCARGA: Record<string, string> = {
   informe_nicho_reciclaje: "Informe: Reciclaje y Economía Circular",
   informe_nicho_fideicomisos: "Informe: Servicios de Fideicomisos",
   informe_nicho_agencias_viajes: "Informe: Agencias de Viajes",
+  informe_nicho_seguridad_privada: "Informe: Seguridad Privada",
   informe_mujeres_fundadoras: "Informe: Mujeres que Fundan Empresas",
   informe_actividades_clae: "Informe: Actividades CLAE",
   informe_analisis_redes: "Informe: Análisis de Redes",

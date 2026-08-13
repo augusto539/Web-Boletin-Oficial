@@ -54,6 +54,9 @@ const InformeNichoFideicomisos = lazy(
 const InformeNichoAgenciasViajes = lazy(
   () => import("./pages/InformeNichoAgenciasViajes"),
 );
+const InformeNichoSeguridadPrivada = lazy(
+  () => import("./pages/InformeNichoSeguridadPrivada"),
+);
 const InformeNichoEnoturismo = lazy(
   () => import("./pages/InformeNichoEnoturismo"),
 );
@@ -196,6 +199,10 @@ export default function App() {
           <Route
             path="/informes/nicho-agencias-viajes"
             element={<InformeNichoAgenciasViajes />}
+          />
+          <Route
+            path="/informes/nicho-seguridad-privada"
+            element={<InformeNichoSeguridadPrivada />}
           />
           <Route
             path="/informes/mujeres-fundadoras"

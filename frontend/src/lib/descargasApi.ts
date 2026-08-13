@@ -20,6 +20,7 @@ export type TipoDescarga =
   | "informe_nicho_reciclaje"
   | "informe_nicho_fideicomisos"
   | "informe_nicho_agencias_viajes"
+  | "informe_nicho_seguridad_privada"
   | "informe_mujeres_fundadoras"
   | "informe_actividades_clae"
   | "informe_analisis_redes";

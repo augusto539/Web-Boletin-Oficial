@@ -198,6 +198,7 @@ import { ENTIDADES as FIDEICOMISOS } from "./data/nichoFideicomisos.js";
 import { ENTIDADES as RECICLAJE } from "./data/nichoReciclaje.js";
 import { ENTIDADES as SERVICIOS_PROFESIONALES } from "./data/nichoServiciosProfesionales.js";
 import { ENTIDADES as SOFTWARE } from "./data/nichoSoftware.js";
+import { ENTIDADES as SEGURIDAD_PRIVADA } from "./data/nichoSeguridadPrivada.js";
 
 const REGISTRO: Record<string, EntidadCuradaBase[]> = {
   "agencias-viajes": AGENCIAS_VIAJES,
@@ -213,6 +214,7 @@ const REGISTRO: Record<string, EntidadCuradaBase[]> = {
   reciclaje: RECICLAJE,
   "servicios-profesionales": SERVICIOS_PROFESIONALES,
   software: SOFTWARE,
+  "seguridad-privada": SEGURIDAD_PRIVADA,
 };
 
 export const informesNichoRouter = Router();

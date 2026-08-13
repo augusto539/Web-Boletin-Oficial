@@ -78,6 +78,11 @@ const NICHOS = [
     nombre: "Agencias de Viajes en Mendoza",
     descripcion: "La pandemia frenó la curva un año, no la cortó, 2017–2026.",
   },
+  {
+    slug: "seguridad-privada",
+    nombre: "Seguridad Privada en Mendoza",
+    descripcion: "El único rubro de la serie que no sintió la pandemia, 2017–2026.",
+  },
 ];
 
 export default function InformesHub() {

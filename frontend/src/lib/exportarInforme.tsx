@@ -15,6 +15,7 @@ import { InformeNichoCervezaPDF } from "../components/pdf/InformeNichoCervezaPDF
 import { InformeNichoReciclajePDF } from "../components/pdf/InformeNichoReciclajePDF";
 import { InformeNichoFideicomisosPDF } from "../components/pdf/InformeNichoFideicomisosPDF";
 import { InformeNichoAgenciasViajesPDF } from "../components/pdf/InformeNichoAgenciasViajesPDF";
+import { InformeNichoSeguridadPrivadaPDF } from "../components/pdf/InformeNichoSeguridadPrivadaPDF";
 import { InformeNichoServiciosProfesionalesPDF } from "../components/pdf/InformeNichoServiciosProfesionalesPDF";
 import { InformeNichoSoftwarePDF } from "../components/pdf/InformeNichoSoftwarePDF";
 import type { Anuario, DepartamentoActivo, EntidadNicho } from "./informesApi";
@@ -122,6 +123,11 @@ export async function exportarNichoFideicomisosPDF(entidades: EntidadNicho[]) {
 export async function exportarNichoAgenciasViajesPDF(entidades: EntidadNicho[]) {
   const blob = await pdf(<InformeNichoAgenciasViajesPDF entidades={entidades} />).toBlob();
   descargarBlob(blob, "agencias-de-viajes-en-mendoza.pdf");
+}
+
+export async function exportarNichoSeguridadPrivadaPDF(entidades: EntidadNicho[]) {
+  const blob = await pdf(<InformeNichoSeguridadPrivadaPDF entidades={entidades} />).toBlob();
+  descargarBlob(blob, "seguridad-privada-en-mendoza.pdf");
 }
 
 export async function exportarMujeresFundadorasPDF() {
