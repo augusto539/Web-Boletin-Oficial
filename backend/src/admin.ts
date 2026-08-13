@@ -1,3 +1,5 @@
+import { promises as fs } from "node:fs";
+import path from "node:path";
 import { type Request, type Response, Router } from "express";
 import { asyncHandler } from "./asyncHandler.js";
 import { pool } from "./auth.js";
@@ -31,6 +33,35 @@ adminRouter.post(
       : [];
     const resultado = await procesarNotificaciones(boletines);
     return res.json(resultado);
+  }),
+);
+
+// Disparo manual del job diario (repo separado "job-diario-boletin-oficial",
+// corre nativo en el host vía systemd, no como contenedor de este compose).
+// Este contenedor no tiene Docker socket ni SSH al host -- el puente es un
+// archivo: JOB_DIARIO_TRIGGER_DIR es un bind mount (ver docker-compose.prod.yml)
+// a /opt/job-diario/trigger en el host, donde un systemd .path unit
+// (job-diario-trigger.path, ver deploy/ del otro repo) espera que aparezca
+// el archivo y dispara `systemctl start job-diario.service`, borrándolo
+// después. Sin esa var (dev local, o si el mount no está) devuelve 501 en
+// vez de fallar en silencio -- así queda claro que hace falta el mount, no
+// que el botón esté roto.
+adminRouter.post(
+  "/job-diario/lanzar",
+  asyncHandler(async (_req: Request, res: Response) => {
+    const dir = process.env.JOB_DIARIO_TRIGGER_DIR;
+    if (!dir) {
+      return res
+        .status(501)
+        .json({ error: "JOB_DIARIO_TRIGGER_DIR no configurada en este entorno." });
+    }
+    try {
+      await fs.writeFile(path.join(dir, "lanzar"), new Date().toISOString());
+    } catch (err) {
+      console.error("[job-diario] no se pudo escribir el archivo trigger:", err);
+      return res.status(500).json({ error: "No se pudo disparar el job diario." });
+    }
+    return res.json({ ok: true });
   }),
 );
 

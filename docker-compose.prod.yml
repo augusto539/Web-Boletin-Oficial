@@ -47,11 +47,25 @@ services:
       # Mismo valor que JOB_WEBHOOK_TOKEN en /opt/job-diario/.env: autentica
       # el POST del job diario a /api/notificaciones/procesar.
       JOB_WEBHOOK_TOKEN: ${JOB_WEBHOOK_TOKEN:-}
+      # Puente hacia job-diario.service (systemd nativo en el host, no un
+      # contenedor de este compose): el admin panel dispara el job manual
+      # escribiendo un archivo acá adentro, que un systemd .path unit del
+      # host (job-diario-trigger.path, ver deploy/ del repo
+      # job-diario-boletin-oficial) detecta y usa para arrancarlo. Ver
+      # backend/src/admin.ts (POST /api/admin/job-diario/lanzar).
+      JOB_DIARIO_TRIGGER_DIR: /app/job-diario-trigger
       PORT: 5050
       NODE_ENV: production
       # VITE_GA_ID / VITE_API_URL / VITE_GRAPHQL_URL NO van acá: Vite las
       # incrusta en el JS al buildear la imagen (ver ARG VITE_GA_ID en el
       # Dockerfile), no las lee en runtime — setearlas acá no tendría efecto.
+    # Bind mount al host, dueño solo de este directorio puntual (ver
+    # JOB_DIARIO_TRIGGER_DIR más arriba) -- el usuario "app" del contenedor
+    # (uid 100, ver Dockerfile) necesita permiso de escritura sobre
+    # /opt/job-diario/trigger en el host (chown 100:101 al crearlo, no
+    # world-writable).
+    volumes:
+      - /opt/job-diario/trigger:/app/job-diario-trigger
     # Solo puerto interno; Caddy es el único que habla con el mundo (ver
     # deploy/Caddyfile) y lo alcanza por el nombre de servicio "app".
     expose:
