@@ -206,11 +206,19 @@ export function obtenerHistorialDescargasUsuario(
   );
 }
 
+// `busqueda` (opcional): nombre, o CUIT/DNI si incluye dígitos -- ver
+// leerBusqueda() en backend/src/admin.ts.
+function paramBusqueda(busqueda?: string): string {
+  const q = busqueda?.trim();
+  return q ? `&q=${encodeURIComponent(q)}` : "";
+}
+
 export function obtenerSociedadesAdmin(
   first: number,
   offset: number,
+  busqueda?: string,
 ): Promise<{ total: number; sociedades: SociedadAdmin[] }> {
-  return get(`/api/admin/sociedades?limit=${first}&offset=${offset}`);
+  return get(`/api/admin/sociedades?limit=${first}&offset=${offset}${paramBusqueda(busqueda)}`);
 }
 
 export function alternarOcultaSociedad(
@@ -223,8 +231,9 @@ export function alternarOcultaSociedad(
 export function obtenerPersonasAdmin(
   first: number,
   offset: number,
+  busqueda?: string,
 ): Promise<{ total: number; personas: PersonaAdmin[] }> {
-  return get(`/api/admin/personas?limit=${first}&offset=${offset}`);
+  return get(`/api/admin/personas?limit=${first}&offset=${offset}${paramBusqueda(busqueda)}`);
 }
 
 export function alternarOcultaPersona(

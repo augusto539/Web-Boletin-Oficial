@@ -398,7 +398,62 @@ adminRouter.get(
 // A diferencia de la búsqueda pública (GraphQL vía boletin_api, filtrada por
 // RLS a oculta=false), estos dos listados usan boletin_auth para mostrar
 // también las sociedades/personas ya ocultas — si no, un admin nunca podría
-// encontrarlas de vuelta para desocultarlas.
+// encontrarlas de vuelta para desocultarlas. Por lo mismo la barra de
+// búsqueda de abajo NO reusa buscar_sociedades()/buscar_personas(): esas
+// funciones descartan las ocultas.
+
+interface Busqueda {
+  termino: string;
+  // Lo tipeado reducido a [A-Z0-9], solo si contiene al menos un dígito — o
+  // sea, solo cuando lo buscado puede ser un CUIT/DNI. "Lescano" no dispara
+  // la comparación por documento; "30-71561506" sí, y matchea el CUIT
+  // guardado como "30715615068" (todos los CUIT de la base son dígitos
+  // puros). Las letras se conservan para los ~130 documentos extranjeros
+  // alfanuméricos ("F69182487").
+  clave: string | null;
+}
+
+function leerBusqueda(q: unknown): Busqueda | null {
+  if (typeof q !== "string") return null;
+  const termino = q.trim().slice(0, 100);
+  if (!/[\p{L}\p{N}]/u.test(termino)) return null;
+  const clave = termino.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return { termino, clave: /\d/.test(clave) ? clave : null };
+}
+
+// Condición SQL "contiene el texto" sobre el nombre (siempre) y sobre las
+// columnas de identificación (solo si lo tipeado tiene dígitos). Agrega sus
+// parámetros a `params` y devuelve el WHERE listo, o "" si no hay búsqueda.
+//
+// Nombre: se compara contra nombre_normalizado usando normalizar_nombre()
+// (038), que replica la normalización del pipeline -- con upper(unaccent())
+// "Viajo Fácil S.A." daría "VIAJO FACIL S.A." y no matchearía el
+// "VIAJO FACIL SA" guardado. normalizar_nombre() además convierte en espacio
+// todo lo que no sea [A-Z0-9], así que un "%" o "_" tipeado no actúa como
+// comodín del LIKE. NULLIF por si la normalización deja la cadena vacía (un
+// término de solo símbolos raros): sin él quedaría LIKE '%%' y matchearía
+// todo. Usa el índice GIN de trigramas que ya existe sobre nombre_normalizado
+// (38 ms medidos sobre 20 mil sociedades).
+function whereBusqueda(
+  busqueda: Busqueda | null,
+  params: unknown[],
+  alias: string,
+  columnasId: string[],
+): string {
+  if (!busqueda) return "";
+  params.push(busqueda.termino);
+  const condiciones = [
+    `${alias}.nombre_normalizado LIKE '%' || NULLIF(normalizar_nombre($${params.length}), '') || '%'`,
+  ];
+  if (busqueda.clave) {
+    params.push(busqueda.clave);
+    const p = `$${params.length}`;
+    for (const col of columnasId) {
+      condiciones.push(`upper(${alias}.${col}) LIKE '%' || ${p} || '%'`);
+    }
+  }
+  return `WHERE ${condiciones.join(" OR ")}`;
+}
 
 interface SociedadAdminRow {
   id: string;
@@ -418,9 +473,13 @@ adminRouter.get(
   asyncHandler(async (req: Request, res: Response) => {
     const limite = Math.min(Number(req.query.limit) || 100, 500);
     const offset = Number(req.query.offset) || 0;
+    const params: unknown[] = [];
+    const where = whereBusqueda(leerBusqueda(req.query.q), params, "s", ["cuit"]);
+    const pLimite = `$${params.length + 1}`;
+    const pOffset = `$${params.length + 2}`;
 
     const [{ rows: totalRows }, { rows }] = await Promise.all([
-      pool().query<{ count: string }>("SELECT count(*) FROM sociedades"),
+      pool().query<{ count: string }>(`SELECT count(*) FROM sociedades s ${where}`, params),
       pool().query<SociedadAdminRow>(
         `WITH socios AS (
          SELECT v.sociedad_id,
@@ -455,9 +514,10 @@ adminRouter.get(
        LEFT JOIN actividades_clae ac ON ac.codigo = ap.clae_codigo
        LEFT JOIN grupos_clae gc ON gc.codigo = ap.clae_grupo
        LEFT JOIN socios soc ON soc.sociedad_id = s.id
+       ${where}
        ORDER BY s.nombre
-       LIMIT $1 OFFSET $2`,
-        [limite, offset],
+       LIMIT ${pLimite} OFFSET ${pOffset}`,
+        [...params, limite, offset],
       ),
     ]);
 
@@ -512,9 +572,13 @@ adminRouter.get(
   asyncHandler(async (req: Request, res: Response) => {
     const limite = Math.min(Number(req.query.limit) || 100, 500);
     const offset = Number(req.query.offset) || 0;
+    const params: unknown[] = [];
+    const where = whereBusqueda(leerBusqueda(req.query.q), params, "p", ["cuit", "documento"]);
+    const pLimite = `$${params.length + 1}`;
+    const pOffset = `$${params.length + 2}`;
 
     const [{ rows: totalRows }, { rows }] = await Promise.all([
-      pool().query<{ count: string }>("SELECT count(*) FROM personas_fisicas"),
+      pool().query<{ count: string }>(`SELECT count(*) FROM personas_fisicas p ${where}`, params),
       pool().query<PersonaAdminRow>(
         `SELECT
          p.id, p.nombre, p.documento, p.cuit, p.profesion,
@@ -523,9 +587,10 @@ adminRouter.get(
          d.domicilio_completo
        FROM personas_fisicas p
        LEFT JOIN domicilios d ON d.id = p.domicilio_id
+       ${where}
        ORDER BY p.nombre
-       LIMIT $1 OFFSET $2`,
-        [limite, offset],
+       LIMIT ${pLimite} OFFSET ${pOffset}`,
+        [...params, limite, offset],
       ),
     ]);
 

@@ -546,8 +546,30 @@ const SUBPESTANAS: { id: SubPestana; etiqueta: string }[] = [
   { id: "socios-juridicos", etiqueta: "Socios jurídicos" },
 ];
 
+// Sub-pestañas que muestran la barra de búsqueda, con el placeholder de cada
+// una (qué campos busca de verdad el backend en cada tabla).
+const PLACEHOLDER_BUSQUEDA: Partial<Record<SubPestana, string>> = {
+  sociedades: "Buscar sociedad por nombre o CUIT…",
+  personas: "Buscar persona por nombre, CUIT o DNI…",
+  "socios-juridicos": "Buscar socio jurídico por nombre o CUIT…",
+};
+
 function TabDatos() {
   const [sub, setSub] = useState<SubPestana>("sociedades");
+  // Una sola barra compartida: el texto sobrevive al cambiar entre
+  // Sociedades / Personas / Socios jurídicos, para buscar el mismo nombre en
+  // los tres lados sin volver a tipearlo.
+  const [busqueda, setBusqueda] = useState("");
+  // Versión con debounce, la que dispara pedidos al backend: sin esto cada
+  // tecla sería un request.
+  const [busquedaAplicada, setBusquedaAplicada] = useState("");
+
+  useEffect(() => {
+    const t = setTimeout(() => setBusquedaAplicada(busqueda.trim()), 300);
+    return () => clearTimeout(t);
+  }, [busqueda]);
+
+  const placeholder = PLACEHOLDER_BUSQUEDA[sub];
 
   return (
     <div className="mt-6">
@@ -573,12 +595,32 @@ function TabDatos() {
         ))}
       </div>
 
-      {sub === "sociedades" && <TablaSociedades />}
-      {sub === "personas" && <TablaPersonas />}
+      {placeholder && (
+        <input
+          type="search"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          placeholder={placeholder}
+          aria-label={placeholder}
+          className="mb-5 w-full max-w-md rounded-full border border-carbon/10 bg-white px-5 py-2.5 text-sm"
+        />
+      )}
+
+      {/* key = término: al cambiar la búsqueda la tabla se remonta, lo que
+          vuelve a la página 1 sin un pedido intermedio con la página vieja. */}
+      {sub === "sociedades" && (
+        <TablaSociedades key={busquedaAplicada} busqueda={busquedaAplicada} />
+      )}
+      {sub === "personas" && (
+        <TablaPersonas key={busquedaAplicada} busqueda={busquedaAplicada} />
+      )}
       {sub === "usuarios" && <TablaUsuarios />}
       {sub === "leads" && <TablaLeads />}
       {sub === "solicitudes-informe" && <TablaSolicitudesInforme />}
-      {sub === "socios-juridicos" && <TablaSociosJuridicos />}
+      {/* Socios jurídicos filtra en el navegador (ya tiene todo cargado):
+          recibe el texto sin debounce, el filtro es instantáneo y no pide
+          nada al backend. */}
+      {sub === "socios-juridicos" && <TablaSociosJuridicos busqueda={busqueda} />}
     </div>
   );
 }
@@ -640,7 +682,19 @@ function BotonOculta({
   );
 }
 
-function TablaSociedades() {
+function textoConteo(
+  cargando: boolean,
+  mostrados: number,
+  total: number,
+  busqueda: string,
+): string {
+  if (cargando) return "Cargando…";
+  if (busqueda && total === 0) return `Sin resultados para "${busqueda}".`;
+  const base = `Mostrando ${mostrados} de ${total.toLocaleString("es-AR")}`;
+  return busqueda ? `${base} resultados para "${busqueda}"` : base;
+}
+
+function TablaSociedades({ busqueda }: { busqueda: string }) {
   const [pagina, setPagina] = useState(1);
   const [datos, setDatos] = useState<{
     total: number;
@@ -652,11 +706,18 @@ function TablaSociedades() {
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
+    // "vigente": si cambia la página antes de que vuelva la respuesta, la
+    // vieja se descarta -- si no, una respuesta lenta podría pisar a una más
+    // nueva y dejar en pantalla la página equivocada.
+    let vigente = true;
     setCargando(true);
-    obtenerSociedadesAdmin(POR_PAGINA, (pagina - 1) * POR_PAGINA)
-      .then(setDatos)
-      .finally(() => setCargando(false));
-  }, [pagina]);
+    obtenerSociedadesAdmin(POR_PAGINA, (pagina - 1) * POR_PAGINA, busqueda)
+      .then((d) => vigente && setDatos(d))
+      .finally(() => vigente && setCargando(false));
+    return () => {
+      vigente = false;
+    };
+  }, [pagina, busqueda]);
 
   function alAlternarOculta(s: SociedadAdmin) {
     const nuevoValor = !s.oculta;
@@ -681,9 +742,7 @@ function TablaSociedades() {
   return (
     <div className="rounded-3xl bg-white p-7">
       <p className="mb-4 text-sm text-carbon/50">
-        {cargando
-          ? "Cargando…"
-          : `Mostrando ${datos.sociedades.length} de ${datos.total.toLocaleString("es-AR")}`}
+        {textoConteo(cargando, datos.sociedades.length, datos.total, busqueda)}
       </p>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1300px] text-left text-sm">
@@ -743,7 +802,7 @@ function TablaSociedades() {
   );
 }
 
-function TablaPersonas() {
+function TablaPersonas({ busqueda }: { busqueda: string }) {
   const [pagina, setPagina] = useState(1);
   const [datos, setDatos] = useState<{
     total: number;
@@ -755,11 +814,16 @@ function TablaPersonas() {
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
+    // Ver TablaSociedades: descarta respuestas de una página ya abandonada.
+    let vigente = true;
     setCargando(true);
-    obtenerPersonasAdmin(POR_PAGINA, (pagina - 1) * POR_PAGINA)
-      .then(setDatos)
-      .finally(() => setCargando(false));
-  }, [pagina]);
+    obtenerPersonasAdmin(POR_PAGINA, (pagina - 1) * POR_PAGINA, busqueda)
+      .then((d) => vigente && setDatos(d))
+      .finally(() => vigente && setCargando(false));
+    return () => {
+      vigente = false;
+    };
+  }, [pagina, busqueda]);
 
   function alAlternarOculta(p: PersonaAdmin) {
     const nuevoValor = !p.oculta;
@@ -784,9 +848,7 @@ function TablaPersonas() {
   return (
     <div className="rounded-3xl bg-white p-7">
       <p className="mb-4 text-sm text-carbon/50">
-        {cargando
-          ? "Cargando…"
-          : `Mostrando ${datos.personas.length} de ${datos.total.toLocaleString("es-AR")}`}
+        {textoConteo(cargando, datos.personas.length, datos.total, busqueda)}
       </p>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1200px] text-left text-sm">
@@ -944,7 +1006,28 @@ function TablaUsuarios() {
 // ver 036_socios_juridicos.sql. "Vincular" crea (o reutiliza, si el CUIT ya
 // existe) una sociedad real y repunta todos los vínculos del grupo. No hay
 // paginación acá: son ~300 grupos en total, entra cómodo en una sola tabla.
-function TablaSociosJuridicos() {
+// Versión en el navegador de normalizar_nombre() (migración 038, que a su vez
+// replica la del pipeline): sin acentos, sin puntuación y con las
+// abreviaturas societarias colapsadas, así "s.a." encuentra a "Foo SA" y
+// viceversa. Se aplica a los dos lados de la comparación.
+function normalizarParaBuscar(texto: string): string {
+  return texto
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/\./g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/\bS A S\b/g, "SAS")
+    .replace(/\bS A U\b/g, "SAU")
+    .replace(/\bS A\b/g, "SA")
+    .replace(/\bS R L\b/g, "SRL")
+    .replace(/\bS C\b/g, "SC")
+    .replace(/[^A-Z0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function TablaSociosJuridicos({ busqueda }: { busqueda: string }) {
   const [grupos, setGrupos] = useState<SocioJuridicoGrupo[] | null>(null);
   const [ediciones, setEdiciones] = useState<
     Record<string, { nombre: string; cuit: string }>
@@ -995,12 +1078,30 @@ function TablaSociosJuridicos() {
     }
   }
 
+  // Se filtra contra el nombre y el CUIT SUGERIDOS (los originales), no
+  // contra lo que el admin está editando en los inputs: si no, la fila
+  // desaparecería en medio de la edición apenas el texto dejara de matchear.
+  // Mismo criterio que el backend: el CUIT solo entra en juego si lo tipeado
+  // tiene dígitos.
+  const termino = normalizarParaBuscar(busqueda);
+  const digitos = busqueda.replace(/\D/g, "");
+  const visibles = (grupos ?? []).filter(
+    (g) =>
+      !termino ||
+      normalizarParaBuscar(g.nombreSugerido).includes(termino) ||
+      (digitos !== "" && (g.cuitSugerido ?? "").replace(/\D/g, "").includes(digitos)),
+  );
+
   return (
     <div className="rounded-3xl bg-white p-7">
       <p className="mb-4 text-sm text-carbon/50">
         {grupos === null
           ? "Cargando…"
-          : `${grupos.length} socios jurídicos sin vincular`}
+          : termino && visibles.length === 0
+            ? `Sin resultados para "${busqueda.trim()}".`
+            : termino
+              ? `${visibles.length} de ${grupos.length} socios jurídicos sin vincular`
+              : `${grupos.length} socios jurídicos sin vincular`}
       </p>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1100px] text-left text-sm">
@@ -1014,7 +1115,7 @@ function TablaSociosJuridicos() {
             </tr>
           </thead>
           <tbody>
-            {(grupos ?? []).map((g) => {
+            {visibles.map((g) => {
               const { nombre, cuit } = campo(g);
               return (
                 <tr
