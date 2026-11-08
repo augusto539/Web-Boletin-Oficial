@@ -52,9 +52,9 @@ consistentemente:
 
 | Superficie | Mecanismo | Estado |
 |---|---|---|
-| `/sociedad/:id`, `/persona/:id` | GraphQL vía `boletin_api` → RLS | ✅ Automático |
+| `/sociedad/:id`, `/persona/:id` | GraphQL vía `boletin_api` → RLS. Ojo: hasta la migración 048 `vinculos` **no tenía RLS**, así que el vínculo con una persona/sociedad oculta seguía saliendo en "Socios y autoridades" (sin nombre, como "— aún no relevada"). Desde 048 un vínculo solo existe para `boletin_api` si sus tres puntas son visibles | ✅ Automático (desde 048) |
 | Búsqueda | ídem | ✅ Automático |
-| Grafo (`vw_grafo_aristas`, `grafo_de_sociedad`/`grafo_de_persona`) | La vista ya filtra `oculta=false` en su definición; las funciones son `LANGUAGE sql` sin `SECURITY DEFINER` (verificado: no hay ni un `SECURITY DEFINER` en todo el proyecto), así que heredan la RLS del rol que llama | ✅ |
+| Grafo (`grafo_de_sociedad`/`grafo_de_persona`) | **Corregido en 048 — antes estaba mal marcado como ✅.** Se afirmaba que `vw_grafo_aristas` filtraba `oculta=false`: nunca lo hizo (la define el pipeline, `db/schema.sql`). Y como corre con los permisos de su dueño, se saltea la RLS: el grafo mostró entidades ocultas desde siempre, con nombre, y la API pública las devolvía a cualquiera vía `allVwGrafoAristas`. Ahora las funciones leen `vw_grafo_aristas_visibles` (048, `security_invoker`, descarta aristas con alguna punta oculta) y la vista del pipeline quedó fuera de la API (`@omit`). **Lección:** que una función no sea `SECURITY DEFINER` no alcanza — si lee de una vista que corre como el dueño de las tablas, la RLS se pierde en el medio | ✅ (desde 048) |
 | `sitemap-sociedades.xml` | `WHERE s.oculta = FALSE` explícito en la query (`seo.ts`) | ✅ |
 | Informe "Departamentos más activos" | `recalcularDepartamentos()` en `informes.ts`: `JOIN sociedades s ON ... AND s.oculta = FALSE`, comentado explícitamente como "habeas data" | ✅ (con matiz, ver §2) |
 | Informes "Mujeres Fundadoras", "Actividades CLAE", "Análisis de Redes" | Archivos estáticos igual que los de nicho, **pero sin `sociedadId`/`personaId`** — son agregados puros (confirmado por grep: 0 referencias en los tres) | ✅ Sin riesgo, por diseño |
